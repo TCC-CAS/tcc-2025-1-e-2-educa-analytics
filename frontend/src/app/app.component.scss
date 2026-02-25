@@ -1,0 +1,138 @@
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(120deg, #f6f1ea, #eef5f0 45%, #fdf7f2);
+  color: #1f2a2e;
+}
+
+.sidebar {
+  width: 240px;
+  padding: 1.5rem 1.25rem;
+  background: #1e3d36;
+  color: #f5f0e9;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f3c969;
+  color: #1e3d36;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+
+  span {
+    font-size: 0.9rem;
+    opacity: 0.85;
+  }
+
+  strong {
+    font-size: 1.1rem;
+  }
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.menu-item {
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s ease, transform 0.2s ease;
+  text-decoration: none;
+}
+
+.menu-item:visited {
+  color: inherit;
+}
+
+.menu-item:hover {
+  background: rgba(245, 240, 233, 0.12);
+  transform: translateX(4px);
+}
+
+.menu-item.active {
+  background: rgba(245, 240, 233, 0.2);
+  font-weight: 600;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f3c969;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.app-footer {
+  padding: 1rem 2rem 1.5rem;
+  color: #4b5a55;
+
+  p {
+    margin: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .menu {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .menu {
+    width: 100%;
+    flex-direction: column;
+  }
+}

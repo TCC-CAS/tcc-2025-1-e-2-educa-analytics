@@ -1,0 +1,197 @@
+<div class="matricula-page">
+  <header class="page-header">
+    <div>
+      <h1>Matricula de alunos</h1>
+      <p>Preencha os dados do aluno e do responsavel.</p>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button
+      type="button"
+      class="tab"
+      [class.active]="activeTab === 'dados'"
+      (click)="setTab('dados')"
+    >
+      Dados basicos
+    </button>
+    <button
+      type="button"
+      class="tab"
+      [class.active]="activeTab === 'responsaveis'"
+      (click)="setTab('responsaveis')"
+    >
+      Responsaveis
+    </button>
+  </div>
+
+  <form class="form">
+    <section class="tab-panel" *ngIf="activeTab === 'dados'">
+      <div class="field-grid">
+        <label class="field">
+          <span>Id Matricula</span>
+          <input type="text" name="alunoIdMatricula" required />
+        </label>
+        <label class="field">
+          <span>Nome do aluno</span>
+          <input type="text" name="alunoNome" required />
+        </label>
+        <label class="field">
+          <span>Nacionalidade</span>
+          <input type="text" name="alunoNacionalidade" required />
+        </label>
+        <label class="field">
+          <span>Sexo</span>
+          <select name="alunoSexo" required>
+            <option value="">Selecione</option>
+            <option value="F">Feminino</option>
+            <option value="M">Masculino</option>
+            <option value="O">Outro</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Data de nascimento</span>
+          <input type="date" name="alunoNascimento" required />
+        </label>
+        <label class="field">
+          <span>CEP</span>
+          <input type="text" name="alunoCep" required />
+        </label>
+        <label class="field">
+          <span>Endereco</span>
+          <input type="text" name="alunoEndereco" required />
+        </label>
+        <label class="field">
+          <span>Numero</span>
+          <input type="text" name="alunoNumero" required />
+        </label>
+        <label class="field">
+          <span>Complemento</span>
+          <input type="text" name="alunoComplemento" required />
+        </label>
+        <label class="field">
+          <span>Bairro</span>
+          <input type="text" name="alunoBairro" required />
+        </label>
+        <label class="field">
+          <span>UF</span>
+          <input type="text" name="alunoUf" maxlength="2" required />
+        </label>
+        <label class="field">
+          <span>Cidade</span>
+          <input type="text" name="alunoCidade" required />
+        </label>
+        <label class="field">
+          <span>Telefone</span>
+          <input type="tel" name="alunoTelefone" required />
+        </label>
+        <label class="field">
+          <span>Email</span>
+          <input type="email" name="alunoEmail" required />
+        </label>
+        <label class="field">
+          <span>RG</span>
+          <input type="text" name="alunoRg" required />
+        </label>
+        <label class="field">
+          <span>Orgao emissor</span>
+          <input type="text" name="alunoOrgaoEmissor" required />
+        </label>
+        <label class="field">
+          <span>Estado emissor</span>
+          <input type="text" name="alunoEstadoEmissor" maxlength="2" required />
+        </label>
+        <label class="field">
+          <span>CPF</span>
+          <input type="text" name="alunoCpf" required />
+        </label>
+      </div>
+    </section>
+
+    <section class="tab-panel" *ngIf="activeTab === 'responsaveis'">
+      <div class="field-grid">
+        <label class="field">
+          <span>Matricula</span>
+          <input type="text" name="respMatricula" required />
+        </label>
+        <label class="field">
+          <span>Nome do responsavel</span>
+          <input type="text" name="respNome" required />
+        </label>
+        <label class="field">
+          <span>Nacionalidade</span>
+          <input type="text" name="respNacionalidade" required />
+        </label>
+        <label class="field">
+          <span>Sexo</span>
+          <select name="respSexo" required>
+            <option value="">Selecione</option>
+            <option value="F">Feminino</option>
+            <option value="M">Masculino</option>
+            <option value="O">Outro</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Data de nascimento</span>
+          <input type="date" name="respNascimento" required />
+        </label>
+        <label class="field">
+          <span>CEP</span>
+          <input type="text" name="respCep" required />
+        </label>
+        <label class="field">
+          <span>Endereco</span>
+          <input type="text" name="respEndereco" required />
+        </label>
+        <label class="field">
+          <span>Numero</span>
+          <input type="text" name="respNumero" required />
+        </label>
+        <label class="field">
+          <span>Complemento</span>
+          <input type="text" name="respComplemento" required />
+        </label>
+        <label class="field">
+          <span>Bairro</span>
+          <input type="text" name="respBairro" required />
+        </label>
+        <label class="field">
+          <span>UF</span>
+          <input type="text" name="respUf" maxlength="2" required />
+        </label>
+        <label class="field">
+          <span>Cidade</span>
+          <input type="text" name="respCidade" required />
+        </label>
+        <label class="field">
+          <span>Telefone</span>
+          <input type="tel" name="respTelefone" required />
+        </label>
+        <label class="field">
+          <span>Email</span>
+          <input type="email" name="respEmail" required />
+        </label>
+        <label class="field">
+          <span>RG</span>
+          <input type="text" name="respRg" required />
+        </label>
+        <label class="field">
+          <span>Orgao emissor</span>
+          <input type="text" name="respOrgaoEmissor" required />
+        </label>
+        <label class="field">
+          <span>Estado emissor</span>
+          <input type="text" name="respEstadoEmissor" maxlength="2" required />
+        </label>
+        <label class="field">
+          <span>CPF</span>
+          <input type="text" name="respCpf" required />
+        </label>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <button type="submit" class="primary">Realizar matricula</button>
+    </div>
+  </form>
+</div>

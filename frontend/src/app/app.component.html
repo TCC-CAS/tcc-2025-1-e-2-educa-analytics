@@ -1,0 +1,33 @@
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">EA</div>
+      <div class="title">
+        <span>Educa</span>
+        <strong>{{ title }}</strong>
+      </div>
+    </div>
+
+    <nav class="menu">
+      <a class="menu-item" routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <span class="dot"></span>
+        Inicio
+      </a>
+      <a class="menu-item" routerLink="/matricula" routerLinkActive="active">
+        <span class="dot"></span>
+        Matricula
+      </a>
+      <a class="menu-item" routerLink="/login" routerLinkActive="active">
+        <span class="dot"></span>
+        Login
+      </a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+    <footer class="app-footer">
+      <p>&copy; 2026 EducaAnalytics. Todos os direitos reservados.</p>
+    </footer>
+  </main>
+</div>

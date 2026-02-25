@@ -1,0 +1,29 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="logo-row">
+      <div class="avatar" aria-hidden="true">EA</div>
+      <div class="brand">EducaAnalytics</div>
+    </div>
+
+    <h1>Entrar</h1>
+    <p class="subtitle">Use sua conta EducaAnalytics</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+      <div class="field">
+        <label for="email">ID ou Endereço de email</label>
+        <input formControlName="email" id="email" type="email" required autocomplete="username" />        
+      </div>
+
+      <div class="field">
+        <label for="password">Senha</label>
+        <input formControlName="password" id="password" type="password" required autocomplete="current-password" />
+      </div>
+
+      <button class="primary" type="submit" [disabled]="loading || form.invalid">{{ loading ? 'Entrando...' : 'Entrar' }}</button>
+
+      <div class="extras">
+        <a class="link" (click)="$event.preventDefault()">Esqueceu a senha?</a>
+      </div>
+    </form>
+  </div>
+</div>
