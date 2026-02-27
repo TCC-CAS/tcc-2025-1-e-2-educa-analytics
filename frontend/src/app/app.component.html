@@ -17,11 +17,68 @@
         <span class="dot"></span>
         Matricula
       </a>
-      <a class="menu-item" routerLink="/login" routerLinkActive="active">
+      <a class="menu-item" routerLink="/turmas" routerLinkActive="active">
         <span class="dot"></span>
-        Login
+        Turmas
+      </a>
+      <a class="menu-item" routerLink="/disciplinas" routerLinkActive="active">
+        <span class="dot"></span>
+        Disciplinas
+      </a>
+      <a class="menu-item" routerLink="/educadores" routerLinkActive="active">
+        <span class="dot"></span>
+        Educadores
+      </a>
+      <a class="menu-item" routerLink="/colaboradores" routerLinkActive="active">
+        <span class="dot"></span>
+        Colaboradores
+      </a>
+      <a class="menu-item" routerLink="/eventos" routerLinkActive="active">
+        <span class="dot"></span>
+        Eventos
+      </a>
+      <a class="menu-item" routerLink="/frequencia" routerLinkActive="active">
+        <span class="dot"></span>
+        Frequência
+      </a>
+      <a class="menu-item" routerLink="/notas" routerLinkActive="active">
+        <span class="dot"></span>
+        Notas
+      </a>
+      <a class="menu-item" routerLink="/caixa" routerLinkActive="active">
+        <span class="dot"></span>
+        Caixa
+      </a>
+      <a class="menu-item" routerLink="/fornecedores" routerLinkActive="active">
+        <span class="dot"></span>
+        Fornecedores
+      </a>
+      <a class="menu-item" routerLink="/dashboard-financeiro" routerLinkActive="active">
+        <span class="dot"></span>
+        Dashboard Financeiro
+      </a>
+      <a class="menu-item" routerLink="/dashboard-escolar" routerLinkActive="active">
+        <span class="dot"></span>
+        Dashboard Escolar
+      </a>
+      <a class="menu-item" routerLink="/avaliacoes" routerLinkActive="active">
+        <span class="dot"></span>
+        Avaliações
       </a>
     </nav>
+
+    <div class="user-menu" *ngIf="usuarioLogado">
+      <div class="user-info">
+        <span class="user-icone">👤</span>
+        <div class="user-details">
+          <span class="user-nome">Usuário</span>
+          <span class="user-role">Conectado</span>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()" title="Fazer logout">
+        🚪
+      </button>
+    </div>
   </aside>
 
   <main class="main-content">

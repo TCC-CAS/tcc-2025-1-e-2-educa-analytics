@@ -90,6 +90,74 @@
   background: #f3c969;
 }
 
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(243, 201, 105, 0.2);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+
+  .user-icone {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  .user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    .user-nome {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f5f0e9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role {
+      font-size: 11px;
+      color: rgba(243, 201, 105, 0.7);
+    }
+  }
+}
+
+.btn-logout {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(243, 201, 105, 0.3);
+  border-radius: 8px;
+  background: transparent;
+  color: #f5f0e9;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(243, 201, 105, 0.1);
+    border-color: rgba(243, 201, 105, 0.6);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
 .main-content {
   flex: 1;
   display: flex;

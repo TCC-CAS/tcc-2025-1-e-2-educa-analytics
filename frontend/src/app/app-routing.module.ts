@@ -19,6 +19,54 @@ const routes: Routes = [
   {
     path: 'matricula',
     loadChildren: () => import('./features/matricula/matricula.module').then(m => m.MatriculaModule)
+  },
+  {
+    path: 'turmas',
+    loadChildren: () => import('./features/turmas/turmas.module').then(m => m.TurmasModule)
+  },
+  {
+    path: 'disciplinas',
+    loadChildren: () => import('./features/disciplinas/disciplinas.module').then(m => m.DisciplinasModule)
+  },
+  {
+    path: 'educadores',
+    loadChildren: () => import('./features/educadores/educadores.module').then(m => m.EducadoresModule)
+  },
+  {
+    path: 'colaboradores',
+    loadChildren: () => import('./features/colaboradores/colaboradores.module').then(m => m.ColaboradoresModule)
+  },
+  {
+    path: 'eventos',
+    loadChildren: () => import('./features/eventos/eventos.module').then(m => m.EventosModule)
+  },
+  {
+    path: 'frequencia',
+    loadChildren: () => import('./features/frequencia/frequencia.module').then(m => m.FrequenciaModule)
+  },
+  {
+    path: 'notas',
+    loadChildren: () => import('./features/notas/notas.module').then(m => m.NotasModule)
+  },
+  {
+    path: 'caixa',
+    loadChildren: () => import('./features/caixa/caixa.module').then(m => m.CaixaModule)
+  },
+  {
+    path: 'fornecedores',
+    loadChildren: () => import('./features/fornecedores/fornecedores.module').then(m => m.FornecedoresModule)
+  },
+  {
+    path: 'dashboard-financeiro',
+    loadChildren: () => import('./features/dashboard-financeiro/dashboard-financeiro.module').then(m => m.DashboardFinanceiroModule)
+  },
+  {
+    path: 'dashboard-escolar',
+    loadChildren: () => import('./features/dashboard-escolar/dashboard-escolar.module').then(m => m.DashboardEscolarModule)
+  },
+  {
+    path: 'avaliacoes',
+    loadChildren: () => import('./features/avaliacoes/avaliacoes.module').then(m => m.AvaliacoesModule)
   }
 ];
 
