@@ -1,0 +1,106 @@
+<div class="caixa-list-container">
+  <div class="header">
+    <h1>Lançamentos de Caixa</h1>
+    <button class="btn-primary" (click)="novo()">+ Novo Lançamento</button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <h3>Filtros</h3>
+    <div class="filters-grid">
+      <div class="filter-field">
+        <label>Data</label>
+        <input 
+          type="date" 
+          [(ngModel)]="filtroData" 
+          (ngModelChange)="aplicarFiltros()">
+      </div>
+
+      <div class="filter-field">
+        <label>Tipo de Operação</label>
+        <select [(ngModel)]="filtroTipo" (ngModelChange)="aplicarFiltros()">
+          <option value="">Todos</option>
+          <option value="credito">Crédito</option>
+          <option value="debito">Débito</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>Fornecedor</label>
+        <input 
+          type="text" 
+          [(ngModel)]="filtroFornecedor" 
+          (ngModelChange)="aplicarFiltros()"
+          placeholder="Digite o fornecedor">
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-secondary" (click)="limparFiltros()">Limpar Filtros</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Totalizadores -->
+  <div class="totals-section">
+    <div class="total-card credito">
+      <span class="label">Total Créditos</span>
+      <span class="value">R$ {{ totalCreditos.toFixed(2) }}</span>
+    </div>
+    <div class="total-card debito">
+      <span class="label">Total Débitos</span>
+      <span class="value">R$ {{ totalDebitos.toFixed(2) }}</span>
+    </div>
+    <div class="total-card saldo" [class.saldo-positivo]="saldo >= 0" [class.saldo-negativo]="saldo < 0">
+      <span class="label">Saldo</span>
+      <span class="value">R$ {{ saldo.toFixed(2) }}</span>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Tipo</th>
+          <th>Descrição</th>
+          <th>Fornecedor</th>
+          <th class="right">Valor</th>
+          <th>Usuário</th>
+          <th class="actions-col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let lancamento of lancamentosFiltrados">
+          <td>{{ lancamento.data | date: 'dd/MM/yyyy' }}</td>
+          <td>
+            <span class="badge-tipo" 
+                  [class.badge-credito]="lancamento.tipoConta === 'credito'"
+                  [class.badge-debito]="lancamento.tipoConta === 'debito'">
+              {{ getTipoLabel(lancamento.tipoConta) }}
+            </span>
+          </td>
+          <td><strong>{{ lancamento.descricao }}</strong></td>
+          <td>{{ lancamento.fornecedor }}</td>
+          <td class="right" 
+              [class.valor-credito]="lancamento.tipoConta === 'credito'"
+              [class.valor-debito]="lancamento.tipoConta === 'debito'">
+            <strong>R$ {{ lancamento.valor.toFixed(2) }}</strong>
+          </td>
+          <td>{{ lancamento.usuario }}</td>
+          <td class="actions-col">
+            <button class="btn-icon" (click)="editar(lancamento.id)" title="Editar">
+              ✏️
+            </button>
+            <button class="btn-icon btn-delete" (click)="excluir(lancamento)" title="Excluir">
+              🗑️
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="lancamentosFiltrados.length === 0">
+          <td colspan="7" class="empty-message">Nenhum lançamento encontrado</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,77 @@
+<div class="turma-form-page">
+  <header class="page-header">
+    <div>
+      <h1>{{ turmaId ? 'Editar turma' : 'Cadastrar turma' }}</h1>
+      <p>Informe os dados da turma para salvar as alteracoes.</p>
+    </div>
+  </header>
+
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+
+  <form #form="ngForm" class="form" (ngSubmit)="submit(form.valid === true)">
+    <div class="field-grid">
+      <label class="field">
+        <span>Codigo da turma</span>
+        <input type="text" name="codigo" [(ngModel)]="model.codigo" required />
+      </label>
+      <label class="field">
+        <span>Descricao</span>
+        <input type="text" name="descricao" [(ngModel)]="model.descricao" required />
+      </label>
+      <label class="field">
+        <span>Turno</span>
+        <select name="turno" [(ngModel)]="model.turno" required>
+          <option value="">Selecione</option>
+          <option value="Manha">Manha</option>
+          <option value="Tarde">Tarde</option>
+          <option value="Noite">Noite</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Periodo letivo</span>
+        <select name="periodoLetivo" [(ngModel)]="model.periodoLetivo" required>
+          <option value="">Selecione</option>
+          <option value="2025.1">2025.1</option>
+          <option value="2025.2">2025.2</option>
+          <option value="2026.1">2026.1</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Serie</span>
+        <select name="serie" [(ngModel)]="model.serie" required>
+          <option value="">Selecione</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Quantidade de vagas</span>
+        <input type="number" name="vagas" [(ngModel)]="model.vagas" required />
+      </label>
+      <label class="field">
+        <span>Inicio das aulas</span>
+        <input type="date" name="inicioAulas" [(ngModel)]="model.inicioAulas" required />
+      </label>
+      <label class="field">
+        <span>Termino das aulas</span>
+        <input type="date" name="fimAulas" [(ngModel)]="model.fimAulas" required />
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <select name="status" [(ngModel)]="model.status" required>
+          <option value="">Selecione</option>
+          <option value="ativa">Ativa</option>
+          <option value="inativa">Inativa</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="ghost" (click)="cancel()">Voltar</button>
+      <button type="submit" class="primary">{{ turmaId ? 'Salvar alteracoes' : 'Cadastrar turma' }}</button>
+    </div>
+  </form>
+</div>

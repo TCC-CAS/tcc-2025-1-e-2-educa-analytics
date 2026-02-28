@@ -1,0 +1,142 @@
+<div class="educadores-list-container">
+  <div class="header">
+    <h1>Educadores</h1>
+    <button class="btn-primary" (click)="novo()">+ Novo Educador</button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <h3>Filtros</h3>
+    <div class="filters-grid">
+      <div class="filter-field">
+        <label>Matrícula Funcional</label>
+        <input 
+          type="text" 
+          [(ngModel)]="filtroMatricula" 
+          (ngModelChange)="aplicarFiltros()"
+          placeholder="Digite a matrícula">
+      </div>
+
+      <div class="filter-field">
+        <label>Nome</label>
+        <input 
+          type="text" 
+          [(ngModel)]="filtroNome" 
+          (ngModelChange)="aplicarFiltros()"
+          placeholder="Digite o nome">
+      </div>
+
+      <div class="filter-field">
+        <label>Disciplina</label>
+        <input 
+          type="text" 
+          [(ngModel)]="filtroDisciplina" 
+          (ngModelChange)="aplicarFiltros()"
+          placeholder="Digite a disciplina">
+      </div>
+
+      <div class="filter-field">
+        <label>Turno</label>
+        <select [(ngModel)]="filtroTurno" (ngModelChange)="aplicarFiltros()">
+          <option value="">Todos</option>
+          <option value="Matutino">Matutino</option>
+          <option value="Vespertino">Vespertino</option>
+          <option value="Noturno">Noturno</option>
+          <option value="Integral">Integral</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>Status</label>
+        <select [(ngModel)]="filtroStatus" (ngModelChange)="aplicarFiltros()">
+          <option value="">Todos</option>
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-secondary" (click)="limparFiltros()">Limpar Filtros</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ações em Lote -->
+  <div class="bulk-actions" *ngIf="algumSelecionado">
+    <div class="bulk-controls">
+      <span>{{ quantidadeSelecionados }} selecionado(s)</span>
+      <select [(ngModel)]="acaoLote">
+        <option value="">Selecione uma ação</option>
+        <option value="ativar">Ativar</option>
+        <option value="desativar">Desativar</option>
+        <option value="excluir">Excluir</option>
+      </select>
+      <button class="btn-primary" (click)="executarAcaoLote()">Executar</button>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th class="checkbox-col">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="todosSelecionados" 
+              (change)="toggleTodos()">
+          </th>
+          <th>Matrícula Funcional</th>
+          <th>Nome Completo</th>
+          <th>Disciplina Lecionada</th>
+          <th>Turno</th>
+          <th>Status</th>
+          <th class="actions-col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let educador of educadoresFiltrados">
+          <td class="checkbox-col">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="educador.selected" 
+              (change)="toggleEducador()">
+          </td>
+          <td>{{ educador.matriculaFuncional }}</td>
+          <td>{{ educador.nomeCompleto }}</td>
+          <td>{{ educador.disciplinaLecionada }}</td>
+          <td>{{ educador.turno }}</td>
+          <td>
+            <span class="badge" [class.badge-active]="educador.status === 'ativo'" 
+                  [class.badge-inactive]="educador.status === 'inativo'">
+              {{ educador.status === 'ativo' ? 'Ativo' : 'Inativo' }}
+            </span>
+          </td>
+          <td class="actions-col">
+            <button class="btn-icon" (click)="editar(educador.id)" title="Editar">
+              ✏️
+            </button>
+            <button class="btn-icon" 
+                    *ngIf="educador.status === 'inativo'"
+                    (click)="ativar(educador)" 
+                    title="Ativar">
+              ✓
+            </button>
+            <button class="btn-icon" 
+                    *ngIf="educador.status === 'ativo'"
+                    (click)="desativar(educador)" 
+                    title="Desativar">
+              ✕
+            </button>
+            <button class="btn-icon btn-delete" (click)="excluir(educador)" title="Excluir">
+              🗑️
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="educadoresFiltrados.length === 0">
+          <td colspan="7" class="empty-message">Nenhum educador encontrado</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,131 @@
+<div class="notas-container">
+  <div class="header">
+    <h1>Notas dos Educandos</h1>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <h3>Filtros</h3>
+    <div class="filters-grid">
+      <div class="filter-field">
+        <label>Período Letivo *</label>
+        <select [(ngModel)]="periodoLetivo" (ngModelChange)="aplicarFiltros()">
+          <option value="">Selecione</option>
+          <option value="2026-1">2026/1</option>
+          <option value="2026-2">2026/2</option>
+          <option value="2025-2">2025/2</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>Turma *</label>
+        <select [(ngModel)]="turma" (ngModelChange)="aplicarFiltros()">
+          <option value="">Selecione</option>
+          <option value="6A">6º Ano A</option>
+          <option value="6B">6º Ano B</option>
+          <option value="7A">7º Ano A</option>
+          <option value="8A">8º Ano A</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>Disciplina *</label>
+        <select [(ngModel)]="disciplina" (ngModelChange)="aplicarFiltros()">
+          <option value="">Selecione</option>
+          <option value="matematica">Matemática</option>
+          <option value="portugues">Português</option>
+          <option value="historia">História</option>
+          <option value="ciencias">Ciências</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-secondary" (click)="limparFiltros()">Limpar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ações de Registro (para educadores) -->
+  <div class="action-bar" *ngIf="educandosFiltrados.length > 0 && !modoEdicao">
+    <button class="btn-primary" (click)="habilitarEdicao()">
+      📝 Registrar/Editar Notas
+    </button>
+  </div>
+
+  <!-- Modo de Edição -->
+  <div class="edit-bar" *ngIf="modoEdicao">
+    <div class="edit-info">
+      <span>⚠️ Modo de edição ativo. Altere as notas e clique em Salvar.</span>
+    </div>
+    <div class="edit-actions">
+      <button class="btn-ghost" (click)="cancelarEdicao()">Cancelar</button>
+      <button class="btn-primary" (click)="salvarNotas()">Salvar Notas</button>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-container" *ngIf="educandosFiltrados.length > 0">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="fixed-col">Matrícula</th>
+            <th class="fixed-col">Nome do Educando</th>
+            <th class="center" *ngFor="let avaliacao of avaliacoes">{{ avaliacao }}</th>
+            <th class="center media-col">Média</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let educando of educandosFiltrados">
+            <td class="fixed-col">{{ educando.matricula }}</td>
+            <td class="fixed-col"><strong>{{ educando.nome }}</strong></td>
+            <td class="center" *ngFor="let avaliacao of avaliacoes">
+              <input 
+                *ngIf="modoEdicao"
+                type="number" 
+                class="nota-input"
+                [value]="getNota(educando, avaliacao)?.nota || ''"
+                (blur)="validarNota($event, educando, avaliacao)"
+                min="0" 
+                max="10" 
+                step="0.5"
+                placeholder="0-10">
+              <span *ngIf="!modoEdicao" class="nota-display">
+                {{ getNota(educando, avaliacao)?.nota?.toFixed(1) || '-' }}
+              </span>
+            </td>
+            <td class="center media-col">
+              <span class="badge-media" [ngClass]="getMediaClass(educando.media)">
+                {{ educando.media.toFixed(2) }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Mensagem de filtro vazio -->
+  <div class="empty-state" *ngIf="educandosFiltrados.length === 0">
+    <p>Selecione o período letivo, turma e disciplina para visualizar as notas dos educandos</p>
+  </div>
+
+  <!-- Legenda -->
+  <div class="legend" *ngIf="educandosFiltrados.length > 0 && !modoEdicao">
+    <h4>Legenda de Médias:</h4>
+    <div class="legend-items">
+      <span class="legend-item">
+        <span class="badge-media media-excelente">9.0+</span> Excelente
+      </span>
+      <span class="legend-item">
+        <span class="badge-media media-bom">7.0-8.9</span> Aprovado
+      </span>
+      <span class="legend-item">
+        <span class="badge-media media-recuperacao">5.0-6.9</span> Recuperação
+      </span>
+      <span class="legend-item">
+        <span class="badge-media media-reprovado">&lt;5.0</span> Reprovado
+      </span>
+    </div>
+  </div>
+</div>

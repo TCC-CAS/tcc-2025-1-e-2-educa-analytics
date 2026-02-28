@@ -1,0 +1,257 @@
+<div class="matricula-page">
+  <header class="page-header">
+    <div>
+      <h1>Matrícula de educandos</h1>
+      <p>Preencha os dados do educando e do responsável. Campos marcados com <span class="required-legend">*</span> são obrigatórios.</p>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button
+      type="button"
+      class="tab"
+      [class.active]="activeTab === 'dados'"
+      (click)="setTab('dados')"
+    >
+      <span class="tab-badge">1</span> Dados básicos
+    </button>
+    <button
+      type="button"
+      class="tab"
+      [class.active]="activeTab === 'responsaveis'"
+      (click)="setTab('responsaveis')"
+    >
+      <span class="tab-badge">2</span> Responsável
+    </button>
+  </div>
+
+  <form class="form" novalidate>
+
+    <!-- ABA: DADOS DO EDUCANDO -->
+    <section class="tab-panel" *ngIf="activeTab === 'dados'">
+
+      <div class="field-group">
+        <h3 class="group-title">Identificação</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>Id Matrícula</span>
+            <input type="text" name="alunoIdMatricula" placeholder="Ex: 2025001" autocomplete="off" required />
+          </label>
+          <label class="field required col-2">
+            <span>Nome do educando</span>
+            <input type="text" name="alunoNome" placeholder="Nome completo" autocomplete="name" required />
+          </label>
+          <label class="field required">
+            <span>Nacionalidade</span>
+            <input type="text" name="alunoNacionalidade" placeholder="Ex: Brasileiro(a)" required />
+          </label>
+          <label class="field required">
+            <span>Sexo</span>
+            <select name="alunoSexo" required>
+              <option value="">Selecione</option>
+              <option value="F">Feminino</option>
+              <option value="M">Masculino</option>
+              <option value="O">Outro</option>
+            </select>
+          </label>
+          <label class="field required">
+            <span>Data de nascimento</span>
+            <input type="date" name="alunoNascimento" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Endereço</h3>
+        <div class="field-grid" [class.address-loading]="cepLoadingAluno">
+          <label class="field required">
+            <span>CEP</span>
+            <div class="cep-wrapper" [class.searching]="cepLoadingAluno">
+              <input type="text" name="alunoCep" [(ngModel)]="alunoEndereco.cep" placeholder="00000-000" maxlength="9" inputmode="numeric" (blur)="buscarCepAluno()" required />
+            </div>
+            <span class="cep-erro" *ngIf="cepErroAluno">CEP não encontrado</span>
+          </label>
+          <label class="field required col-2">
+            <span>Endereço</span>
+            <input type="text" name="alunoEndereco" [(ngModel)]="alunoEndereco.logradouro" placeholder="Rua, Avenida..." autocomplete="street-address" required />
+          </label>
+          <label class="field required">
+            <span>Número</span>
+            <input type="text" name="alunoNumero" [(ngModel)]="alunoEndereco.numero" placeholder="Ex: 123" inputmode="numeric" required />
+          </label>
+          <label class="field">
+            <span>Complemento</span>
+            <input type="text" name="alunoComplemento" [(ngModel)]="alunoEndereco.complemento" placeholder="Apto, Bloco..." />
+          </label>
+          <label class="field required">
+            <span>Bairro</span>
+            <input type="text" name="alunoBairro" [(ngModel)]="alunoEndereco.bairro" placeholder="Nome do bairro" required />
+          </label>
+          <label class="field required">
+            <span>UF</span>
+            <input type="text" name="alunoUf" [(ngModel)]="alunoEndereco.uf" placeholder="SP" maxlength="2" style="text-transform:uppercase" required />
+          </label>
+          <label class="field required">
+            <span>Cidade</span>
+            <input type="text" name="alunoCidade" [(ngModel)]="alunoEndereco.cidade" placeholder="Nome da cidade" autocomplete="address-level2" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Contato</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>Telefone</span>
+            <input type="tel" name="alunoTelefone" placeholder="(00) 00000-0000" inputmode="tel" required />
+          </label>
+          <label class="field required">
+            <span>Email</span>
+            <input type="email" name="alunoEmail" placeholder="email@exemplo.com" autocomplete="email" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Documentos</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>RG</span>
+            <input type="text" name="alunoRg" placeholder="00.000.000-0" required />
+          </label>
+          <label class="field required">
+            <span>Órgão emissor</span>
+            <input type="text" name="alunoOrgaoEmissor" placeholder="Ex: SSP" required />
+          </label>
+          <label class="field required">
+            <span>Estado emissor</span>
+            <input type="text" name="alunoEstadoEmissor" placeholder="SP" maxlength="2" required />
+          </label>
+          <label class="field required">
+            <span>CPF</span>
+            <input type="text" name="alunoCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" required />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA: DADOS DO RESPONSÁVEL -->
+    <section class="tab-panel" *ngIf="activeTab === 'responsaveis'">
+
+      <div class="field-group">
+        <h3 class="group-title">Identificação</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>Id Matrícula do responsável</span>
+            <input type="text" name="respMatricula" placeholder="Ex: 2025001" autocomplete="off" required />
+          </label>
+          <label class="field required col-2">
+            <span>Nome do responsável</span>
+            <input type="text" name="respNome" placeholder="Nome completo" autocomplete="name" required />
+          </label>
+          <label class="field required">
+            <span>Nacionalidade</span>
+            <input type="text" name="respNacionalidade" placeholder="Ex: Brasileiro(a)" required />
+          </label>
+          <label class="field required">
+            <span>Sexo</span>
+            <select name="respSexo" required>
+              <option value="">Selecione</option>
+              <option value="F">Feminino</option>
+              <option value="M">Masculino</option>
+              <option value="O">Outro</option>
+            </select>
+          </label>
+          <label class="field required">
+            <span>Data de nascimento</span>
+            <input type="date" name="respNascimento" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Endereço</h3>
+        <label class="same-address-check">
+          <input type="checkbox" [(ngModel)]="useSameAddress" (change)="toggleSameAddress()" name="useSameAddress" />
+          <span>Usar mesmo endereço do educando</span>
+        </label>
+        <div class="field-grid" [class.address-loading]="cepLoadingResp" [class.disabled-grid]="useSameAddress">
+          <label class="field required">
+            <span>CEP</span>
+            <div class="cep-wrapper" [class.searching]="cepLoadingResp">
+              <input type="text" name="respCep" [(ngModel)]="respEndereco.cep" placeholder="00000-000" maxlength="9" inputmode="numeric" [disabled]="useSameAddress" (blur)="buscarCepResp()" required />
+            </div>
+            <span class="cep-erro" *ngIf="cepErroResp">CEP não encontrado</span>
+          </label>
+          <label class="field required col-2">
+            <span>Endereço</span>
+            <input type="text" name="respEndereco" [(ngModel)]="respEndereco.logradouro" placeholder="Rua, Avenida..." autocomplete="street-address" [disabled]="useSameAddress" required />
+          </label>
+          <label class="field required">
+            <span>Número</span>
+            <input type="text" name="respNumero" [(ngModel)]="respEndereco.numero" placeholder="Ex: 123" inputmode="numeric" [disabled]="useSameAddress" required />
+          </label>
+          <label class="field">
+            <span>Complemento</span>
+            <input type="text" name="respComplemento" [(ngModel)]="respEndereco.complemento" placeholder="Apto, Bloco..." [disabled]="useSameAddress" />
+          </label>
+          <label class="field required">
+            <span>Bairro</span>
+            <input type="text" name="respBairro" [(ngModel)]="respEndereco.bairro" placeholder="Nome do bairro" [disabled]="useSameAddress" required />
+          </label>
+          <label class="field required">
+            <span>UF</span>
+            <input type="text" name="respUf" [(ngModel)]="respEndereco.uf" placeholder="SP" maxlength="2" style="text-transform:uppercase" [disabled]="useSameAddress" required />
+          </label>
+          <label class="field required">
+            <span>Cidade</span>
+            <input type="text" name="respCidade" [(ngModel)]="respEndereco.cidade" placeholder="Nome da cidade" autocomplete="address-level2" [disabled]="useSameAddress" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Contato</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>Telefone</span>
+            <input type="tel" name="respTelefone" placeholder="(00) 00000-0000" inputmode="tel" required />
+          </label>
+          <label class="field required">
+            <span>Email</span>
+            <input type="email" name="respEmail" placeholder="email@exemplo.com" autocomplete="email" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Documentos</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>RG</span>
+            <input type="text" name="respRg" placeholder="00.000.000-0" required />
+          </label>
+          <label class="field required">
+            <span>Órgão emissor</span>
+            <input type="text" name="respOrgaoEmissor" placeholder="Ex: SSP" required />
+          </label>
+          <label class="field required">
+            <span>Estado emissor</span>
+            <input type="text" name="respEstadoEmissor" placeholder="SP" maxlength="2" required />
+          </label>
+          <label class="field required">
+            <span>CPF</span>
+            <input type="text" name="respCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" required />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <button type="submit" class="primary ml-auto">
+        Realizar matrícula
+      </button>
+    </div>
+
+  </form>
+</div>

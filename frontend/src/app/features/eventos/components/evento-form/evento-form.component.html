@@ -1,0 +1,72 @@
+<div class="evento-form-container">
+  <div class="header">
+    <h1>{{ isEdicao ? 'Editar Evento' : 'Agendar Evento' }}</h1>
+  </div>
+
+  <form #eventoForm="ngForm" (ngSubmit)="salvar(eventoForm)">
+    <div class="form-card">
+      <h2>Informações do Evento</h2>
+      <div class="form-grid">
+        <div class="form-field full-width">
+          <label for="nomeEvento">Nome do Evento *</label>
+          <input 
+            type="text" 
+            id="nomeEvento" 
+            name="nomeEvento"
+            [(ngModel)]="evento.nomeEvento"
+            required
+            placeholder="Ex: Feira de Ciências">
+        </div>
+
+        <div class="form-field">
+          <label for="dataEvento">Data do Evento *</label>
+          <input 
+            type="date" 
+            id="dataEvento" 
+            name="dataEvento"
+            [(ngModel)]="evento.dataEvento"
+            required>
+        </div>
+
+        <div class="form-field">
+          <label for="horarioEvento">Horário do Evento *</label>
+          <input 
+            type="time" 
+            id="horarioEvento" 
+            name="horarioEvento"
+            [(ngModel)]="evento.horarioEvento"
+            required>
+        </div>
+
+        <div class="form-field full-width">
+          <label for="serieEscolar">Série Escolar *</label>
+          <input 
+            type="text" 
+            id="serieEscolar" 
+            name="serieEscolar"
+            [(ngModel)]="evento.serieEscolar"
+            required
+            placeholder="Ex: 6º Ano, 7º Ano, Todas as séries">
+        </div>
+
+        <div class="form-field full-width">
+          <label for="descricao">Descrição do Evento *</label>
+          <textarea 
+            id="descricao" 
+            name="descricao"
+            [(ngModel)]="evento.descricao"
+            required
+            rows="5"
+            placeholder="Descreva os detalhes do evento"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-ghost" (click)="voltar()">Cancelar</button>
+      <button type="submit" class="btn-primary">
+        {{ isEdicao ? 'Atualizar' : 'Agendar' }}
+      </button>
+    </div>
+  </form>
+</div>

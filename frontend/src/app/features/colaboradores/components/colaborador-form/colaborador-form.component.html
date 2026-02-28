@@ -1,0 +1,285 @@
+<div class="colaborador-form-container">
+  <div class="header">
+    <h1>{{ isEdicao ? 'Editar Colaborador' : 'Novo Colaborador' }}</h1>
+  </div>
+
+  <form #colaboradorForm="ngForm" (ngSubmit)="salvar(colaboradorForm)">
+    <div class="form-card">
+      <h2>Dados Pessoais</h2>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="nomeCompleto">Nome Completo *</label>
+          <input 
+            type="text" 
+            id="nomeCompleto" 
+            name="nomeCompleto"
+            [(ngModel)]="colaborador.nomeCompleto"
+            required
+            placeholder="Digite o nome completo">
+        </div>
+
+        <div class="form-field">
+          <label for="dataNascimento">Data de Nascimento *</label>
+          <input 
+            type="date" 
+            id="dataNascimento" 
+            name="dataNascimento"
+            [(ngModel)]="colaborador.dataNascimento"
+            required>
+        </div>
+
+        <div class="form-field">
+          <label for="cpf">CPF *</label>
+          <input 
+            type="text" 
+            id="cpf" 
+            name="cpf"
+            [(ngModel)]="colaborador.cpf"
+            required
+            placeholder="000.000.000-00">
+        </div>
+
+        <div class="form-field">
+          <label for="genero">Gênero *</label>
+          <select 
+            id="genero" 
+            name="genero"
+            [(ngModel)]="colaborador.genero"
+            required>
+            <option value="">Selecione</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Feminino">Feminino</option>
+            <option value="Outro">Outro</option>
+            <option value="Prefiro não informar">Prefiro não informar</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="raca">Raça/Cor *</label>
+          <select 
+            id="raca" 
+            name="raca"
+            [(ngModel)]="colaborador.raca"
+            required>
+            <option value="">Selecione</option>
+            <option value="Branca">Branca</option>
+            <option value="Preta">Preta</option>
+            <option value="Parda">Parda</option>
+            <option value="Amarela">Amarela</option>
+            <option value="Indígena">Indígena</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="telefone">Telefone *</label>
+          <input 
+            type="tel" 
+            id="telefone" 
+            name="telefone"
+            [(ngModel)]="colaborador.telefone"
+            required
+            placeholder="(00) 00000-0000">
+        </div>
+
+        <div class="form-field full-width">
+          <label for="endereco">Endereço *</label>
+          <input 
+            type="text" 
+            id="endereco" 
+            name="endereco"
+            [(ngModel)]="colaborador.endereco"
+            required
+            placeholder="Rua, Número - Bairro - Cidade/UF">
+        </div>
+
+        <div class="form-field">
+          <label for="email">E-mail *</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email"
+            [(ngModel)]="colaborador.email"
+            required
+            placeholder="email@escola.edu.br">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h2>Dados Profissionais</h2>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="matriculaFuncional">Matrícula Funcional *</label>
+          <input 
+            type="text" 
+            id="matriculaFuncional" 
+            name="matriculaFuncional"
+            [(ngModel)]="colaborador.matriculaFuncional"
+            required
+            placeholder="Digite a matrícula">
+        </div>
+
+        <div class="form-field">
+          <label for="cargo">Cargo *</label>
+          <input 
+            type="text" 
+            id="cargo" 
+            name="cargo"
+            [(ngModel)]="colaborador.cargo"
+            required
+            placeholder="Ex: Secretária Escolar">
+        </div>
+
+        <div class="form-field full-width">
+          <label for="formacaoAcademica">Formação Acadêmica *</label>
+          <input 
+            type="text" 
+            id="formacaoAcademica" 
+            name="formacaoAcademica"
+            [(ngModel)]="colaborador.formacaoAcademica"
+            required
+            placeholder="Ex: Bacharelado em Administração">
+        </div>
+      </div>
+    </div>
+
+    <!-- Senha (apenas para novo cadastro) -->
+    <div class="form-card" *ngIf="!isEdicao">
+      <h2>Senha de Acesso</h2>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="senha">Senha *</label>
+          <input 
+            type="password" 
+            id="senha" 
+            name="senha"
+            [(ngModel)]="colaborador.senha"
+            required
+            placeholder="Digite a senha"
+            minlength="6">
+        </div>
+
+        <div class="form-field">
+          <label for="confirmacaoSenha">Confirmação de Senha *</label>
+          <input 
+            type="password" 
+            id="confirmacaoSenha" 
+            name="confirmacaoSenha"
+            [(ngModel)]="colaborador.confirmacaoSenha"
+            required
+            placeholder="Confirme a senha"
+            minlength="6">
+        </div>
+      </div>
+    </div>
+
+    <!-- Formações -->
+    <div class="form-card">
+      <div class="formacoes-header">
+        <h2>Formações</h2>
+        <button 
+          type="button" 
+          class="btn-secondary" 
+          (click)="toggleFormFormacao()">
+          {{ mostrarFormFormacao ? 'Cancelar' : '+ Adicionar Formação' }}
+        </button>
+      </div>
+
+      <!-- Formulário de nova formação -->
+      <div class="formacao-form" *ngIf="mostrarFormFormacao">
+        <form #formFormacao="ngForm" (ngSubmit)="adicionarFormacao(formFormacao)">
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="instituicao">Nome da Instituição *</label>
+              <input 
+                type="text" 
+                id="instituicao" 
+                name="instituicao"
+                [(ngModel)]="novaFormacao.instituicao"
+                required
+                placeholder="Ex: Universidade de Brasília">
+            </div>
+
+            <div class="form-field">
+              <label for="areaEstudo">Área de Estudo *</label>
+              <input 
+                type="text" 
+                id="areaEstudo" 
+                name="areaEstudo"
+                [(ngModel)]="novaFormacao.areaEstudo"
+                required
+                placeholder="Ex: Administração de Empresas">
+            </div>
+
+            <div class="form-field">
+              <label for="dataInicio">Data de Início *</label>
+              <input 
+                type="date" 
+                id="dataInicio" 
+                name="dataInicio"
+                [(ngModel)]="novaFormacao.dataInicio"
+                required>
+            </div>
+
+            <div class="form-field">
+              <label for="dataTermino">Data de Término *</label>
+              <input 
+                type="date" 
+                id="dataTermino" 
+                name="dataTermino"
+                [(ngModel)]="novaFormacao.dataTermino"
+                required>
+            </div>
+
+            <div class="form-field full-width">
+              <label for="descricao">Descrição *</label>
+              <textarea 
+                id="descricao" 
+                name="descricao"
+                [(ngModel)]="novaFormacao.descricao"
+                required
+                rows="3"
+                placeholder="Descreva a formação"></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Adicionar</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Lista de formações -->
+      <div class="formacoes-list" *ngIf="colaborador.formacoes.length > 0">
+        <div class="formacao-item" *ngFor="let formacao of colaborador.formacoes; let i = index">
+          <div class="formacao-content">
+            <h4>{{ formacao.instituicao }}</h4>
+            <p><strong>{{ formacao.areaEstudo }}</strong></p>
+            <p class="periodo">
+              {{ formacao.dataInicio | date: 'MM/yyyy' }} - {{ formacao.dataTermino | date: 'MM/yyyy' }}
+            </p>
+            <p class="descricao">{{ formacao.descricao }}</p>
+          </div>
+          <button 
+            type="button" 
+            class="btn-icon btn-delete" 
+            (click)="removerFormacao(i)"
+            title="Remover">
+            🗑️
+          </button>
+        </div>
+      </div>
+
+      <div class="empty-message" *ngIf="colaborador.formacoes.length === 0 && !mostrarFormFormacao">
+        Nenhuma formação adicionada
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-ghost" (click)="voltar()">Cancelar</button>
+      <button type="submit" class="btn-primary">
+        {{ isEdicao ? 'Atualizar' : 'Cadastrar' }}
+      </button>
+    </div>
+  </form>
+</div>

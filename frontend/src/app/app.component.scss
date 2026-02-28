@@ -1,0 +1,210 @@
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(120deg, #f6f1ea, #eef5f0 45%, #fdf7f2);
+  color: #1f2a2e;
+}
+
+.sidebar {
+  width: 240px;
+  padding: 1.5rem 1.25rem;
+  background: #1e3d36;
+  color: #f5f0e9;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f3c969;
+  color: #1e3d36;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+
+  span {
+    font-size: 0.9rem;
+    opacity: 0.85;
+  }
+
+  strong {
+    font-size: 1.1rem;
+  }
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.menu-item {
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s ease, transform 0.2s ease;
+  text-decoration: none;
+}
+
+.menu-item:visited {
+  color: inherit;
+}
+
+.menu-item:hover {
+  background: rgba(245, 240, 233, 0.12);
+  transform: translateX(4px);
+}
+
+.menu-item.active {
+  background: rgba(245, 240, 233, 0.2);
+  font-weight: 600;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f3c969;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(243, 201, 105, 0.2);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+
+  .user-icone {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  .user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    .user-nome {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f5f0e9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role {
+      font-size: 11px;
+      color: rgba(243, 201, 105, 0.7);
+    }
+  }
+}
+
+.btn-logout {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(243, 201, 105, 0.3);
+  border-radius: 8px;
+  background: transparent;
+  color: #f5f0e9;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(243, 201, 105, 0.1);
+    border-color: rgba(243, 201, 105, 0.6);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.main-content {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  min-width: 0;
+  overflow-x: hidden;
+  text-align: left !important;
+}
+
+.app-footer {
+  padding: 1rem 2rem 1.5rem;
+  color: #4b5a55;
+
+  p {
+    margin: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .menu {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .menu {
+    width: 100%;
+    flex-direction: column;
+  }
+}

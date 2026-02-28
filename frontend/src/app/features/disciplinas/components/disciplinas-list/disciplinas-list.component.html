@@ -1,0 +1,108 @@
+<div class="disciplinas-page">
+  <header class="page-header">
+    <div>
+      <h1>Disciplinas</h1>
+      <p>Consulte, filtre e gerencie disciplinas cadastradas.</p>
+    </div>
+    <div class="actions">
+      <a class="primary" routerLink="/disciplinas/nova">Cadastrar disciplina</a>
+    </div>
+  </header>
+
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+
+  <section class="filters">
+    <div class="field">
+      <label for="filtroAbreviatura">Abreviatura</label>
+      <input id="filtroAbreviatura" type="text" [(ngModel)]="filtro.abreviatura" (input)="applyFilters()" />
+    </div>
+    <div class="field">
+      <label for="filtroNome">Nome da disciplina</label>
+      <input id="filtroNome" type="text" [(ngModel)]="filtro.nome" (input)="applyFilters()" />
+    </div>
+    <div class="field">
+      <label for="filtroSerie">Serie</label>
+      <select id="filtroSerie" [(ngModel)]="filtro.serie" (change)="applyFilters()">
+        <option value="">Todas</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="filtroAulas">Aulas semanais</label>
+      <input id="filtroAulas" type="number" [(ngModel)]="filtro.aulasSemanais" (input)="applyFilters()" />
+    </div>
+    <div class="field">
+      <label for="filtroHoras">Horas semanais</label>
+      <input id="filtroHoras" type="number" [(ngModel)]="filtro.horasSemanais" (input)="applyFilters()" />
+    </div>
+    <div class="field">
+      <label for="filtroStatus">Status</label>
+      <select id="filtroStatus" [(ngModel)]="filtro.status" (change)="applyFilters()">
+        <option value="">Todos</option>
+        <option value="ativa">Ativa</option>
+        <option value="inativa">Inativa</option>
+      </select>
+    </div>
+    <button type="button" class="ghost" (click)="resetFilters()">Limpar filtros</button>
+  </section>
+
+  <section class="bulk-actions">
+    <label class="bulk-select">
+      <input type="checkbox" [checked]="allSelected()" (change)="toggleAll($any($event.target).checked)" />
+      Selecionar todas
+    </label>
+    <div class="bulk-controls">
+      <select [(ngModel)]="bulkAction">
+        <option value="">Acao em lote</option>
+        <option value="ativar">Ativar</option>
+        <option value="desativar">Desativar</option>
+        <option value="excluir">Excluir</option>
+      </select>
+      <button type="button" class="ghost" (click)="performBulkAction()">Aplicar</button>
+    </div>
+  </section>
+
+  <section class="table">
+    <div class="table-head">
+      <span></span>
+      <span>Abrev.</span>
+      <span>Nome</span>
+      <span>Serie</span>
+      <span>Aulas/semana</span>
+      <span>Horas/semana</span>
+      <span>Status</span>
+      <span>Acoes</span>
+    </div>
+
+    <div class="table-row" *ngFor="let disciplina of filteredDisciplinas">
+      <span>
+        <input type="checkbox" [checked]="isSelected(disciplina.id)" (change)="toggleSelection(disciplina.id, $any($event.target).checked)" />
+      </span>
+      <span>{{ disciplina.abreviatura }}</span>
+      <span>{{ disciplina.nome }}</span>
+      <span>{{ disciplina.serie }}</span>
+      <span>{{ disciplina.aulasSemanais }}</span>
+      <span>{{ disciplina.horasSemanais }}</span>
+      <span>
+        <span class="status" [class.inactive]="disciplina.status === 'inativa'">
+          {{ disciplina.status === 'ativa' ? 'Ativa' : 'Inativa' }}
+        </span>
+      </span>
+      <span class="row-actions">
+        <button type="button" class="link" (click)="editDisciplina(disciplina)">Editar</button>
+        <button type="button" class="link" (click)="toggleStatus(disciplina)">
+          {{ disciplina.status === 'ativa' ? 'Desativar' : 'Ativar' }}
+        </button>
+        <button type="button" class="link danger" (click)="deleteDisciplina(disciplina)">Excluir</button>
+      </span>
+    </div>
+
+    <div class="empty" *ngIf="filteredDisciplinas.length === 0">
+      Nenhuma disciplina encontrada.
+    </div>
+  </section>
+</div>

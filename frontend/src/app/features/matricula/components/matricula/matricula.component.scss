@@ -1,0 +1,376 @@
+:host {
+  display: block !important;
+  width: 100% !important;
+  min-height: 100vh !important;
+  background: #f5f7fb !important;
+  text-align: left !important;
+  box-sizing: border-box !important;
+  align-self: stretch !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+}
+
+.matricula-page {
+  padding: 1.25rem 1.75rem !important;
+  color: #1f2a2e !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  text-align: left !important;
+  margin: 0 !important;
+  position: relative !important;
+}
+
+// ---------- Header ----------
+.page-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 0.75rem !important;
+
+  h1 {
+    margin: 0 0 0.2rem;
+    color: #202124;
+    font-size: 1.2rem;
+    text-align: left !important;
+  }
+
+  p {
+    margin: 0;
+    color: #5f6368;
+    font-size: 0.75rem;
+  }
+
+  .required-legend {
+    color: #d93025;
+    font-weight: 700;
+  }
+}
+
+// ---------- Tabs ----------
+.tabs {
+  display: flex !important;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem !important;
+  flex-wrap: wrap;
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+.tab {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.35rem;
+  border: 1px solid #dadce0;
+  background: #ffffff;
+  color: #5f6368;
+  padding: 0.3rem 0.8rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+
+  .tab-badge {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #dadce0;
+    color: #5f6368;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &.active {
+    background: #1a73e8;
+    color: #ffffff;
+    border-color: #1a73e8;
+    box-shadow: 0 3px 10px rgba(26, 115, 232, 0.25);
+
+    .tab-badge {
+      background: rgba(255,255,255,0.3);
+      color: #fff;
+    }
+  }
+
+  &:not(.active):hover {
+    border-color: #1a73e8;
+    color: #1a73e8;
+  }
+}
+
+// ---------- Form ----------
+.form {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 6px 16px rgba(60, 64, 67, 0.1);
+  border: 1px solid #e0e3eb;
+}
+
+// ---------- CEP Wrapper ----------
+.cep-wrapper {
+  position: relative;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+
+  input {
+    width: 100% !important;
+  }
+
+  &.searching input {
+    border-color: #1a73e8 !important;
+    animation: cep-pulse 1s ease-in-out infinite;
+  }
+}
+
+@keyframes cep-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.25); }
+  50%       { box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15); }
+}
+
+// Shimmer skeleton nos campos preenchidos pelo CEP
+.address-loading {
+  .field:not(:first-child) {
+    input, select {
+      background: linear-gradient(
+        90deg,
+        #f0f0f0 25%,
+        #e0e8ff 50%,
+        #f0f0f0 75%
+      ) !important;
+      background-size: 200% 100% !important;
+      animation: shimmer 1.2s ease-in-out infinite !important;
+      color: transparent !important;
+      border-color: #dadce0 !important;
+      pointer-events: none;
+    }
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.cep-erro {
+  font-size: 0.65rem !important;
+  color: #d93025;
+  margin-top: 2px;
+  display: block !important;
+}
+
+// ---------- Same Address Checkbox ----------
+.same-address-check {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-direction: row !important;
+  gap: 0.4rem;
+  margin-top: 0.3rem !important;
+  margin-bottom: 0.5rem !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #3c4043;
+  font-weight: 500;
+  text-align: left !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 1;
+  float: none !important;
+  order: 2;
+
+  input[type="checkbox"] {
+    width: 14px !important;
+    height: 14px !important;
+    cursor: pointer;
+    accent-color: #1a73e8;
+    flex-shrink: 0;
+    margin: 0 !important;
+    position: static !important;
+  }
+
+  span {
+    display: inline !important;
+    width: auto !important;
+    font-weight: 500 !important;
+  }
+}
+
+.disabled-grid {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+// ---------- Field Groups ----------
+.field-group {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  margin-bottom: 0.9rem;
+  position: relative;
+
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+}
+
+.group-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #1a73e8;
+  margin: 0 0 0.45rem !important;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #e8eaed;
+  text-align: left !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+// ---------- Field Grid ----------
+.field-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)) !important;
+  gap: 0.5rem 0.65rem;
+  justify-items: stretch !important;
+  align-items: start !important;
+  text-align: left !important;
+}
+
+.col-2 {
+  grid-column: span 2;
+}
+
+// ---------- Fields ----------
+.field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.15rem;
+  font-size: 0.72rem;
+  color: #5f6368;
+  text-align: left !important;
+  align-items: stretch !important;
+  width: 100% !important;
+
+  span {
+    font-weight: 600;
+    color: #3c4043;
+    text-align: left !important;
+    display: block !important;
+    width: 100% !important;
+  }
+
+  &.required > span::after {
+    content: ' *';
+    color: #d93025;
+    font-weight: 700;
+  }
+
+  input,
+  select {
+    border: 1px solid #dadce0;
+    border-radius: 5px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.78rem !important;
+    height: 28px;
+    box-sizing: border-box !important;
+    background: #ffffff;
+    color: #202124;
+    width: 100% !important;
+    display: block !important;
+    text-align: left !important;
+    text-align-last: left !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.18);
+    }
+
+    &::placeholder {
+      color: #bdc1c6;
+      font-size: 0.72rem;
+    }
+  }
+}
+
+// ---------- Form Actions ----------
+.form-actions {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid #e8eaed;
+  text-align: left !important;
+}
+
+.ml-auto {
+  margin-left: auto !important;
+}
+
+.form-actions .primary {
+  border: none;
+  background: #1a73e8;
+  color: #ffffff;
+  padding: 0.4rem 1.1rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(26, 115, 232, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(26, 115, 232, 0.3);
+  }
+}
+
+.form-actions .secondary {
+  border: 1px solid #dadce0;
+  background: #ffffff;
+  color: #5f6368;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: #1a73e8;
+    color: #1a73e8;
+  }
+}
+
+// ---------- Responsive ----------
+@media (max-width: 900px) {
+  .matricula-page {
+    padding: 1rem 1.25rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .matricula-page {
+    padding: 0.75rem;
+  }
+
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .col-2 {
+    grid-column: span 1;
+  }
+}
