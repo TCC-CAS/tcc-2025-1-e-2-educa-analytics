@@ -1,0 +1,118 @@
+<div class="turmas-page">
+  <header class="page-header">
+    <div>
+      <h1>Turmas</h1>
+      <p>Consulte, filtre e gerencie turmas cadastradas.</p>
+    </div>
+    <div class="actions">
+      <a class="primary" routerLink="/turmas/nova">Cadastrar turma</a>
+    </div>
+  </header>
+
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+
+  <section class="filters">
+    <div class="field">
+      <label for="filtroCodigo">Codigo</label>
+      <input id="filtroCodigo" type="text" [(ngModel)]="filtro.codigo" (input)="applyFilters()" />
+    </div>
+    <div class="field">
+      <label for="filtroDescricao">Descricao</label>
+      <input id="filtroDescricao" type="text" [(ngModel)]="filtro.descricao" (input)="applyFilters()" />
+    </div>
+    <div class="field">
+      <label for="filtroTurno">Turno</label>
+      <select id="filtroTurno" [(ngModel)]="filtro.turno" (change)="applyFilters()">
+        <option value="">Todos</option>
+        <option value="Manha">Manha</option>
+        <option value="Tarde">Tarde</option>
+        <option value="Noite">Noite</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="filtroPeriodo">Periodo letivo</label>
+      <select id="filtroPeriodo" [(ngModel)]="filtro.periodoLetivo" (change)="applyFilters()">
+        <option value="">Todos</option>
+        <option value="2025.1">2025.1</option>
+        <option value="2025.2">2025.2</option>
+        <option value="2026.1">2026.1</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="filtroSerie">Serie</label>
+      <select id="filtroSerie" [(ngModel)]="filtro.serie" (change)="applyFilters()">
+        <option value="">Todas</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="filtroStatus">Status</label>
+      <select id="filtroStatus" [(ngModel)]="filtro.status" (change)="applyFilters()">
+        <option value="">Todos</option>
+        <option value="ativa">Ativa</option>
+        <option value="inativa">Inativa</option>
+      </select>
+    </div>
+    <button type="button" class="ghost" (click)="resetFilters()">Limpar filtros</button>
+  </section>
+
+  <section class="bulk-actions">
+    <label class="bulk-select">
+      <input type="checkbox" [checked]="allSelected()" (change)="toggleAll($any($event.target).checked)" />
+      Selecionar todas
+    </label>
+    <div class="bulk-controls">
+      <select [(ngModel)]="bulkAction">
+        <option value="">Acao em lote</option>
+        <option value="ativar">Ativar</option>
+        <option value="desativar">Desativar</option>
+        <option value="excluir">Excluir</option>
+      </select>
+      <button type="button" class="ghost" (click)="performBulkAction()">Aplicar</button>
+    </div>
+  </section>
+
+  <section class="table">
+    <div class="table-head">
+      <span></span>
+      <span>Codigo</span>
+      <span>Descricao</span>
+      <span>Turno</span>
+      <span>Periodo</span>
+      <span>Serie</span>
+      <span>Status</span>
+      <span>Acoes</span>
+    </div>
+
+    <div class="table-row" *ngFor="let turma of filteredTurmas">
+      <span>
+        <input type="checkbox" [checked]="isSelected(turma.id)" (change)="toggleSelection(turma.id, $any($event.target).checked)" />
+      </span>
+      <span>{{ turma.codigo }}</span>
+      <span>{{ turma.descricao }}</span>
+      <span>{{ turma.turno }}</span>
+      <span>{{ turma.periodoLetivo }}</span>
+      <span>{{ turma.serie }}</span>
+      <span>
+        <span class="status" [class.inactive]="turma.status === 'inativa'">
+          {{ turma.status === 'ativa' ? 'Ativa' : 'Inativa' }}
+        </span>
+      </span>
+      <span class="row-actions">
+        <button type="button" class="link" (click)="editTurma(turma)">Editar</button>
+        <button type="button" class="link" (click)="toggleStatus(turma)">
+          {{ turma.status === 'ativa' ? 'Desativar' : 'Ativar' }}
+        </button>
+        <button type="button" class="link danger" (click)="deleteTurma(turma)">Excluir</button>
+      </span>
+    </div>
+
+    <div class="empty" *ngIf="filteredTurmas.length === 0">
+      Nenhuma turma encontrada.
+    </div>
+  </section>
+</div>

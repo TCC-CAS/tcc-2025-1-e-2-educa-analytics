@@ -1,0 +1,80 @@
+<div class="caixa-form-container">
+  <div class="header">
+    <h1>{{ isEdicao ? 'Editar Lançamento' : 'Novo Lançamento' }}</h1>
+  </div>
+
+  <form #lancamentoForm="ngForm" (ngSubmit)="salvar(lancamentoForm)">
+    <div class="form-card">
+      <h2>Informações do Lançamento</h2>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="data">Data da Movimentação *</label>
+          <input 
+            type="date" 
+            id="data" 
+            name="data"
+            [(ngModel)]="lancamento.data"
+            required>
+        </div>
+
+        <div class="form-field">
+          <label for="tipoConta">Tipo de Operação *</label>
+          <select 
+            id="tipoConta" 
+            name="tipoConta"
+            [(ngModel)]="lancamento.tipoConta"
+            required>
+            <option value="">Selecione</option>
+            <option value="credito">Crédito (Recebimento)</option>
+            <option value="debito">Débito (Pagamento)</option>
+          </select>
+        </div>
+
+        <div class="form-field full-width">
+          <label for="descricao">Descrição *</label>
+          <input 
+            type="text" 
+            id="descricao" 
+            name="descricao"
+            [(ngModel)]="lancamento.descricao"
+            required
+            placeholder="Ex: Mensalidade Fevereiro, Pagamento Fornecedor">
+        </div>
+
+        <div class="form-field">
+          <label for="fornecedor">Fornecedor *</label>
+          <select 
+            id="fornecedor" 
+            name="fornecedor"
+            [(ngModel)]="lancamento.fornecedor"
+            required>
+            <option value="">Selecione</option>
+            <option *ngFor="let fornecedor of fornecedores" [value]="fornecedor">
+              {{ fornecedor }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="valor">Valor (R$) *</label>
+          <input 
+            type="number" 
+            id="valor" 
+            name="valor"
+            [(ngModel)]="lancamento.valor"
+            required
+            min="0.01"
+            step="0.01"
+            placeholder="0,00">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-ghost" (click)="voltar()">Cancelar</button>
+      <button type="submit" class="btn-primary">
+        {{ isEdicao ? 'Atualizar' : 'Registrar' }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,128 @@
+<div class="fornecedor-form-container">
+  <div class="header">
+    <h1>{{ isEdicao ? 'Editar Fornecedor' : 'Novo Fornecedor' }}</h1>
+  </div>
+
+  <form #fornecedorForm="ngForm" (ngSubmit)="salvar(fornecedorForm)">
+    <!-- Tipo de Pessoa -->
+    <div class="form-card">
+      <h2>Tipo de Pessoa</h2>
+      <div class="tipo-pessoa">
+        <label class="radio-label">
+          <input 
+            type="radio" 
+            name="tipo" 
+            value="PF" 
+            [(ngModel)]="fornecedor.tipo"
+            required>
+          <span>Pessoa Física (PF)</span>
+        </label>
+        <label class="radio-label">
+          <input 
+            type="radio" 
+            name="tipo" 
+            value="PJ" 
+            [(ngModel)]="fornecedor.tipo"
+            required>
+          <span>Pessoa Jurídica (PJ)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Dados Básicos -->
+    <div class="form-card">
+      <h2>Dados Básicos</h2>
+      <div class="form-grid">
+        <div class="form-field" [class.full-width]="!mostrarRazaoSocial">
+          <label [attr.for]="'nome'">{{ labelNome }} *</label>
+          <input 
+            type="text" 
+            id="nome" 
+            name="nome"
+            [(ngModel)]="fornecedor.nome"
+            required
+            [placeholder]="fornecedor.tipo === 'PF' ? 'Ex: João Silva' : 'Ex: Papelaria Central'">
+        </div>
+
+        <div class="form-field" *ngIf="mostrarRazaoSocial">
+          <label for="razaoSocial">Razão Social *</label>
+          <input 
+            type="text" 
+            id="razaoSocial" 
+            name="razaoSocial"
+            [(ngModel)]="fornecedor.razaoSocial"
+            [required]="mostrarRazaoSocial"
+            placeholder="Ex: Papelaria Central Ltda">
+        </div>
+
+        <div class="form-field">
+          <label [attr.for]="'cpfCnpj'">{{ labelDocumento }} *</label>
+          <input 
+            type="text" 
+            id="cpfCnpj" 
+            name="cpfCnpj"
+            [(ngModel)]="fornecedor.cpfCnpj"
+            required
+            [placeholder]="fornecedor.tipo === 'PF' ? '000.000.000-00' : '00.000.000/0000-00'">
+        </div>
+
+        <div class="form-field">
+          <label for="telefone">Telefone *</label>
+          <input 
+            type="tel" 
+            id="telefone" 
+            name="telefone"
+            [(ngModel)]="fornecedor.telefone"
+            required
+            placeholder="(00) 00000-0000">
+        </div>
+
+        <div class="form-field full-width">
+          <label for="email">E-mail *</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email"
+            [(ngModel)]="fornecedor.email"
+            required
+            placeholder="exemplo@email.com">
+        </div>
+      </div>
+    </div>
+
+    <!-- Endereço -->
+    <div class="form-card">
+      <h2>Endereço</h2>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="cep">CEP *</label>
+          <input 
+            type="text" 
+            id="cep" 
+            name="cep"
+            [(ngModel)]="fornecedor.cep"
+            required
+            placeholder="00000-000">
+        </div>
+
+        <div class="form-field full-width">
+          <label for="endereco">Endereço Completo *</label>
+          <input 
+            type="text" 
+            id="endereco" 
+            name="endereco"
+            [(ngModel)]="fornecedor.endereco"
+            required
+            placeholder="Rua, número, bairro, cidade - UF">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-ghost" (click)="voltar()">Cancelar</button>
+      <button type="submit" class="btn-primary">
+        {{ isEdicao ? 'Atualizar' : 'Cadastrar' }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,304 @@
+.caixa-list-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+
+  h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+    color: #202124;
+  }
+}
+
+.filters-section {
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.1);
+
+  h3 {
+    margin: 0 0 20px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #202124;
+  }
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  align-items: end;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+
+  label {
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #5f6368;
+    font-weight: 500;
+  }
+
+  input, select {
+    padding: 10px 12px;
+    border: 1px solid #dadce0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+    }
+  }
+}
+
+.filter-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+.totals-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.total-card {
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .label {
+    font-size: 14px;
+    color: #5f6368;
+    font-weight: 500;
+  }
+
+  .value {
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  &.credito {
+    border-left: 4px solid #137333;
+
+    .value {
+      color: #137333;
+    }
+  }
+
+  &.debito {
+    border-left: 4px solid #c5221f;
+
+    .value {
+      color: #c5221f;
+    }
+  }
+
+  &.saldo {
+    border-left: 4px solid #1a73e8;
+
+    &.saldo-positivo .value {
+      color: #137333;
+    }
+
+    &.saldo-negativo .value {
+      color: #c5221f;
+    }
+  }
+}
+
+.table-container {
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.1);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dadce0;
+
+    th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 14px;
+      color: #5f6368;
+
+      &.right {
+        text-align: right;
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #dadce0;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background: #f8f9fa;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: 16px;
+      font-size: 14px;
+      color: #202124;
+
+      &.right {
+        text-align: right;
+      }
+    }
+  }
+}
+
+.badge-tipo {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+
+  &.badge-credito {
+    background: #e6f4ea;
+    color: #137333;
+  }
+
+  &.badge-debito {
+    background: #fce8e6;
+    color: #c5221f;
+  }
+}
+
+.valor-credito {
+  color: #137333 !important;
+}
+
+.valor-debito {
+  color: #c5221f !important;
+}
+
+.actions-col {
+  width: 120px;
+  text-align: right;
+}
+
+.btn-primary {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #1557b0;
+    box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3);
+  }
+}
+
+.btn-secondary {
+  background: white;
+  color: #1a73e8;
+  border: 1px solid #dadce0;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f8f9fa;
+    border-color: #1a73e8;
+  }
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 6px;
+  margin: 0 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #f8f9fa;
+  }
+
+  &.btn-delete:hover {
+    background: #fce8e6;
+  }
+}
+
+.empty-message {
+  text-align: center;
+  color: #5f6368;
+  padding: 48px 16px !important;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .caixa-list-container {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .totals-section {
+    grid-template-columns: 1fr;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 900px;
+  }
+}

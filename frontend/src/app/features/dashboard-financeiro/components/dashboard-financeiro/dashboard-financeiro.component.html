@@ -1,0 +1,126 @@
+<div class="dashboard-financeiro-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>Dashboard Financeiro</h1>
+      <span class="periodo">{{ mesAtual }}</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn-action" (click)="exportarExcel()" title="Baixar em Excel">
+        📊 Excel
+      </button>
+      <button class="btn-action" (click)="exportarPDF()" title="Baixar em PDF">
+        📄 PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtro de Período -->
+  <div class="periodo-filter">
+    <button class="periodo-btn" [class.active]="periodo === 'mes'" (click)="mudarPeriodo('mes')">
+      Este Mês
+    </button>
+    <button class="periodo-btn" [class.active]="periodo === 'ano'" (click)="mudarPeriodo('ano')">
+      Este Ano
+    </button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis-section">
+    <div *ngFor="let kpi of kpis" class="kpi-card" [class]="'kpi-' + kpi.cor">
+      <div class="kpi-icone">{{ kpi.icone }}</div>
+      <div class="kpi-content">
+        <span class="kpi-titulo">{{ kpi.titulo }}</span>
+        <span class="kpi-valor">
+          <span *ngIf="kpi.formato === 'moeda'">{{ formatarMoeda(kpi.valor) }}</span>
+          <span *ngIf="kpi.formato === 'percentual'">{{ formatarPercentual(kpi.valor) }}</span>
+          <span *ngIf="kpi.formato === 'numero'">{{ kpi.valor }}</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos e Análises -->
+  <div class="analytics-section">
+    <!-- Gráfico de Movimentação Mensal -->
+    <div class="chart-card">
+      <h3>Evolução Mensal - Receita vs Despesa</h3>
+      <div class="chart-placeholder">
+        <table class="simple-chart">
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th>Receita</th>
+              <th>Despesa</th>
+              <th>Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let mov of movimentacoes">
+              <td><strong>{{ mov.mes }}</strong></td>
+              <td class="value-receita">{{ formatarMoeda(mov.receita) }}</td>
+              <td class="value-despesa">{{ formatarMoeda(mov.despesa) }}</td>
+              <td class="value-saldo">{{ formatarMoeda(mov.receita - mov.despesa) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Receitas por Categoria -->
+    <div class="chart-card">
+      <h3>Receitas por Categoria</h3>
+      <div class="categories-list">
+        <div *ngFor="let categoriareceita of receitasPorCategoria" class="category-item">
+          <div class="category-header">
+            <span class="category-name">{{ categoriareceita.categoria }}</span>
+            <span class="category-value">{{ formatarMoeda(categoriareceita.valor) }}</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="categoriareceita.percentual" style="background: #137333;"></div>
+          </div>
+          <span class="category-percent">{{ categoriareceita.percentual }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segunda Linha de Análises -->
+  <div class="analytics-section">
+    <!-- Despesas por Categoria -->
+    <div class="chart-card">
+      <h3>Despesas por Categoria</h3>
+      <div class="categories-list">
+        <div *ngFor="let categoriadespesa of despesasPorCategoria" class="category-item">
+          <div class="category-header">
+            <span class="category-name">{{ categoriadespesa.categoria }}</span>
+            <span class="category-value">{{ formatarMoeda(categoriadespesa.valor) }}</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="categoriadespesa.percentual" style="background: #c5221f;"></div>
+          </div>
+          <span class="category-percent">{{ categoriadespesa.percentual }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Últimas Transações -->
+    <div class="chart-card">
+      <h3>Últimas Movimentações</h3>
+      <div class="transactions-list">
+        <div *ngFor="let transacao of ultimasTransacoes" class="transaction-item" [class]="'tx-' + transacao.tipo">
+          <div class="tx-icon">
+            {{ transacao.tipo === 'credito' ? '⬇️' : '⬆️' }}
+          </div>
+          <div class="tx-info">
+            <span class="tx-descricao">{{ transacao.descricao }}</span>
+            <span class="tx-data">{{ transacao.data }}</span>
+          </div>
+          <div class="tx-valor" [class]="'tx-' + transacao.tipo">
+            {{ transacao.tipo === 'credito' ? '+' : '-' }} {{ formatarMoeda(transacao.valor) }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

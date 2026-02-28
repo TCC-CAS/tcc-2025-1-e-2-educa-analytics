@@ -22,6 +22,8 @@ body {
 html, body, app-root {
   height: 100%;
   overflow: hidden;
+  display: block;
+  text-align: left;
 }
 
 /* Scrollbar Styling */

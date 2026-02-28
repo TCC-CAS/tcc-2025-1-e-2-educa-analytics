@@ -1,0 +1,242 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+.turmas-page {
+  padding: 2.5rem 3rem;
+  color: #202124;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0 0 0.4rem;
+    font-size: 1.85rem;
+  }
+
+  p {
+    margin: 0;
+    color: #5f6368;
+  }
+}
+
+.actions .primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #1a73e8;
+  color: #ffffff;
+  padding: 0.7rem 1.4rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(26, 115, 232, 0.28);
+}
+
+.message {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: rgba(52, 168, 83, 0.12);
+  color: #1e6f3b;
+  border: 1px solid rgba(52, 168, 83, 0.25);
+}
+
+.message.error {
+  background: rgba(234, 67, 53, 0.12);
+  color: #b3261e;
+  border-color: rgba(234, 67, 53, 0.25);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.25rem;
+  border: 1px solid #e0e3eb;
+  box-shadow: 0 6px 16px rgba(60, 64, 67, 0.08);
+}
+
+.filters .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #5f6368;
+}
+
+.filters input,
+.filters select,
+.bulk-actions select {
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.95rem;
+  background: #ffffff;
+  color: #202124;
+}
+
+.filters input:focus,
+.filters select:focus,
+.bulk-actions select:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.18);
+}
+
+.ghost {
+  border: 1px solid #dadce0;
+  background: #ffffff;
+  color: #202124;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  height: fit-content;
+}
+
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.bulk-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #5f6368;
+}
+
+.bulk-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.table {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e0e3eb;
+  box-shadow: 0 10px 24px rgba(60, 64, 67, 0.1);
+  overflow: hidden;
+}
+
+.table-head,
+.table-row {
+  display: grid;
+  grid-template-columns: 48px 120px 1.4fr 0.8fr 0.9fr 0.6fr 0.6fr 1.3fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+}
+
+.table-head {
+  background: #f8f9fa;
+  color: #5f6368;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.table-row {
+  border-top: 1px solid #eceff3;
+  font-size: 0.95rem;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: rgba(52, 168, 83, 0.15);
+  color: #1e6f3b;
+}
+
+.status.inactive {
+  background: rgba(234, 67, 53, 0.12);
+  color: #b3261e;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.link {
+  border: none;
+  background: transparent;
+  color: #1a73e8;
+  cursor: pointer;
+  padding: 0;
+}
+
+.link.danger {
+  color: #b3261e;
+}
+
+.empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: #5f6368;
+}
+
+@media (max-width: 1100px) {
+  .table-head,
+  .table-row {
+    grid-template-columns: 40px 100px 1.2fr 0.7fr 0.8fr 0.6fr 0.6fr 1.2fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .turmas-page {
+    padding: 2rem;
+  }
+
+  .table-head {
+    display: none;
+  }
+
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .table-row span {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .row-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .turmas-page {
+    padding: 1.5rem 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,81 @@
+<div class="home-content">
+  <!-- Selector de Tipo de Usuário (para testes) -->
+  <div class="user-selector">
+    <label>Testar como:</label>
+    <div class="selector-buttons">
+      <button 
+        *ngFor="let tipo of userTypes"
+        (click)="trocarTipoUsuario(tipo)"
+        [class.active]="tipoUsuario === tipo"
+        class="selector-btn">
+        <span *ngIf="tipo === 'educador'">👨‍🏫 Educador</span>
+        <span *ngIf="tipo === 'educando'">👨‍🎓 Educando</span>
+        <span *ngIf="tipo === 'tutor'">👨‍👩‍👧 Responsável</span>
+        <span *ngIf="tipo === 'administrativo'">⚙️ Admin</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <div class="hero">
+    <div class="hero-content">
+      <span class="hero-icon">{{ configs.icone }}</span>
+      <div>
+        <h1>{{ configs.titulo }}</h1>
+        <p>{{ configs.subtitulo }}</p>
+      </div>
+    </div>
+    <div class="user-info-card" *ngIf="usuarioAtual">
+      <p class="user-label">Usuário autenticado:</p>
+      <p class="user-name">{{ usuarioAtual.nome }}</p>
+      <p class="user-email">{{ usuarioAtual.email }}</p>
+    </div>
+  </div>
+
+  <!-- Estatísticas Rápidas -->
+  <section class="estatisticas-section">
+    <h2 class="section-title">📊 Estatísticas</h2>
+    <div class="stats-grid">
+      <div *ngFor="let stat of configs.stats" [class]="'stat-card stat-' + stat.cor">
+        <div class="stat-icon">{{ stat.icone }}</div>
+        <div class="stat-content">
+          <p class="stat-label">{{ stat.titulo }}</p>
+          <p class="stat-value">{{ stat.valor }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Atalhos Rápidos -->
+  <section class="shortcuts-section">
+    <h2 class="section-title">⚡ Atalhos Rápidos</h2>
+    <div class="shortcuts-grid">
+      <a *ngFor="let atalho of configs.atalhos" 
+         [routerLink]="atalho.rota" 
+         [class]="'shortcut-card shortcut-' + atalho.cor">
+        <span class="shortcut-icon">{{ atalho.icone }}</span>
+        <span class="shortcut-title">{{ atalho.titulo }}</span>
+        <span class="shortcut-desc">{{ atalho.descricao }}</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Info Cards -->
+  <section class="info-section">
+    <div class="info-card info-card-1">
+      <div class="info-icon">{{ infoCards[0].icone }}</div>
+      <h3>{{ infoCards[0].titulo }}</h3>
+      <p>{{ infoCards[0].descricao }}</p>
+    </div>
+    <div class="info-card info-card-2">
+      <div class="info-icon">{{ infoCards[1].icone }}</div>
+      <h3>{{ infoCards[1].titulo }}</h3>
+      <p>{{ infoCards[1].descricao }}</p>
+    </div>
+    <div class="info-card info-card-3">
+      <div class="info-icon">{{ infoCards[2].icone }}</div>
+      <h3>{{ infoCards[2].titulo }}</h3>
+      <p>{{ infoCards[2].descricao }}</p>
+    </div>
+  </section>
+</div>

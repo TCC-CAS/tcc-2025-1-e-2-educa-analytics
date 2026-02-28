@@ -1,0 +1,135 @@
+<div class="frequencia-container">
+  <div class="header">
+    <h1>Frequência dos Educandos</h1>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <h3>Filtros</h3>
+    <div class="filters-grid">
+      <div class="filter-field">
+        <label>Período Letivo *</label>
+        <select [(ngModel)]="periodoLetivo" (ngModelChange)="aplicarFiltros()">
+          <option value="">Selecione</option>
+          <option value="2026-1">2026/1</option>
+          <option value="2026-2">2026/2</option>
+          <option value="2025-2">2025/2</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>Turma *</label>
+        <select [(ngModel)]="turma" (ngModelChange)="aplicarFiltros()">
+          <option value="">Selecione</option>
+          <option value="6A">6º Ano A</option>
+          <option value="6B">6º Ano B</option>
+          <option value="7A">7º Ano A</option>
+          <option value="8A">8º Ano A</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>Disciplina *</label>
+        <select [(ngModel)]="disciplina" (ngModelChange)="aplicarFiltros()">
+          <option value="">Selecione</option>
+          <option value="matematica">Matemática</option>
+          <option value="portugues">Português</option>
+          <option value="historia">História</option>
+          <option value="ciencias">Ciências</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-secondary" (click)="limparFiltros()">Limpar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ações de Registro (para educadores) -->
+  <div class="action-bar" *ngIf="educandosFiltrados.length > 0 && !modoEdicao">
+    <button class="btn-primary" (click)="habilitarEdicao()">
+      📝 Registrar Frequência
+    </button>
+  </div>
+
+  <!-- Modo de Edição -->
+  <div class="edit-bar" *ngIf="modoEdicao">
+    <div class="edit-info">
+      <label>Data da Aula:</label>
+      <input type="date" [(ngModel)]="dataAula">
+    </div>
+    <div class="edit-actions">
+      <button class="btn-ghost" (click)="cancelarEdicao()">Cancelar</button>
+      <button class="btn-primary" (click)="salvarFrequencia()">Salvar Frequência</button>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-container" *ngIf="educandosFiltrados.length > 0">
+    <table>
+      <thead>
+        <tr>
+          <th>Matrícula</th>
+          <th>Nome do Educando</th>
+          <th class="center">Presenças</th>
+          <th class="center">Faltas</th>
+          <th class="center">Frequência</th>
+          <th class="center" *ngIf="modoEdicao">Registrar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let educando of educandosFiltrados">
+          <td>{{ educando.matricula }}</td>
+          <td><strong>{{ educando.nome }}</strong></td>
+          <td class="center">{{ educando.presencas }}</td>
+          <td class="center">{{ educando.faltas }}</td>
+          <td class="center">
+            <span class="badge-frequencia" [ngClass]="getStatusClass(educando.percentualFrequencia)">
+              {{ educando.percentualFrequencia.toFixed(1) }}%
+            </span>
+          </td>
+          <td class="center action-buttons" *ngIf="modoEdicao">
+            <button 
+              class="btn-presenca" 
+              [class.selected]="educando.presencaHoje === true"
+              (click)="marcarPresenca(educando)"
+              title="Marcar Presença">
+              ✓ P
+            </button>
+            <button 
+              class="btn-falta" 
+              [class.selected]="educando.presencaHoje === false"
+              (click)="marcarFalta(educando)"
+              title="Marcar Falta">
+              ✕ F
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mensagem de filtro vazio -->
+  <div class="empty-state" *ngIf="educandosFiltrados.length === 0">
+    <p>Selecione o período letivo, turma e disciplina para visualizar a frequência dos educandos</p>
+  </div>
+
+  <!-- Legenda -->
+  <div class="legend" *ngIf="educandosFiltrados.length > 0 && !modoEdicao">
+    <h4>Legenda:</h4>
+    <div class="legend-items">
+      <span class="legend-item">
+        <span class="badge-frequencia status-excelente">95%+</span> Excelente
+      </span>
+      <span class="legend-item">
+        <span class="badge-frequencia status-bom">85-94%</span> Bom
+      </span>
+      <span class="legend-item">
+        <span class="badge-frequencia status-atencao">75-84%</span> Atenção
+      </span>
+      <span class="legend-item">
+        <span class="badge-frequencia status-critico">&lt;75%</span> Crítico
+      </span>
+    </div>
+  </div>
+</div>
