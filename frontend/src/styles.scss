@@ -18,11 +18,16 @@ body {
   font-family: 'Poppins', sans-serif;
 }
 
-/* Ensure no global vertical scrollbar by default; components handle overflow when needed */
-html, body, app-root {
+/* Shell ocupa 100% da viewport; scroll fica no .main-content */
+html, body {
   height: 100%;
   overflow: hidden;
-  display: block;
+}
+
+app-root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   text-align: left;
 }
 

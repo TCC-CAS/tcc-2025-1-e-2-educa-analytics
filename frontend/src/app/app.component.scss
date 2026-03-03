@@ -1,18 +1,23 @@
 .app-shell {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   background: linear-gradient(120deg, #f6f1ea, #eef5f0 45%, #fdf7f2);
   color: #1f2a2e;
 }
 
 .sidebar {
-  width: 240px;
-  padding: 1.5rem 1.25rem;
+  width: 220px;
+  flex-shrink: 0;
+  padding: 1.25rem 1rem;
   background: #1e3d36;
   color: #f5f0e9;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .brand {
@@ -163,10 +168,17 @@
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
-  justify-content: flex-start !important;
   min-width: 0;
-  overflow-x: hidden;
+  min-height: 0;
+  overflow: hidden;
   text-align: left !important;
+}
+
+.content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
 }
 
 .app-footer {

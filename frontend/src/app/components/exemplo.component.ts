@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AwsLambdaService } from '../services/aws-lambda.service';
+import { AwsLambdaService } from '../../services/aws-lambda.service';
 
 @Component({
   selector: 'app-exemplo',
@@ -25,12 +25,12 @@ export class ExemploComponent implements OnInit {
     this.error = null;
 
     this.lambdaService.getDados().subscribe({
-      next: (response) => {
+      next: (response: any) => {
         console.log('Dados recebidos:', response);
         this.dados = response;
         this.loading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Erro ao buscar dados:', err);
         this.error = err.message;
         this.loading = false;
@@ -45,11 +45,11 @@ export class ExemploComponent implements OnInit {
     const novoRegistro = { coluna1, coluna2 };
 
     this.lambdaService.createDados(novoRegistro).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         console.log('Registro criado:', response);
         this.buscarDados(); // Atualiza a lista
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Erro ao criar registro:', err);
         this.error = err.message;
       }
@@ -63,11 +63,11 @@ export class ExemploComponent implements OnInit {
     const registroAtualizado = { id, coluna1, coluna2 };
 
     this.lambdaService.updateDados(registroAtualizado).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         console.log('Registro atualizado:', response);
         this.buscarDados();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Erro ao atualizar:', err);
         this.error = err.message;
       }
@@ -79,11 +79,11 @@ export class ExemploComponent implements OnInit {
    */
   deletarDados(id: number): void {
     this.lambdaService.deleteDados(id).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         console.log('Registro deletado:', response);
         this.buscarDados();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Erro ao deletar:', err);
         this.error = err.message;
       }
