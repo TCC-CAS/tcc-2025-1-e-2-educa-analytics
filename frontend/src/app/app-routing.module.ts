@@ -25,6 +25,10 @@ const routes: Routes = [
     loadChildren: () => import('./features/turmas/turmas.module').then(m => m.TurmasModule)
   },
   {
+    path: 'salas',
+    loadChildren: () => import('./features/salas/salas.module').then(m => m.SalasModule)
+  },
+  {
     path: 'disciplinas',
     loadChildren: () => import('./features/disciplinas/disciplinas.module').then(m => m.DisciplinasModule)
   },
