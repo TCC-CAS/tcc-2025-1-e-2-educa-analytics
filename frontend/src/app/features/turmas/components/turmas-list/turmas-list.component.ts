@@ -92,11 +92,13 @@ export class TurmasListComponent implements AfterViewInit {
   message = '';
   messageType: 'success' | 'error' = 'success';
 
-  modalVisible = false;
-  modalTitle = '';
-  modalMessage = '';
-  modalDanger = false;
-  private modalCallback: (() => void) | null = null;
+  confirm = {
+    visible: false,
+    title: '',
+    message: '',
+    danger: false,
+    callback: () => {}
+  };
 
   constructor(private router: Router) { }
 
@@ -285,7 +287,7 @@ export class TurmasListComponent implements AfterViewInit {
 
   toggleStatus(turma: Turma): void {
     const acao = turma.status === 'ativa' ? 'desativar' : 'ativar';
-    this.openModal(
+    this.openConfirm(
       `${acao.charAt(0).toUpperCase() + acao.slice(1)} turma`,
       `Tem certeza que deseja ${acao} a turma ${turma.codigo}?`,
       acao === 'desativar',
@@ -297,7 +299,7 @@ export class TurmasListComponent implements AfterViewInit {
   }
 
   deleteTurma(turma: Turma): void {
-    this.openModal(
+    this.openConfirm(
       'Excluir turma',
       `Tem certeza que deseja excluir a turma ${turma.codigo}? Esta ação não pode ser desfeita.`,
       true,
@@ -325,7 +327,7 @@ export class TurmasListComponent implements AfterViewInit {
     const isDanger = this.bulkAction === 'excluir' || this.bulkAction === 'desativar';
     const bulkActionSnapshot = this.bulkAction;
 
-    this.openModal(
+    this.openConfirm(
       'Ação em lote',
       `Tem certeza que deseja ${acaoLabel} ${n} turma(s) selecionada(s)?`,
       isDanger,
@@ -356,24 +358,10 @@ export class TurmasListComponent implements AfterViewInit {
     this.messageType = type;
   }
 
-  openModal(title: string, message: string, danger: boolean, callback: () => void): void {
-    this.modalTitle = title;
-    this.modalMessage = message;
-    this.modalDanger = danger;
-    this.modalCallback = callback;
-    this.modalVisible = true;
+  openConfirm(title: string, message: string, danger: boolean, callback: () => void): void {
+    this.confirm = { visible: true, title, message, danger, callback };
   }
 
-  onModalConfirmed(): void {
-    this.modalVisible = false;
-    if (this.modalCallback) {
-      this.modalCallback();
-      this.modalCallback = null;
-    }
-  }
-
-  onModalCancelled(): void {
-    this.modalVisible = false;
-    this.modalCallback = null;
-  }
+  confirmAction(): void { this.confirm.visible = false; this.confirm.callback(); }
+  cancelConfirm(): void  { this.confirm.visible = false; }
 }

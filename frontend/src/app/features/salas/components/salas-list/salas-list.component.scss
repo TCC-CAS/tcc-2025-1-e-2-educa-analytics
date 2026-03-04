@@ -23,7 +23,7 @@ $shadow-sm:    0 1px 3px rgba(0,0,0,.08);
   padding: 0 !important;
 }
 
-.turmas-page {
+.salas-page {
   padding: 2rem 2.5rem;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -33,6 +33,7 @@ $shadow-sm:    0 1px 3px rgba(0,0,0,.08);
 
   @media (max-width: 768px) { padding: 1rem; }
 }
+
 
 // Cabeçalho
 
@@ -67,6 +68,7 @@ a.primary {
   justify-content: center !important;
   &:hover { background: $primary-dark; }
 }
+
 
 // Toolbar (acima dos filtros)
 
@@ -106,7 +108,7 @@ a.primary {
   margin-bottom: 1.25rem;
   box-shadow: $shadow-sm;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: 1fr 1.8fr 1fr 1fr auto;
   gap: .85rem;
   align-items: end;
   text-align: left !important;
@@ -145,8 +147,11 @@ a.primary {
   box-sizing: border-box;
   transition: border-color .15s;
   text-align: left !important;
-  width: 100%;
   &:focus { border-color: $primary; }
+
+  &::placeholder {
+    text-align: left !important;
+  }
 }
 
 .filters select {
@@ -218,6 +223,7 @@ a.primary {
     background-position: right .6rem center;
     background-size: 14px;
     transition: border-color .15s;
+    text-align: left !important;
     &:focus { border-color: $primary; }
   }
 }
@@ -237,7 +243,7 @@ a.primary {
 .table-head,
 .table-row {
   display: grid;
-  grid-template-columns: 44px 100px 1.8fr 1fr 0.9fr 0.7fr 0.8fr 1fr;
+  grid-template-columns: 44px 80px 1.6fr 1fr 100px 1fr 1.4fr .65fr .8fr;
   gap: .75rem;
   align-items: center !important;
   padding: .85rem 1.1rem;
@@ -265,6 +271,45 @@ a.primary {
 }
 
 
+// Recursos
+
+.recursos {
+  display: flex;
+  align-items: center !important;
+  gap: .3rem;
+  flex-wrap: wrap;
+  text-align: left !important;
+}
+
+.recurso-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .2rem .5rem;
+  border-radius: 20px;
+  background: #e0e7ff;
+  font-size: .7rem;
+  font-weight: 600;
+  color: $primary;
+  white-space: nowrap;
+
+  svg {
+    width: 12px;
+    height: 12px;
+    stroke: $primary;
+    flex-shrink: 0;
+  }
+
+  &.acess {
+    background: #dcfce7;
+    color: #166534;
+    svg { stroke: #166534; }
+  }
+}
+
+.sem-recursos { color: $text-muted; }
+
+
 // Status badge
 
 .status {
@@ -289,7 +334,7 @@ a.primary {
   gap: .35rem;
 }
 
-.link {
+.btn-icone {
   width: 32px;
   height: 32px;
   border-radius: 7px;
@@ -299,21 +344,15 @@ a.primary {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background .15s, border-color .15s, color .15s;
-  color: $text-muted;
-  padding: 0;
+  transition: background .15s, border-color .15s;
 
-  .material-icons { font-size: 1rem; }
+  svg { width: 15px; height: 15px; stroke: $text-muted; transition: stroke .15s; }
 
-  &:hover { background: #eef2ff; border-color: $primary; color: $primary; }
+  &:hover           { background: #eef2ff; border-color: $primary; svg { stroke: $primary; } }
+  &.btn-icone-ativar:hover   { background: #dcfce7; border-color: #16a34a; svg { stroke: #16a34a; } }
+  &.btn-icone-desativar:hover{ background: #fef9c3; border-color: #ca8a04; svg { stroke: #ca8a04; } }
+  &.btn-icone-danger:hover   { background: #fee2e2; border-color: #dc2626; svg { stroke: #dc2626; } }
 }
-
-.link.danger {
-  &:hover { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
-}
-
-.link.btn-toggle-ativar:hover   { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
-.link.btn-toggle-desativar:hover{ background: #fef9c3; border-color: #ca8a04; color: #ca8a04; }
 
 
 // Estado vazio
@@ -325,9 +364,9 @@ a.primary {
   font-size: .9rem;
 }
 
-// ═══════════════════════════════════════════════════════
+
 // Modal de confirmação
-// ═══════════════════════════════════════════════════════
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -362,11 +401,13 @@ a.primary {
   align-items: center;
   justify-content: center;
   svg { width: 26px; height: 26px; stroke: $primary; }
+
   &.danger { background: #fee2e2; svg { stroke: #dc2626; } }
 }
 
 .modal-title   { margin: 0; font-size: 1.1rem; font-weight: 700; text-align: center; }
 .modal-message { margin: 0; font-size: .875rem; color: $text-muted; text-align: center; line-height: 1.5; }
+
 .modal-actions { display: flex; gap: .75rem; margin-top: .5rem; width: 100%; }
 
 .modal-btn {
@@ -392,7 +433,7 @@ a.primary {
 
 @media (max-width: 1100px) {
   .table-head, .table-row {
-    grid-template-columns: 40px 90px 1.5fr .9fr .8fr .6fr .7fr .9fr;
+    grid-template-columns: 40px 70px 1.4fr .9fr 90px .9fr 1.2fr .6fr .75fr;
   }
 }
 
@@ -404,6 +445,6 @@ a.primary {
 }
 
 @media (max-width: 600px) {
-  .turmas-page { padding: 1.5rem 1rem; }
+  .salas-page { padding: 1.5rem 1rem; }
   .page-header { flex-direction: column; align-items: flex-start; }
 }

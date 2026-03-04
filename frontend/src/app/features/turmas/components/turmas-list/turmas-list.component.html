@@ -1,4 +1,21 @@
 <div class="turmas-page">
+
+  <!-- Modal de Confirmação -->
+  <div class="modal-overlay" *ngIf="confirm.visible" (click)="cancelConfirm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon" [class.danger]="confirm.danger">
+        <svg *ngIf="!confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg *ngIf="confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="10.29 3.86 1.82 18 2 18 22 18 21.73 18 13.71 3.86 12 1 10.29 3.86"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h3 class="modal-title">{{ confirm.title }}</h3>
+      <p class="modal-message">{{ confirm.message }}</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
+        <button type="button" class="modal-btn" [class.modal-confirm-danger]="confirm.danger" [class.modal-confirm]="!confirm.danger" (click)="confirmAction()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <header class="page-header">
     <div>
       <h1>Turmas</h1>
@@ -131,12 +148,3 @@
     </div>
   </section>
 </div>
-
-<app-confirm-modal
-  *ngIf="modalVisible"
-  [title]="modalTitle"
-  [message]="modalMessage"
-  [danger]="modalDanger"
-  (confirmed)="onModalConfirmed()"
-  (cancelled)="onModalCancelled()">
-</app-confirm-modal>

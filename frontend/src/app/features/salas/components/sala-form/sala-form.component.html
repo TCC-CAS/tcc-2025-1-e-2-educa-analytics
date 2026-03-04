@@ -1,0 +1,148 @@
+<div class="sala-form-page">
+
+  <header class="page-header">
+    <div>
+      <h1>{{ salaId ? 'Editar sala' : 'Cadastrar sala' }}</h1>
+      <p>Preencha os dados da sala. Campos marcados com <span class="required-legend">*</span> são obrigatórios.</p>
+    </div>
+  </header>
+
+  <!-- Mensagem de feedback -->
+  <div class="message success" *ngIf="message && messageType === 'success'">
+    <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#1e6f3b" stroke-width="1.5"/><path d="M6 10l3 3 5-5" stroke="#1e6f3b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    {{ message }}
+  </div>
+  <div class="message error" *ngIf="message && messageType === 'error'">
+    <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#b3261e" stroke-width="1.5"/><path d="M10 6v4M10 14h.01" stroke="#b3261e" stroke-width="1.8" stroke-linecap="round"/></svg>
+    {{ message }}
+  </div>
+
+  <form #form="ngForm" class="form" novalidate (ngSubmit)="submit(form.valid === true)">
+
+    <!-- Identificação -->
+    <div class="field-group">
+      <h3 class="group-title">Identificação</h3>
+      <div class="field-grid">
+
+        <label class="field required">
+          <span>Código</span>
+          <input type="text" name="codigo" [(ngModel)]="model.codigo"
+                 placeholder="Ex: 101, LAB-02" required />
+        </label>
+
+        <label class="field required col-2">
+          <span>Nome</span>
+          <input type="text" name="nome" [(ngModel)]="model.nome"
+                 placeholder="Ex: Sala 101, Laboratório de Ciências" required />
+        </label>
+
+        <label class="field required">
+          <span>Tipo</span>
+          <select name="tipo" [(ngModel)]="model.tipo" required>
+            <option value="">Selecione</option>
+            <option *ngFor="let t of tiposList" [value]="t.value">{{ t.label }}</option>
+          </select>
+        </label>
+
+        <label class="field required">
+          <span>Status</span>
+          <select name="status" [(ngModel)]="model.status" required>
+            <option value="">Selecione</option>
+            <option value="ativa">Ativa</option>
+            <option value="inativa">Inativa</option>
+          </select>
+        </label>
+
+      </div>
+    </div>
+
+    <!-- Localização -->
+    <div class="field-group">
+      <h3 class="group-title">Localização</h3>
+      <div class="field-grid">
+
+        <label class="field required">
+          <span>Capacidade (educandos)</span>
+          <input type="number" name="capacidade" [(ngModel)]="model.capacidade"
+                 placeholder="Ex: 35" min="1" max="500" required />
+        </label>
+
+        <label class="field">
+          <span>Bloco</span>
+          <input type="text" name="bloco" [(ngModel)]="model.bloco"
+                 placeholder="Ex: A, B, Principal" />
+        </label>
+
+        <label class="field">
+          <span>Andar</span>
+          <input type="text" name="andar" [(ngModel)]="model.andar"
+                 placeholder="Ex: Térreo, 1º, 2º" />
+        </label>
+
+      </div>
+    </div>
+
+    <!-- Recursos -->
+    <div class="field-group">
+      <h3 class="group-title">Recursos disponíveis</h3>
+      <div class="field-grid">
+
+        <label class="field checkbox-field">
+          <div class="checkbox-wrap">
+            <input type="checkbox" name="projetor" [(ngModel)]="model.projetor" id="projetor" />
+            <span class="checkbox-label">Projetor / Televisão</span>
+          </div>
+        </label>
+
+        <label class="field checkbox-field">
+          <div class="checkbox-wrap">
+            <input type="checkbox" name="arCondicionado" [(ngModel)]="model.arCondicionado" id="arCondicionado" />
+            <span class="checkbox-label">Ar-condicionado</span>
+          </div>
+        </label>
+
+        <label class="field checkbox-field">
+          <div class="checkbox-wrap">
+            <input type="checkbox" name="ventilador" [(ngModel)]="model.ventilador" id="ventilador" />
+            <span class="checkbox-label">Ventilador</span>
+          </div>
+        </label>
+
+        <label class="field checkbox-field">
+          <div class="checkbox-wrap">
+            <input type="checkbox" name="computadores" [(ngModel)]="model.computadores" id="computadores" />
+            <span class="checkbox-label">Computadores</span>
+          </div>
+        </label>
+
+        <label class="field checkbox-field">
+          <div class="checkbox-wrap">
+            <input type="checkbox" name="acessibilidade" [(ngModel)]="model.acessibilidade" id="acessibilidade" />
+            <span class="checkbox-label">Acessibilidade</span>
+          </div>
+        </label>
+
+      </div>
+    </div>
+
+    <!-- Observações -->
+    <div class="field-group">
+      <h3 class="group-title">Observações</h3>
+      <div class="field-grid">
+        <label class="field col-full">
+          <span>Observações</span>
+          <textarea name="observacoes" [(ngModel)]="model.observacoes"
+                    placeholder="Informações adicionais sobre a sala..." rows="3"></textarea>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" (click)="cancel()">Cancelar</button>
+      <button type="submit" class="primary">
+        {{ salaId ? 'Salvar alterações' : 'Cadastrar sala' }}
+      </button>
+    </div>
+
+  </form>
+</div>

@@ -12,6 +12,7 @@ import { HighlightDirective } from './directives/highlight.directive';
 import { NotificationComponent } from './components/notification/notification.component';
 import { LoadingComponent } from './components/loading/loading.component';
 import { ButtonComponent } from './components/button/button.component';
+import { ConfirmModalComponent } from './components/confirm-modal/confirm-modal.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { ButtonComponent } from './components/button/button.component';
     // Components
     NotificationComponent,
     LoadingComponent,
-    ButtonComponent
+    ButtonComponent,
+    ConfirmModalComponent
   ],
   imports: [
     CommonModule,
@@ -40,7 +42,8 @@ import { ButtonComponent } from './components/button/button.component';
     // Components
     NotificationComponent,
     LoadingComponent,
-    ButtonComponent
+    ButtonComponent,
+    ConfirmModalComponent
   ]
 })
 export class SharedModule { }
