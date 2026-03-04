@@ -31,7 +31,7 @@ interface TurmaDetalhe {
   sala: string;
   dataInicio: string;
   dataTermino: string;
-  vagasOcupadas: number[]; // números das vagas já ocupadas (1-30)
+  vagasOcupadas: number[];
 }
 
 @Component({
@@ -43,7 +43,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
   activeTab: MatriculaTab = 'dados';
   useSameAddress = false;
 
-  // ── Gênero ─────────────────────────────────────────────────
+  // Gênero 
   alunoGeneroSelecionado = '';
   alunoGeneroOutro = false;
   alunoGeneroCustom = '';
@@ -54,15 +54,15 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
   respGeneroCustom = '';
   respCorRaca = '';
 
-  // ── Rematrícula ─────────────────────────────────────────────────
+  // Rematrícula 
   modoRematricula = false;
   rematriculaOriginalId = '';
 
-  // ── ID Matrícula ───────────────────────────────────────────────
+  // ID Matrícula 
   matriculaId = this.gerarMatriculaId();
   respMatriculaId = this.gerarMatriculaId();
 
-  // ── Campos não ligados aos outros grupos ────────────────────────
+  // Campos não ligados aos outros grupos 
   alunoNome = '';
   alunoNacionalidade = '';
   alunoTelefone = '';
@@ -81,11 +81,11 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
   respEstadoEmissor = '';
   respCpf = '';
 
-  // ── Validação ───────────────────────────────────────────────
+  // Validação 
   errosValidacao: { tab: MatriculaTab; tabLabel: string; campos: string[] }[] = [];
   mostrarErros = false;
 
-  // ── Modal de confirmação ─────────────────────────────────────
+  // Modal de confirmação 
   modalConfirmacaoAberto = false;
   emailEnviando = false;
   matriculaRealizada = false;
@@ -140,7 +140,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     if (!this.respCpf)               cr.push('CPF');
     if (cr.length) erros.push({ tab: 'responsaveis', tabLabel: 'Responsável', campos: cr });
 
-    // ― Dados Escolares
+    // Dados Escolares
     const cs: string[] = [];
     if (!this.serie)            cs.push('Série');
     if (!this.periodo)          cs.push('Período');
@@ -204,14 +204,14 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     this.setTab('dados');
   }
 
-  // ── Nascimento / Idade ──────────────────────────────────────
+  // Nascimento / Idade ─
   alunoNascimento = '';
   alunoIdade: number | null = null;
 
   respNascimento = '';
   respIdade: number | null = null;
 
-  // ── Dados Escolares ─────────────────────────────────────────
+  // Dados Escolares 
   serie = '';
   codigoTurma = '';
   turmaSelecionada = '';
@@ -221,7 +221,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
   periodo = '';
   sala = '';
 
-  // ── Modal de vagas ──────────────────────────────────────────
+  // Modal de vagas 
   modalAberto = false;
   turmaModalTemp = '';
   vagasModal: Vaga[] = [];
@@ -239,6 +239,18 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     // 2026 – 3º Ano
     { codigo: '3A', nome: '3A - Terceiro Ano A', anoLetivo: '2026', serie: '3º Ano', periodo: 'matutino',   sala: 'Sala 301', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [4,8,16,22] },
     { codigo: '3B', nome: '3B - Terceiro Ano B', anoLetivo: '2026', serie: '3º Ano', periodo: 'vespertino', sala: 'Sala 302', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [] },
+    // 2026 – 4º Ano
+    { codigo: '4A', nome: '4A - Quarto Ano A',   anoLetivo: '2026', serie: '4º Ano', periodo: 'matutino',   sala: 'Sala 401', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [5,10,15,20] },
+    // 2026 – 5º Ano
+    { codigo: '5A', nome: '5A - Quinto Ano A',   anoLetivo: '2026', serie: '5º Ano', periodo: 'vespertino', sala: 'Sala 501', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [3,6,9,12] },
+    // 2026 – 6º Ano
+    { codigo: '6A', nome: '6A - Sexto Ano A',    anoLetivo: '2026', serie: '6º Ano', periodo: 'matutino',   sala: 'Sala 601', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [1,7,14,21] },
+    // 2026 – 7º Ano
+    { codigo: '7A', nome: '7A - Sétimo Ano A',   anoLetivo: '2026', serie: '7º Ano', periodo: 'vespertino', sala: 'Sala 701', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [2,8,16,24] },
+    // 2026 – 8º Ano
+    { codigo: '8A', nome: '8A - Oitavo Ano A',   anoLetivo: '2026', serie: '8º Ano', periodo: 'matutino',   sala: 'Sala 801', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [4,11,18,25] },
+    // 2026 – 9º Ano
+    { codigo: '9A', nome: '9A - Nono Ano A',     anoLetivo: '2026', serie: '9º Ano', periodo: 'vespertino', sala: 'Sala 901', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [6,12,18,24,30] },
     // 2025 – 1º Ano
     { codigo: '1A', nome: '1A - Primeiro Ano A', anoLetivo: '2025', serie: '1º Ano', periodo: 'matutino',   sala: 'Sala 101', dataInicio: '2025-02-03', dataTermino: '2025-12-19', vagasOcupadas: [1,3,5,8,12,15,18,21,24,27,28,29,30] },
     { codigo: '1B', nome: '1B - Primeiro Ano B', anoLetivo: '2025', serie: '1º Ano', periodo: 'vespertino', sala: 'Sala 101', dataInicio: '2025-02-03', dataTermino: '2025-12-19', vagasOcupadas: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30] },
@@ -254,7 +266,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
   ];
 
   private readonly periodosLabel: Record<string, string> = {
-    matutino: 'Matutino', vespertino: 'Vespertino', noturno: 'Noturno', integral: 'Integral'
+    matutino: 'Manhã', vespertino: 'Tarde', noturno: 'Noite', integral: 'Integral'
   };
 
   anosLetivos: string[] = Array.from({ length: 6 }, (_, i) =>
@@ -386,7 +398,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
   trackByVaga(_: number, vaga: Vaga): number { return vaga.numero; }
   trackByTurma(_: number, t: TurmaDetalhe): string { return t.anoLetivo + t.codigo; }
 
-  // ── CEP ────────────────────────────────────────────────────
+  // CEP ───
   cepLoadingAluno = false;
   cepErroAluno = false;
   cepLoadingResp = false;
@@ -415,7 +427,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     this.modoRematricula = true;
     this.rematriculaOriginalId = String(m.id);
 
-    // ── Educando
+    // Educando
     this.alunoNome               = m.alunoNome ?? '';
     this.alunoEmail              = m.alunoEmail ?? '';
     this.alunoTelefone           = m.alunoCelular || m.alunoTelefone || '';
@@ -428,7 +440,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     this.alunoGeneroOutro        = m.alunoGenero === 'outro';
     this.alunoEndereco           = { ...m.alunoEndereco };
 
-    // ── Responsável
+    // Responsável
     this.respNome                = m.respNome ?? '';
     this.respEmail               = m.respEmail ?? '';
     this.respTelefone            = m.respCelular || m.respTelefone || '';
@@ -446,7 +458,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     this.codigoTurma = ''; this.dataInicio = ''; this.dataTermino = ''; this.sala = '';
   }
 
-  // ── Gênero ─────────────────────────────────────────────────
+  // Gênero 
   onAlunoGeneroChange(valor: string): void {
     this.alunoGeneroOutro = valor === 'outro';
     if (!this.alunoGeneroOutro) this.alunoGeneroCustom = '';
@@ -457,7 +469,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     if (!this.respGeneroOutro) this.respGeneroCustom = '';
   }
 
-  // ── Idade ───────────────────────────────────────────────────
+  // Idade
   private calcularIdade(dataNascimento: string): number | null {
     if (!dataNascimento) return null;
     const nascimento = new Date(dataNascimento);
@@ -479,7 +491,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     this.respIdade = this.calcularIdade(data);
   }
 
-  // ── CEP ─────────────────────────────────────────────────────
+  // CEP
   buscarCepAluno(): void {
     const cep = this.alunoEndereco.cep.replace(/\D/g, '');
     if (cep.length !== 8) return;

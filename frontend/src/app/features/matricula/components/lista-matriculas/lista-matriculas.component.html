@@ -1,4 +1,4 @@
-<!-- <--Lista de matrículas -->
+<!-- Lista de matrículas -->
 <div class="lista-page" *ngIf="view === 'lista'">
 
   <!-- Cabeçalho -->
@@ -6,11 +6,11 @@
     <div class="page-title">
       <h1>Matrículas</h1>
       <span class="page-subtitle">Gerencie as matrículas dos educandos</span>
+      <button class="btn btn-primary" (click)="novaMatricula()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nova matrícula
+      </button>
     </div>
-    <button class="btn btn-primary" (click)="novaMatricula()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Nova matrícula
-    </button>
   </div>
 
   <!-- Filtros -->
@@ -51,6 +51,16 @@
           <option *ngFor="let s of statusList; trackBy: trackByNome" [value]="s">{{ s }}</option>
         </select>
       </div>
+      <div class="filtro-field">
+        <label>Período</label>
+        <select [(ngModel)]="filtroPeriodo" (ngModelChange)="onFiltroChange()">
+          <option value="">Todos</option>
+          <option value="Manhã">Manhã</option>
+          <option value="Tarde">Tarde</option>
+          <option value="Noite">Noite</option>
+          <option value="Integral">Integral</option>
+        </select>
+      </div>
       <div class="filtro-field filtro-clear">
         <button class="btn btn-ghost" (click)="limparFiltros()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
@@ -83,7 +93,6 @@
           <tr *ngFor="let m of matriculasPaginadas; trackBy: trackById" (click)="abrirDetalhe(m)" class="tabela-row">
             <td>
               <div class="aluno-cell">
-                <div class="aluno-avatar">{{ m.alunoNome.charAt(0) }}</div>
                 <div class="aluno-info">
                   <span class="aluno-nome">{{ m.alunoNome }}</span>
                   <span class="aluno-detalhe">{{ m.alunoIdade }} anos · {{ m.alunoCpf }}</span>
@@ -151,7 +160,6 @@
     </button>
 
     <div class="detalhe-titulo">
-      <div class="detalhe-avatar">{{ edicao.alunoNome.charAt(0) }}</div>
       <div>
         <h1>{{ edicao.alunoNome }}</h1>
         <span class="detalhe-sub">Matrícula #{{ edicao.id }} · {{ edicao.anoLetivo }}</span>
@@ -191,7 +199,7 @@
     </button>
   </div>
 
-  <!-- ── ABA: EDUCANDO ── -->
+  <!-- ABA: EDUCANDO -->
   <div class="detalhe-conteudo" *ngIf="activeTab === 'educando'">
     <div class="secao">
       <h3 class="secao-titulo">Identificação</h3>
@@ -304,7 +312,7 @@
     </div>
   </div>
 
-  <!-- ── ABA: RESPONSÁVEL ── -->
+  <!-- ABA: RESPONSÁVEL -->
   <div class="detalhe-conteudo" *ngIf="activeTab === 'responsavel'">
     <div class="secao">
       <h3 class="secao-titulo">Identificação</h3>
@@ -422,7 +430,7 @@
     </div>
   </div>
 
-  <!-- ── ABA: DADOS ESCOLARES ── -->
+  <!-- ABA: DADOS ESCOLARES -->
   <div class="detalhe-conteudo" *ngIf="activeTab === 'escolar'">
     <div class="secao">
       <h3 class="secao-titulo">Vínculo Escolar</h3>
@@ -462,9 +470,9 @@
         <div class="campo">
           <label>Período</label>
           <select *ngIf="modoEdicao" [(ngModel)]="edicao.periodo">
-            <option value="Matutino">Matutino</option>
-            <option value="Vespertino">Vespertino</option>
-            <option value="Noturno">Noturno</option>
+            <option value="Manhã">Manhã</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noite">Noite</option>
             <option value="Integral">Integral</option>
           </select>
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.periodo }}</span>
@@ -492,7 +500,7 @@
     </div>
   </div>
 
-  <!-- ── ABA: HISTÓRICO ESCOLAR ── -->
+  <!-- ABA: HISTÓRICO ESCOLAR -->
   <div class="detalhe-conteudo" *ngIf="activeTab === 'historico'">
 
     <div class="historico-vazio" *ngIf="edicao.historico.length === 0">

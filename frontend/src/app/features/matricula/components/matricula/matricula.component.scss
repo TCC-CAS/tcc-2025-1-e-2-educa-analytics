@@ -1,11 +1,15 @@
 :host {
   display: block !important;
   width: 100% !important;
+  min-height: 100vh !important;
   background: #f5f7fb !important;
   text-align: left !important;
   box-sizing: border-box !important;
+  align-self: stretch !important;
+  flex-shrink: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
+  position: relative !important;
 }
 
 .matricula-page {
@@ -364,15 +368,13 @@
 // ---------- Form Actions ----------
 .form-actions {
   display: flex !important;
-  flex-direction: column;
-  align-items: stretch;
+  justify-content: space-between !important;
+  align-items: center !important;
   gap: 0.5rem;
   margin-top: 0.85rem;
   padding-top: 0.7rem;
   border-top: 1px solid #e8eaed;
   text-align: left !important;
-
-  .primary { align-self: flex-end; }
 }
 
 .ml-auto {
@@ -435,9 +437,9 @@
   }
 }
 
-// ══════════════════════════════════════════════════════════════
+// ═
 // Turma selector
-// ══════════════════════════════════════════════════════════════
+// ═
 
 .turma-field {
   display: flex !important;
@@ -516,9 +518,9 @@
   }
 }
 
-// ══════════════════════════════════════════════════════════════
+// ═
 // Modal overlay
-// ══════════════════════════════════════════════════════════════
+// ═
 
 .modal-overlay {
   position: fixed;
@@ -553,7 +555,7 @@
   to   { transform: translateY(0);    opacity: 1; }
 }
 
-// ── Turma chips (dentro do modal) ───────────────────────────
+//  Turma chips (dentro do modal) ─
 .turma-chips {
   display: flex;
   gap: 0.45rem;
@@ -614,7 +616,7 @@
   }
 }
 
-// ── Header ──────────────────────────────────────────────────
+//  Header 
 .modal-header {
   display: flex;
   align-items: flex-start;
@@ -651,7 +653,7 @@
   &:hover { color: #e8eaed; }
 }
 
-// ── Stats bar ───────────────────────────────────────────────
+//  Stats bar ─
 .modal-stats {
   display: flex;
   gap: 1rem;
@@ -678,7 +680,7 @@
   }
 }
 
-// ── Cinema wrap ─────────────────────────────────────────────
+//  Cinema wrap ─
 .cinema-wrap {
   padding: 0.9rem 1.1rem 0.6rem;
   display: flex;
@@ -804,7 +806,7 @@
   }
 }
 
-// ── Footer ──────────────────────────────────────────────────
+//  Footer 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -851,25 +853,15 @@
   }
 }
 
-// ══ BANNER REMATRÍCULA ════════════════════════════════════════════════
-.banner-rematricula {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.55rem;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 9px;
-  padding: 0.6rem 0.9rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.75rem;
-  color: #1e40af;
-  line-height: 1.5;
+//  PAINEL DE ERROS DE VALIDAÇÃO 
+.form-actions {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
 
-  svg { flex-shrink: 0; margin-top: 1px; color: #1d4ed8; }
-  strong { font-weight: 700; }
+  .primary { align-self: flex-end; }
 }
 
-// ══ PAINEL DE ERROS DE VALIDAÇÃO ═════════════════════════════════════════
 .validacao-erros {
   width: 100%;
   background: #fff5f5;
@@ -935,7 +927,7 @@
   }
 }
 
-// ══ MODAL DE CONFIRMAÇÃO ══════════════════════════════════════════════
+//  MODAL DE CONFIRMAÇÃO 
 .modal-confirmacao {
   background: #fff;
   border-radius: 14px;

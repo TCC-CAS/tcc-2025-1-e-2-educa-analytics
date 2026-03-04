@@ -1,6 +1,6 @@
-// ═══════════════════════════════════════════════════════
+
 // Variáveis
-// ═══════════════════════════════════════════════════════
+
 $primary:      #4f46e5;
 $primary-dark: #4338ca;
 $surface:      #ffffff;
@@ -20,9 +20,9 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
   min-height: 100vh;
 }
 
-// ═══════════════════════════════════════════════════════
+
 // Botões
-// ═══════════════════════════════════════════════════════
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -74,9 +74,9 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
   &:hover { background: #eef2ff; svg { stroke: $primary; } }
 }
 
-// ═══════════════════════════════════════════════════════
+
 // Status badges
-// ═══════════════════════════════════════════════════════
+
 .status-badge {
   display: inline-block;
   padding: .25rem .65rem;
@@ -107,13 +107,13 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
   &.sm { font-size: .68rem; padding: .18rem .5rem; }
 }
 
-// ═══════════════════════════════════════════════════════
+
 // LISTA
-// ═══════════════════════════════════════════════════════
+
 .lista-page {
   padding: 2rem 2.5rem;
   max-width: 1400px;
-  margin: 0 auto;
+  margin: 0;
 
   @media (max-width: 768px) { padding: 1rem; }
 }
@@ -122,10 +122,17 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
 .page-header {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 1rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
+
+  .page-title {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .75rem;
+  }
 
   .page-title h1 {
     font-size: 1.6rem;
@@ -279,20 +286,6 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
   gap: .75rem;
 }
 
-.aluno-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: $primary;
-  color: #fff;
-  font-weight: 700;
-  font-size: .95rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
 .aluno-info {
   display: flex;
   flex-direction: column;
@@ -362,13 +355,13 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
   &:disabled { opacity: .4; cursor: not-allowed; }
 }
 
-// ═══════════════════════════════════════════════════════
+
 // DETALHE / EDIÇÃO
-// ═══════════════════════════════════════════════════════
+
 .detalhe-page {
   padding: 1.75rem 2.5rem;
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 0;
 
   @media (max-width: 768px) { padding: 1rem; }
 }
@@ -401,20 +394,6 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
-
-  .detalhe-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: $primary;
-    color: #fff;
-    font-weight: 700;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
 
   h1 { font-size: 1.4rem; font-weight: 700; margin: 0 0 .15rem; }
   .detalhe-sub { font-size: .82rem; color: $text-muted; }
@@ -560,9 +539,9 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
   padding: 0 .85rem;
 }
 
-// ═══════════════════════════════════════════════════════
+
 // HISTÓRICO ESCOLAR
-// ═══════════════════════════════════════════════════════
+
 .historico-vazio {
   background: $surface;
   border: 1px solid $border;

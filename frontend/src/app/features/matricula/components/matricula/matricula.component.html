@@ -436,11 +436,11 @@
   </form>
 </div>
 
-<!-- ══ MODAL DE CONFIRMAÇÃO ═══════════════════════════════════════════ -->
+<!--  MODAL DE CONFIRMAÇÃO ═ -->
 <div class="modal-overlay" *ngIf="modalConfirmacaoAberto" (click)="fecharConfirmacao()">
   <div class="modal-confirmacao" (click)="$event.stopPropagation()">
 
-    <!-- ── TELA DE SUCESSO ── -->
+    <!--  TELA DE SUCESSO  -->
     <ng-container *ngIf="matriculaRealizada">
       <div class="confirmacao-sucesso">
         <div class="sucesso-icon">
@@ -462,7 +462,7 @@
       </div>
     </ng-container>
 
-    <!-- ── TELA DE CONFIRMAÇÃO ── -->
+    <!--  TELA DE CONFIRMAÇÃO  -->
     <ng-container *ngIf="!matriculaRealizada">
       <header class="modal-header">
         <div class="modal-title-block">
@@ -532,7 +532,7 @@
   </div>
 </div>
 
-<!-- ══ MODAL DE VAGAS ══════════════════════════════════════════════════ -->
+<!--  MODAL DE VAGAS  -->
 <div class="modal-overlay" *ngIf="modalAberto" (click)="fecharModal()">
   <div class="modal-vagas" (click)="$event.stopPropagation()">
 

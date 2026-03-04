@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit, AfterViewInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 export type DetalheTab = 'educando' | 'responsavel' | 'escolar' | 'historico';
@@ -81,30 +81,102 @@ export interface MatriculaRegistro {
   selector: 'app-lista-matriculas',
   templateUrl: './lista-matriculas.component.html',
   styleUrls: ['./lista-matriculas.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
-export class ListaMatriculasComponent implements OnInit {
+export class ListaMatriculasComponent implements OnInit, AfterViewInit {
 
   constructor(private router: Router, private cdr: ChangeDetectorRef) {}
 
-  // ── Estado da tela ───────────────────────────────────────────
+  ngAfterViewInit(): void {
+    this.forceLeftAlignmentStyles();
+
+    const startTime = performance.now();
+    const frameLoop = () => {
+      this.forceLeftAlignmentStyles();
+      if (performance.now() - startTime < 1200) {
+        requestAnimationFrame(frameLoop);
+      }
+    };
+    requestAnimationFrame(frameLoop);
+
+    const observer = new MutationObserver(() => {
+      this.forceLeftAlignmentStyles();
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class']
+    });
+
+    setTimeout(() => {
+      observer.disconnect();
+    }, 2000);
+  }
+
+  private forceLeftAlignmentStyles(): void {
+    const listaPage = document.querySelector('.lista-page') as HTMLElement;
+    if (listaPage) {
+      listaPage.style.setProperty('text-align', 'left', 'important');
+      listaPage.style.setProperty('width', '100%', 'important');
+    }
+
+    const pageHeader = document.querySelector('.page-header') as HTMLElement;
+    if (pageHeader) {
+      pageHeader.style.setProperty('text-align', 'left', 'important');
+      pageHeader.style.setProperty('align-items', 'flex-start', 'important');
+      pageHeader.style.setProperty('justify-content', 'flex-start', 'important');
+
+      const h1 = pageHeader.querySelector('h1') as HTMLElement;
+      if (h1) h1.style.setProperty('text-align', 'left', 'important');
+
+      const p = pageHeader.querySelector('p, span') as HTMLElement;
+      if (p) p.style.setProperty('text-align', 'left', 'important');
+    }
+
+    const filtrosCard = document.querySelector('.filtros-card') as HTMLElement;
+    if (filtrosCard) {
+      filtrosCard.style.setProperty('text-align', 'left', 'important');
+    }
+
+    const filtroFields = document.querySelectorAll('.filtro-field') as NodeListOf<HTMLElement>;
+    filtroFields.forEach((field) => {
+      field.style.setProperty('text-align', 'left', 'important');
+      field.style.setProperty('align-items', 'flex-start', 'important');
+
+      const label = field.querySelector('label') as HTMLElement;
+      if (label) label.style.setProperty('text-align', 'left', 'important');
+
+      const input = field.querySelector('input, select') as HTMLElement;
+      if (input) input.style.setProperty('text-align', 'left', 'important');
+    });
+
+    const tabelaCard = document.querySelector('.tabela-card') as HTMLElement;
+    if (tabelaCard) {
+      tabelaCard.style.setProperty('text-align', 'left', 'important');
+    }
+  }
+
+  // Estado da tela
   view: 'lista' | 'detalhe' = 'lista';
   modoEdicao = false;
   activeTab: DetalheTab = 'educando';
   historicoExpandido: number | null = null;
 
-  // ── Filtros ──────────────────────────────────────────────────
+  // Filtros───
   filtroNome = '';
   filtroSerie = '';
   filtroTurma = '';
   filtroAno = '';
   filtroStatus = '';
+  filtroPeriodo = '';
 
-  // ── Paginação ────────────────────────────────────────────────
+  // Paginação─
   itensPorPagina = 10;
   paginaAtual = 1;
 
-  // ── Listas cacheadas (atualizadas apenas quando necessário) ──
+  // Listas cacheadas (atualizadas apenas quando necessário)
   matriculasFiltradas: MatriculaRegistro[] = [];
   matriculasPaginadas: MatriculaRegistro[] = [];
   paginas: number[] = [];
@@ -112,7 +184,7 @@ export class ListaMatriculasComponent implements OnInit {
   turmasUnicas: string[] = [];
   anosUnicos: string[] = [];
 
-  // ── Registro selecionado ─────────────────────────────────────
+  // Registro selecionado ─
   selecionado: MatriculaRegistro | null = null;
   edicao: MatriculaRegistro | null = null;
 
@@ -123,7 +195,7 @@ export class ListaMatriculasComponent implements OnInit {
 
   readonly statusList: StatusMatricula[] = ['Ativa', 'Trancada', 'Cancelada', 'Concluída'];
 
-  // ── Dados mock ───────────────────────────────────────────────
+  // Dados mock
   matriculas: MatriculaRegistro[] = [
     {
       id: 1,
@@ -158,11 +230,11 @@ export class ListaMatriculasComponent implements OnInit {
       anoLetivo: '2025',
       dataInicio: '2025-02-03',
       dataTermino: '2025-12-19',
-      periodo: 'Matutino',
+      periodo: 'Manhã',
       sala: 'Sala 101',
       historico: [
         {
-          anoLetivo: '2024', serie: '3º Ano', turma: '3A', sala: 'Sala 101', periodo: 'Matutino', situacao: 'Aprovado',
+          anoLetivo: '2024', serie: '3º Ano', turma: '3A', sala: 'Sala 101', periodo: 'Manhã', situacao: 'Aprovado',
           mediaGeral: 8.2, frequencia: 94,
           disciplinas: [
             { nome: 'Português',    n1: 8.0, n2: 7.5, n3: 9.0, n4: 8.5, media: 8.25, frequencia: 96, situacao: 'Aprovado' },
@@ -174,7 +246,7 @@ export class ListaMatriculasComponent implements OnInit {
           ]
         },
         {
-          anoLetivo: '2023', serie: '2º Ano', turma: '2B', sala: 'Sala 205', periodo: 'Matutino', situacao: 'Aprovado',
+          anoLetivo: '2023', serie: '2º Ano', turma: '2B', sala: 'Sala 205', periodo: 'Manhã', situacao: 'Aprovado',
           mediaGeral: 7.8, frequencia: 91,
           disciplinas: [
             { nome: 'Português',  n1: 7.0, n2: 7.5, n3: 8.0, n4: 8.5, media: 7.75, frequencia: 92, situacao: 'Aprovado' },
@@ -217,11 +289,11 @@ export class ListaMatriculasComponent implements OnInit {
       anoLetivo: '2025',
       dataInicio: '2025-02-03',
       dataTermino: '2025-12-19',
-      periodo: 'Vespertino',
+      periodo: 'Tarde',
       sala: 'Sala 203',
       historico: [
         {
-          anoLetivo: '2024', serie: '4º Ano', turma: '4B', sala: 'Sala 203', periodo: 'Vespertino', situacao: 'Aprovado',
+          anoLetivo: '2024', serie: '4º Ano', turma: '4B', sala: 'Sala 203', periodo: 'Tarde', situacao: 'Aprovado',
           mediaGeral: 7.1, frequencia: 88,
           disciplinas: [
             { nome: 'Português',    n1: 6.5, n2: 7.0, n3: 7.5, n4: 7.0, media: 7.0,  frequencia: 89, situacao: 'Aprovado' },
@@ -264,11 +336,11 @@ export class ListaMatriculasComponent implements OnInit {
       anoLetivo: '2025',
       dataInicio: '2025-02-03',
       dataTermino: '2025-12-19',
-      periodo: 'Matutino',
+      periodo: 'Manhã',
       sala: 'Sala 105',
       historico: [
         {
-          anoLetivo: '2024', serie: '2º Ano', turma: '2A', sala: 'Sala 102', periodo: 'Matutino', situacao: 'Aprovado',
+          anoLetivo: '2024', serie: '2º Ano', turma: '2A', sala: 'Sala 102', periodo: 'Manhã', situacao: 'Aprovado',
           mediaGeral: 8.9, frequencia: 97,
           disciplinas: [
             { nome: 'Português',  n1: 9.0, n2: 9.0, n3: 8.5, n4: 9.5, media: 9.0, frequencia: 98, situacao: 'Aprovado' },
@@ -310,7 +382,7 @@ export class ListaMatriculasComponent implements OnInit {
       anoLetivo: '2025',
       dataInicio: '2025-02-03',
       dataTermino: '2025-12-19',
-      periodo: 'Matutino',
+      periodo: 'Manhã',
       sala: 'Sala 302',
       historico: []
     },
@@ -347,11 +419,11 @@ export class ListaMatriculasComponent implements OnInit {
       anoLetivo: '2025',
       dataInicio: '2025-01-15',
       dataTermino: '2025-12-19',
-      periodo: 'Matutino',
+      periodo: 'Manhã',
       sala: 'Sala 401',
       historico: [
         {
-          anoLetivo: '2024', serie: '6º Ano', turma: '6B', sala: 'Sala 304', periodo: 'Matutino', situacao: 'Aprovado',
+          anoLetivo: '2024', serie: '6º Ano', turma: '6B', sala: 'Sala 304', periodo: 'Manhã', situacao: 'Aprovado',
           mediaGeral: 6.5, frequencia: 85,
           disciplinas: [
             { nome: 'Português',  n1: 6.0, n2: 6.5, n3: 7.0, n4: 6.5, media: 6.5, frequencia: 84, situacao: 'Aprovado' },
@@ -362,12 +434,12 @@ export class ListaMatriculasComponent implements OnInit {
     },
   ];
 
-  // ── Inicialização ─────────────────────────────────────────────
+  // Inicialização 
   ngOnInit(): void {
     this.recalcularTudo();
   }
 
-  // ── Recálculo centralizado ────────────────────────────────────
+  // Recálculo centralizado 
   private recalcularTudo(): void {
     const nomeLower = this.filtroNome.toLowerCase();
     this.matriculasFiltradas = this.matriculas.filter(m => {
@@ -375,7 +447,8 @@ export class ListaMatriculasComponent implements OnInit {
       if (this.filtroSerie  && m.serie        !== this.filtroSerie)  return false;
       if (this.filtroTurma  && m.codigoTurma  !== this.filtroTurma)  return false;
       if (this.filtroAno    && m.anoLetivo    !== this.filtroAno)    return false;
-      if (this.filtroStatus && m.status       !== this.filtroStatus) return false;
+      if (this.filtroStatus  && m.status    !== this.filtroStatus)  return false;
+      if (this.filtroPeriodo && m.periodo    !== this.filtroPeriodo) return false;
       return true;
     });
     this.totalPaginas = Math.max(1, Math.ceil(this.matriculasFiltradas.length / this.itensPorPagina));
@@ -387,12 +460,12 @@ export class ListaMatriculasComponent implements OnInit {
     this.anosUnicos   = [...new Set(this.matriculas.map(m => m.anoLetivo))].sort().reverse();
   }
 
-  // ── TrackBy helpers ───────────────────────────────────────────
+  // TrackBy helpers
   trackById(_: number, m: MatriculaRegistro): number { return m.id; }
   trackByIndex(i: number): number { return i; }
   trackByNome(_: number, s: string): string { return s; }
 
-  // ── Ações de lista ────────────────────────────────────────────
+  // Ações de lista
   abrirDetalhe(m: MatriculaRegistro): void {
     this.selecionado = m;
     this.edicao = JSON.parse(JSON.stringify(m)); // deep copy
@@ -419,7 +492,7 @@ export class ListaMatriculasComponent implements OnInit {
     this.router.navigate(['/matricula'], { state: { rematricula: m } });
   }
 
-  // ── Ações de detalhe ──────────────────────────────────────────
+  // Ações de detalhe
   iniciarEdicao(): void {
     this.modoEdicao = true;
   }
@@ -445,7 +518,7 @@ export class ListaMatriculasComponent implements OnInit {
     this.historicoExpandido = this.historicoExpandido === index ? null : index;
   }
 
-  // ── Helpers ───────────────────────────────────────────────────
+  // Helpers
   calcularIdade(nascimento: string): number | null {
     if (!nascimento) return null;
     const hoje = new Date();
@@ -503,6 +576,7 @@ export class ListaMatriculasComponent implements OnInit {
     this.filtroTurma = '';
     this.filtroAno = '';
     this.filtroStatus = '';
+    this.filtroPeriodo = '';
     this.paginaAtual = 1;
     this.recalcularTudo();
     this.cdr.markForCheck();
