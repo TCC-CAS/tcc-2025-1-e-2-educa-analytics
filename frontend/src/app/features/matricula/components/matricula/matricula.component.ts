@@ -273,21 +273,24 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     (new Date().getFullYear() - 1 + i).toString()
   );
 
-  get seriesDisponiveis(): string[] {
+  seriesDisponiveis: string[] = [];
+  periodosDisponiveis: { value: string; label: string }[] = [];
+
+  private computarSeries(): void {
     const found = new Set(this.turmas
       .filter(t => !this.anoLetivo || t.anoLetivo === this.anoLetivo)
       .map(t => t.serie));
-    return this.ordemSeries.filter(s => found.has(s));
+    this.seriesDisponiveis = this.ordemSeries.filter(s => found.has(s));
   }
 
-  get periodosDisponiveis(): { value: string; label: string }[] {
+  private computarPeriodos(): void {
     const found = new Set(this.turmas
       .filter(t =>
         (!this.anoLetivo || t.anoLetivo === this.anoLetivo) &&
         (!this.serie     || t.serie     === this.serie)
       )
       .map(t => t.periodo));
-    return ['matutino', 'vespertino', 'noturno', 'integral']
+    this.periodosDisponiveis = ['matutino', 'vespertino', 'noturno', 'integral']
       .filter(p => found.has(p))
       .map(p => ({ value: p, label: this.periodosLabel[p] }));
   }
@@ -328,12 +331,15 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     this.serie = ''; this.periodo = '';
     this.turmaSelecionada = ''; this.turmaModalTemp = '';
     this.codigoTurma = ''; this.dataInicio = ''; this.dataTermino = ''; this.sala = '';
+    this.computarSeries();
+    this.computarPeriodos();
   }
 
   onSerieChange(_: string): void {
     this.periodo = '';
     this.turmaSelecionada = ''; this.turmaModalTemp = '';
     this.codigoTurma = ''; this.dataInicio = ''; this.dataTermino = ''; this.sala = '';
+    this.computarPeriodos();
   }
 
   onPeriodoChange(_: string): void {
@@ -421,7 +427,10 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     }
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.computarSeries();
+    this.computarPeriodos();
+  }
 
   private preencherDadosRematricula(m: MatriculaRegistro): void {
     this.modoRematricula = true;

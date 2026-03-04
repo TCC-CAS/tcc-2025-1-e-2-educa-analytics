@@ -19,7 +19,7 @@
   <!-- Cabeçalho -->
   <div class="page-header">
     <div class="page-title">
-      <h1>Matrículas</h1>
+      <h1>Lista de Matrículas</h1>
       <span class="page-subtitle">Gerencie as matrículas dos educandos</span>
       <button class="btn btn-primary" (click)="novaMatricula()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -473,12 +473,12 @@
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.anoLetivo }}</span>
         </div>
         <div class="campo">
-          <label>Data de Início</label>
+          <label>Início das aulas</label>
           <input *ngIf="modoEdicao" type="date" [(ngModel)]="edicao.dataInicio">
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.dataInicio ? formatarData(edicao.dataInicio) : '-' }}</span>
         </div>
         <div class="campo">
-          <label>Data de Término</label>
+          <label>Término das aulas</label>
           <input *ngIf="modoEdicao" type="date" [(ngModel)]="edicao.dataTermino">
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.dataTermino ? formatarData(edicao.dataTermino) : '-' }}</span>
         </div>
