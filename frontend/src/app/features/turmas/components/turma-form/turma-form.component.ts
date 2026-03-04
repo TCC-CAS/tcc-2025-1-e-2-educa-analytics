@@ -3,17 +3,17 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 type StatusTurma = 'ativa' | 'inativa';
 
-type Turno = 'Manha' | 'Tarde' | 'Noite';
+type Turno = 'Manhã' | 'Tarde' | 'Noite' | 'Integral';
 
-type PeriodoLetivo = '2025.1' | '2025.2' | '2026.1';
+type AnoLetivo = '2025' | '2026';
 
-type Serie = '1' | '2' | '3';
+type Serie = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
 
 interface TurmaFormModel {
   codigo: string;
-  descricao: string;
+  nome: string;
   turno: Turno | '';
-  periodoLetivo: PeriodoLetivo | '';
+  anoLetivo: AnoLetivo | '';
   serie: Serie | '';
   vagas: number | null;
   inicioAulas: string;
@@ -33,9 +33,9 @@ export class TurmaFormComponent {
 
   model: TurmaFormModel = {
     codigo: '',
-    descricao: '',
+    nome: '',
     turno: '',
-    periodoLetivo: '',
+    anoLetivo: '',
     serie: '',
     vagas: null,
     inicioAulas: '',
@@ -48,10 +48,10 @@ export class TurmaFormComponent {
 
     if (this.turmaId) {
       this.model = {
-        codigo: 'T-002',
-        descricao: '2 ano B',
+        codigo: '2B',
+        nome: '2B - Segundo Ano B',
         turno: 'Tarde',
-        periodoLetivo: '2025.2',
+        anoLetivo: '2025',
         serie: '2',
         vagas: 28,
         inicioAulas: '2025-08-05',

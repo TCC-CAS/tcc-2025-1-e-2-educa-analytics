@@ -4,10 +4,11 @@
       <h1>Turmas</h1>
       <p>Consulte, filtre e gerencie turmas cadastradas.</p>
     </div>
-    <div class="actions">
-      <a class="primary" routerLink="/turmas/nova">Cadastrar turma</a>
-    </div>
   </header>
+
+  <div class="toolbar">
+    <a class="primary" routerLink="/turmas/nova">+ Cadastrar turma</a>
+  </div>
 
   <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
     {{ message }}
@@ -15,38 +16,44 @@
 
   <section class="filters">
     <div class="field">
-      <label for="filtroCodigo">Codigo</label>
+      <label for="filtroCodigo">Código</label>
       <input id="filtroCodigo" type="text" [(ngModel)]="filtro.codigo" (input)="applyFilters()" />
     </div>
     <div class="field">
-      <label for="filtroDescricao">Descricao</label>
-      <input id="filtroDescricao" type="text" [(ngModel)]="filtro.descricao" (input)="applyFilters()" />
+      <label for="filtroNome">Turma</label>
+      <input id="filtroNome" type="text" [(ngModel)]="filtro.nome" (input)="applyFilters()" />
     </div>
     <div class="field">
-      <label for="filtroTurno">Turno</label>
+      <label for="filtroTurno">Período</label>
       <select id="filtroTurno" [(ngModel)]="filtro.turno" (change)="applyFilters()">
         <option value="">Todos</option>
-        <option value="Manha">Manha</option>
+        <option value="Manhã">Manhã</option>
         <option value="Tarde">Tarde</option>
         <option value="Noite">Noite</option>
+        <option value="Integral">Integral</option>
       </select>
     </div>
     <div class="field">
-      <label for="filtroPeriodo">Periodo letivo</label>
-      <select id="filtroPeriodo" [(ngModel)]="filtro.periodoLetivo" (change)="applyFilters()">
+      <label for="filtroAnoLetivo">Ano Letivo</label>
+      <select id="filtroAnoLetivo" [(ngModel)]="filtro.anoLetivo" (change)="applyFilters()">
         <option value="">Todos</option>
-        <option value="2025.1">2025.1</option>
-        <option value="2025.2">2025.2</option>
-        <option value="2026.1">2026.1</option>
+        <option value="2025">2025</option>
+        <option value="2026">2026</option>
       </select>
     </div>
     <div class="field">
-      <label for="filtroSerie">Serie</label>
+      <label for="filtroSerie">Série</label>
       <select id="filtroSerie" [(ngModel)]="filtro.serie" (change)="applyFilters()">
         <option value="">Todas</option>
         <option value="1">1</option>
         <option value="2">2</option>
         <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
       </select>
     </div>
     <div class="field">
@@ -67,7 +74,7 @@
     </label>
     <div class="bulk-controls">
       <select [(ngModel)]="bulkAction">
-        <option value="">Acao em lote</option>
+        <option value="">Ação em lote</option>
         <option value="ativar">Ativar</option>
         <option value="desativar">Desativar</option>
         <option value="excluir">Excluir</option>
@@ -80,12 +87,12 @@
     <div class="table-head">
       <span></span>
       <span>Codigo</span>
-      <span>Descricao</span>
-      <span>Turno</span>
-      <span>Periodo</span>
+      <span>Turma</span>
+      <span>Período</span>
+      <span>Ano Letivo</span>
       <span>Serie</span>
       <span>Status</span>
-      <span>Acoes</span>
+      <span>Ações</span>
     </div>
 
     <div class="table-row" *ngFor="let turma of filteredTurmas">
@@ -93,9 +100,9 @@
         <input type="checkbox" [checked]="isSelected(turma.id)" (change)="toggleSelection(turma.id, $any($event.target).checked)" />
       </span>
       <span>{{ turma.codigo }}</span>
-      <span>{{ turma.descricao }}</span>
+      <span>{{ turma.nome }}</span>
       <span>{{ turma.turno }}</span>
-      <span>{{ turma.periodoLetivo }}</span>
+      <span>{{ turma.anoLetivo }}</span>
       <span>{{ turma.serie }}</span>
       <span>
         <span class="status" [class.inactive]="turma.status === 'inativa'">
@@ -103,11 +110,19 @@
         </span>
       </span>
       <span class="row-actions">
-        <button type="button" class="link" (click)="editTurma(turma)">Editar</button>
-        <button type="button" class="link" (click)="toggleStatus(turma)">
-          {{ turma.status === 'ativa' ? 'Desativar' : 'Ativar' }}
+        <button type="button" class="link" (click)="editTurma(turma)" title="Editar">
+          <span class="material-icons">edit</span>
         </button>
-        <button type="button" class="link danger" (click)="deleteTurma(turma)">Excluir</button>
+        <button type="button" class="link"
+          [class.btn-toggle-desativar]="turma.status === 'ativa'"
+          [class.btn-toggle-ativar]="turma.status === 'inativa'"
+          (click)="toggleStatus(turma)"
+          [title]="turma.status === 'ativa' ? 'Desativar' : 'Ativar'">
+          <span class="material-icons">{{ turma.status === 'ativa' ? 'block' : 'check_circle' }}</span>
+        </button>
+        <button type="button" class="link danger" (click)="deleteTurma(turma)" title="Excluir">
+          <span class="material-icons">delete</span>
+        </button>
       </span>
     </div>
 
@@ -116,3 +131,12 @@
     </div>
   </section>
 </div>
+
+<app-confirm-modal
+  *ngIf="modalVisible"
+  [title]="modalTitle"
+  [message]="modalMessage"
+  [danger]="modalDanger"
+  (confirmed)="onModalConfirmed()"
+  (cancelled)="onModalCancelled()">
+</app-confirm-modal>

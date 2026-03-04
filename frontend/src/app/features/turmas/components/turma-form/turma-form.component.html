@@ -17,25 +17,25 @@
         <input type="text" name="codigo" [(ngModel)]="model.codigo" required />
       </label>
       <label class="field">
-        <span>Descricao</span>
-        <input type="text" name="descricao" [(ngModel)]="model.descricao" required />
+        <span>Turma</span>
+        <input type="text" name="nome" [(ngModel)]="model.nome" required />
       </label>
       <label class="field">
-        <span>Turno</span>
+        <span>Período</span>
         <select name="turno" [(ngModel)]="model.turno" required>
           <option value="">Selecione</option>
-          <option value="Manha">Manha</option>
+          <option value="Manhã">Manhã</option>
           <option value="Tarde">Tarde</option>
           <option value="Noite">Noite</option>
+          <option value="Integral">Integral</option>
         </select>
       </label>
       <label class="field">
-        <span>Periodo letivo</span>
-        <select name="periodoLetivo" [(ngModel)]="model.periodoLetivo" required>
+        <span>Ano Letivo</span>
+        <select name="anoLetivo" [(ngModel)]="model.anoLetivo" required>
           <option value="">Selecione</option>
-          <option value="2025.1">2025.1</option>
-          <option value="2025.2">2025.2</option>
-          <option value="2026.1">2026.1</option>
+          <option value="2025">2025</option>
+          <option value="2026">2026</option>
         </select>
       </label>
       <label class="field">
@@ -45,6 +45,12 @@
           <option value="1">1</option>
           <option value="2">2</option>
           <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
         </select>
       </label>
       <label class="field">
