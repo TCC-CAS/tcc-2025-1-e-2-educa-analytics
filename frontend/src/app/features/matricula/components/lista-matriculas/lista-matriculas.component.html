@@ -1,3 +1,18 @@
+<!-- Modal de Confirmação de Edição -->
+<div class="modal-overlay" *ngIf="confirmEdicaoVisible" (click)="cancelarConfirmEdicao()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <h3 class="modal-title">Confirmar edição</h3>
+    <p class="modal-message">Deseja realmente salvar as alterações desta matrícula?</p>
+    <div class="modal-actions">
+      <button type="button" class="modal-btn modal-cancel" (click)="cancelarConfirmEdicao()">Cancelar</button>
+      <button type="button" class="modal-btn modal-confirm" (click)="confirmarEdicao()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Lista de matrículas -->
 <div class="lista-page" *ngIf="view === 'lista'">
 
@@ -180,7 +195,7 @@
       </ng-container>
       <ng-container *ngIf="modoEdicao">
         <button class="btn btn-ghost" (click)="cancelarEdicao()">Cancelar</button>
-        <button class="btn btn-primary" (click)="salvarEdicao()">
+        <button class="btn btn-primary" (click)="abrirConfirmEdicao()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
           Salvar alterações
         </button>

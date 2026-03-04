@@ -502,6 +502,22 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
     this.modoEdicao = false;
   }
 
+  confirmEdicaoVisible = false;
+
+  abrirConfirmEdicao(): void {
+    if (!this.edicao) return;
+    this.confirmEdicaoVisible = true;
+  }
+
+  confirmarEdicao(): void {
+    this.confirmEdicaoVisible = false;
+    this.salvarEdicao();
+  }
+
+  cancelarConfirmEdicao(): void {
+    this.confirmEdicaoVisible = false;
+  }
+
   salvarEdicao(): void {
     if (!this.edicao) return;
     const idx = this.matriculas.findIndex(m => m.id === this.edicao!.id);

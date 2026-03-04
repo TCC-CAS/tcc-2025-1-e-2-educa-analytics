@@ -695,3 +695,61 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
 .nota-ok   { color: #166534; }
 .nota-risco{ color: #854d0e; }
 .nota-baixa{ color: #991b1b; }
+
+// ── Modal de edição ────────────────────────────────────────────
+.modal-overlay {
+  position        : fixed;
+  inset           : 0;
+  background      : rgba(0,0,0,.45);
+  display         : flex;
+  align-items     : center;
+  justify-content : center;
+  z-index         : 1000;
+  backdrop-filter : blur(2px);
+}
+
+.modal {
+  background    : #fff;
+  border-radius : 16px;
+  padding       : 2rem;
+  max-width     : 420px;
+  width         : 90%;
+  box-shadow    : 0 20px 60px rgba(0,0,0,.18);
+  text-align    : center;
+}
+
+.modal-icon {
+  width           : 52px;
+  height          : 52px;
+  border-radius   : 50%;
+  background      : rgba(26,115,232,.1);
+  display         : flex;
+  align-items     : center;
+  justify-content : center;
+  margin          : 0 auto 1rem;
+  color           : #1a73e8;
+  svg { width: 26px; height: 26px; }
+}
+
+.modal-title   { margin: 0 0 .5rem; font-size: 1.15rem; font-weight: 700; color: #111827; }
+.modal-message { margin: 0 0 1.5rem; font-size: .95rem; color: #6b7280; line-height: 1.5; }
+
+.modal-actions {
+  display         : flex;
+  gap             : .75rem;
+  justify-content : center;
+}
+
+.modal-btn {
+  padding       : .6rem 1.4rem;
+  border-radius : 8px;
+  font-size     : .95rem;
+  font-weight   : 600;
+  cursor        : pointer;
+  border        : none;
+  transition    : opacity .15s;
+  &:hover { opacity: .85; }
+}
+
+.modal-cancel  { background: #f8f9fc; border: 1px solid #e5e7eb; color: #111827; }
+.modal-confirm { background: #1a73e8; color: #fff; }

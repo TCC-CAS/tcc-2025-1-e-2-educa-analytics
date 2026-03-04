@@ -289,7 +289,7 @@ a.primary {
   gap: .35rem;
 }
 
-.link {
+.btn-icone {
   width: 32px;
   height: 32px;
   border-radius: 7px;
@@ -299,21 +299,15 @@ a.primary {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background .15s, border-color .15s, color .15s;
-  color: $text-muted;
-  padding: 0;
+  transition: background .15s, border-color .15s;
 
-  .material-icons { font-size: 1rem; }
+  svg { width: 15px; height: 15px; stroke: $text-muted; transition: stroke .15s; }
 
-  &:hover { background: #eef2ff; border-color: $primary; color: $primary; }
+  &:hover                     { background: #eef2ff; border-color: $primary;  svg { stroke: $primary;  } }
+  &.btn-icone-ativar:hover    { background: #dcfce7; border-color: #16a34a;   svg { stroke: #16a34a;   } }
+  &.btn-icone-desativar:hover { background: #fef9c3; border-color: #ca8a04;   svg { stroke: #ca8a04;   } }
+  &.btn-icone-danger:hover    { background: #fee2e2; border-color: #dc2626;   svg { stroke: #dc2626;   } }
 }
-
-.link.danger {
-  &:hover { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
-}
-
-.link.btn-toggle-ativar:hover   { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
-.link.btn-toggle-desativar:hover{ background: #fef9c3; border-color: #ca8a04; color: #ca8a04; }
 
 
 // Estado vazio

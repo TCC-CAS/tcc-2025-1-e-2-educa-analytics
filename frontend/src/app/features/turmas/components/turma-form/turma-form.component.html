@@ -1,4 +1,19 @@
 <div class="turma-form-page">
+
+  <!-- Modal de Confirmação de Edição -->
+  <div class="modal-overlay" *ngIf="confirmVisible" (click)="cancelConfirm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h3 class="modal-title">Confirmar edição</h3>
+      <p class="modal-message">Deseja realmente salvar as alterações desta turma?</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
+        <button type="button" class="modal-btn modal-confirm" (click)="confirmEdit()">Confirmar</button>
+      </div>
+    </div>
+  </div>
   <header class="page-header">
     <div>
       <h1>{{ turmaId ? 'Editar turma' : 'Cadastrar turma' }}</h1>

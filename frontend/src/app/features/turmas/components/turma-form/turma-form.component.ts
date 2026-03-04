@@ -30,6 +30,7 @@ export class TurmaFormComponent {
   turmaId: string | null = null;
   message = '';
   messageType: 'success' | 'error' = 'success';
+  confirmVisible = false;
 
   model: TurmaFormModel = {
     codigo: '',
@@ -73,11 +74,20 @@ export class TurmaFormComponent {
     }
 
     if (this.turmaId) {
-      this.showMessage('Turma editada com sucesso.', 'success');
+      this.confirmVisible = true;
       return;
     }
 
     this.showMessage('Turma cadastrada com sucesso.', 'success');
+  }
+
+  confirmEdit(): void {
+    this.confirmVisible = false;
+    this.showMessage('Turma editada com sucesso.', 'success');
+  }
+
+  cancelConfirm(): void {
+    this.confirmVisible = false;
   }
 
   showMessage(message: string, type: 'success' | 'error'): void {
