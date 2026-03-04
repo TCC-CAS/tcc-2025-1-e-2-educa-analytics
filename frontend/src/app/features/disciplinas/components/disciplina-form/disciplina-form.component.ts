@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+﻿import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 type StatusDisciplina = 'ativa' | 'inativa';
@@ -7,7 +7,7 @@ type Turno = 'Manha' | 'Tarde' | 'Noite';
 
 type PeriodoLetivo = '2025.1' | '2025.2' | '2026.1';
 
-type Serie = '1' | '2' | '3';
+type Serie = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
 
 type AreaConhecimento = 'Linguagens' | 'Matematica' | 'Ciencias Humanas' | 'Ciencias da Natureza';
 
@@ -27,12 +27,15 @@ interface DisciplinaFormModel {
 @Component({
   selector: 'app-disciplina-form',
   templateUrl: './disciplina-form.component.html',
-  styleUrls: ['./disciplina-form.component.scss']
+  styleUrls: ['./disciplina-form.component.scss'],
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
 export class DisciplinaFormComponent {
   disciplinaId: string | null = null;
   message = '';
   messageType: 'success' | 'error' = 'success';
+  confirmVisible = false;
+  private _pendingValid = false;
 
   model: DisciplinaFormModel = {
     abreviatura: '',
@@ -78,11 +81,21 @@ export class DisciplinaFormComponent {
     }
 
     if (this.disciplinaId) {
-      this.showMessage('Disciplina editada com sucesso.', 'success');
+      this._pendingValid = true;
+      this.confirmVisible = true;
       return;
     }
 
     this.showMessage('Disciplina cadastrada com sucesso.', 'success');
+  }
+
+  confirmEdit(): void {
+    this.confirmVisible = false;
+    this.showMessage('Disciplina editada com sucesso.', 'success');
+  }
+
+  cancelConfirm(): void {
+    this.confirmVisible = false;
   }
 
   turmaHorasInvalidas(): boolean {

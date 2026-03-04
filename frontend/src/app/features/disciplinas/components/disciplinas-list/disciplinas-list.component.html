@@ -1,13 +1,31 @@
 <div class="disciplinas-page">
+
+  <!-- Modal de Confirmação -->
+  <div class="modal-overlay" *ngIf="confirm.visible" (click)="cancelConfirm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon" [class.danger]="confirm.danger">
+        <svg *ngIf="!confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg *ngIf="confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="10.29 3.86 1.82 18 2 18 22 18 21.73 18 13.71 3.86 12 1 10.29 3.86"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h3 class="modal-title">{{ confirm.title }}</h3>
+      <p class="modal-message">{{ confirm.message }}</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
+        <button type="button" class="modal-btn" [class.modal-confirm-danger]="confirm.danger" [class.modal-confirm]="!confirm.danger" (click)="confirmAction()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <header class="page-header">
     <div>
       <h1>Disciplinas</h1>
       <p>Consulte, filtre e gerencie disciplinas cadastradas.</p>
     </div>
-    <div class="actions">
-      <a class="primary" routerLink="/disciplinas/nova">Cadastrar disciplina</a>
-    </div>
   </header>
+
+  <div class="toolbar">
+    <a class="primary" routerLink="/disciplinas/nova">+ Cadastrar disciplina</a>
+  </div>
 
   <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
     {{ message }}
@@ -15,7 +33,7 @@
 
   <section class="filters">
     <div class="field">
-      <label for="filtroAbreviatura">Abreviatura</label>
+      <label for="filtroAbreviatura">Código</label>
       <input id="filtroAbreviatura" type="text" [(ngModel)]="filtro.abreviatura" (input)="applyFilters()" />
     </div>
     <div class="field">
@@ -23,20 +41,26 @@
       <input id="filtroNome" type="text" [(ngModel)]="filtro.nome" (input)="applyFilters()" />
     </div>
     <div class="field">
-      <label for="filtroSerie">Serie</label>
+      <label for="filtroSerie">Série</label>
       <select id="filtroSerie" [(ngModel)]="filtro.serie" (change)="applyFilters()">
         <option value="">Todas</option>
         <option value="1">1</option>
         <option value="2">2</option>
         <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
       </select>
     </div>
     <div class="field">
-      <label for="filtroAulas">Aulas semanais</label>
+      <label for="filtroAulas">Aulas/semana</label>
       <input id="filtroAulas" type="number" [(ngModel)]="filtro.aulasSemanais" (input)="applyFilters()" />
     </div>
     <div class="field">
-      <label for="filtroHoras">Horas semanais</label>
+      <label for="filtroHoras">Horas/semana</label>
       <input id="filtroHoras" type="number" [(ngModel)]="filtro.horasSemanais" (input)="applyFilters()" />
     </div>
     <div class="field">
@@ -57,7 +81,7 @@
     </label>
     <div class="bulk-controls">
       <select [(ngModel)]="bulkAction">
-        <option value="">Acao em lote</option>
+        <option value="">Ações em lote</option>
         <option value="ativar">Ativar</option>
         <option value="desativar">Desativar</option>
         <option value="excluir">Excluir</option>
@@ -69,13 +93,13 @@
   <section class="table">
     <div class="table-head">
       <span></span>
-      <span>Abrev.</span>
+      <span>Código</span>
       <span>Nome</span>
-      <span>Serie</span>
-      <span>Aulas/semana</span>
-      <span>Horas/semana</span>
+      <span>Série</span>
+      <span>Aulas/sem</span>
+      <span>Horas/sem</span>
       <span>Status</span>
-      <span>Acoes</span>
+      <span>Ações</span>
     </div>
 
     <div class="table-row" *ngFor="let disciplina of filteredDisciplinas">
@@ -93,11 +117,20 @@
         </span>
       </span>
       <span class="row-actions">
-        <button type="button" class="link" (click)="editDisciplina(disciplina)">Editar</button>
-        <button type="button" class="link" (click)="toggleStatus(disciplina)">
-          {{ disciplina.status === 'ativa' ? 'Desativar' : 'Ativar' }}
+        <button type="button" class="btn-icone" title="Editar" (click)="editDisciplina(disciplina)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
-        <button type="button" class="link danger" (click)="deleteDisciplina(disciplina)">Excluir</button>
+        <button type="button" class="btn-icone"
+          [class.btn-icone-ativar]="disciplina.status === 'inativa'"
+          [class.btn-icone-desativar]="disciplina.status === 'ativa'"
+          [title]="disciplina.status === 'ativa' ? 'Desativar' : 'Ativar'"
+          (click)="toggleStatus(disciplina)">
+          <svg *ngIf="disciplina.status === 'ativa'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <svg *ngIf="disciplina.status === 'inativa'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 8 16 12 12 16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </button>
+        <button type="button" class="btn-icone btn-icone-danger" title="Excluir" (click)="deleteDisciplina(disciplina)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
       </span>
     </div>
 

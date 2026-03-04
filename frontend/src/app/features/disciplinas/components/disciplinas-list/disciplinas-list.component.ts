@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
+﻿import { Component, AfterViewInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 type StatusDisciplina = 'ativa' | 'inativa';
 
-type Serie = '1' | '2' | '3';
+type Serie = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
 
 interface Disciplina {
   id: number;
@@ -27,9 +27,10 @@ interface DisciplinaFiltro {
 @Component({
   selector: 'app-disciplinas-list',
   templateUrl: './disciplinas-list.component.html',
-  styleUrls: ['./disciplinas-list.component.scss']
+  styleUrls: ['./disciplinas-list.component.scss'],
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
-export class DisciplinasListComponent {
+export class DisciplinasListComponent implements AfterViewInit {
   disciplinas: Disciplina[] = [
     {
       id: 1,
@@ -75,7 +76,50 @@ export class DisciplinasListComponent {
   message = '';
   messageType: 'success' | 'error' = 'success';
 
+  confirm = {
+    visible: false,
+    title: '',
+    message: '',
+    danger: false,
+    callback: () => {}
+  };
+
   constructor(private router: Router) { }
+
+  ngAfterViewInit(): void {
+    this.forceLeftAlignmentStyles();
+    const startTime = performance.now();
+    const frameLoop = () => {
+      this.forceLeftAlignmentStyles();
+      if (performance.now() - startTime < 1200) requestAnimationFrame(frameLoop);
+    };
+    requestAnimationFrame(frameLoop);
+    const observer = new MutationObserver(() => this.forceLeftAlignmentStyles());
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+    setTimeout(() => observer.disconnect(), 2000);
+  }
+
+  private forceLeftAlignmentStyles(): void {
+    const host = document.querySelector('app-disciplinas-list') as HTMLElement;
+    if (host) { host.style.setProperty('text-align', 'left', 'important'); host.style.setProperty('display', 'block', 'important'); host.style.setProperty('width', '100%', 'important'); }
+    const page = document.querySelector('.disciplinas-page') as HTMLElement;
+    if (page) { page.style.setProperty('text-align', 'left', 'important'); page.style.setProperty('width', '100%', 'important'); }
+    const pageHeader = document.querySelector('.disciplinas-page .page-header') as HTMLElement;
+    if (pageHeader) {
+      pageHeader.style.setProperty('text-align', 'left', 'important');
+      pageHeader.style.setProperty('align-items', 'flex-start', 'important');
+      pageHeader.style.setProperty('justify-content', 'flex-start', 'important');
+    }
+    (document.querySelectorAll('.disciplinas-page .page-header h1, .disciplinas-page .page-header p') as NodeListOf<HTMLElement>).forEach(el => {
+      el.style.setProperty('text-align', 'left', 'important');
+    });
+    (document.querySelectorAll('.disciplinas-page .filters .field') as NodeListOf<HTMLElement>).forEach(el => {
+      el.style.setProperty('text-align', 'left', 'important');
+      el.style.setProperty('align-items', 'flex-start', 'important');
+    });
+    const toolbar = document.querySelector('.disciplinas-page .toolbar') as HTMLElement;
+    if (toolbar) { toolbar.style.setProperty('text-align', 'left', 'important'); toolbar.style.setProperty('justify-content', 'flex-start', 'important'); }
+  }
 
   applyFilters(): void {
     const abreviatura = this.filtro.abreviatura.trim().toLowerCase();
@@ -152,47 +196,65 @@ export class DisciplinasListComponent {
   }
 
   toggleStatus(disciplina: Disciplina): void {
-    disciplina.status = disciplina.status === 'ativa' ? 'inativa' : 'ativa';
-    this.showMessage(`Disciplina ${disciplina.abreviatura} ${disciplina.status === 'ativa' ? 'ativada' : 'desativada'} com sucesso.`, 'success');
+    const acao = disciplina.status === 'ativa' ? 'desativar' : 'ativar';
+    this.openConfirm(
+      `${acao.charAt(0).toUpperCase() + acao.slice(1)} disciplina`,
+      `Deseja ${acao} a disciplina ${disciplina.abreviatura}?`,
+      acao === 'desativar',
+      () => {
+        disciplina.status = disciplina.status === 'ativa' ? 'inativa' : 'ativa';
+        this.showMessage(`Disciplina ${disciplina.abreviatura} ${disciplina.status === 'ativa' ? 'ativada' : 'desativada'} com sucesso.`, 'success');
+      }
+    );
   }
 
   deleteDisciplina(disciplina: Disciplina): void {
-    const confirmed = window.confirm('Tem certeza que deseja excluir esta disciplina?');
-    if (!confirmed) return;
-
-    this.disciplinas = this.disciplinas.filter((item) => item.id !== disciplina.id);
-    this.applyFilters();
-    this.showMessage(`Disciplina ${disciplina.abreviatura} excluida com sucesso.`, 'success');
+    this.openConfirm(
+      'Excluir disciplina',
+      `Tem certeza que deseja excluir a disciplina ${disciplina.abreviatura}? Esta ação não pode ser desfeita.`,
+      true,
+      () => {
+        this.disciplinas = this.disciplinas.filter((item) => item.id !== disciplina.id);
+        this.applyFilters();
+        this.showMessage(`Disciplina ${disciplina.abreviatura} excluída com sucesso.`, 'success');
+      }
+    );
   }
 
   performBulkAction(): void {
-    if (!this.bulkAction) {
-      this.showMessage('Selecione uma acao em lote.', 'error');
-      return;
-    }
-
-    if (this.selectedIds.size === 0) {
-      this.showMessage('Selecione ao menos uma disciplina.', 'error');
-      return;
-    }
-
-    const confirmed = window.confirm('Tem certeza que deseja aplicar esta acao nas disciplinas selecionadas?');
-    if (!confirmed) return;
-
-    if (this.bulkAction === 'excluir') {
-      this.disciplinas = this.disciplinas.filter((disciplina) => !this.selectedIds.has(disciplina.id));
-      this.selectedIds.clear();
-      this.applyFilters();
-      this.showMessage('Disciplinas excluidas com sucesso.', 'success');
-      return;
-    }
-
-    const status = this.bulkAction === 'ativar' ? 'ativa' : 'inativa';
-    this.disciplinas = this.disciplinas.map((disciplina) =>
-      this.selectedIds.has(disciplina.id) ? { ...disciplina, status } : disciplina
+    if (!this.bulkAction) { this.showMessage('Selecione uma ação em lote.', 'error'); return; }
+    if (this.selectedIds.size === 0) { this.showMessage('Selecione ao menos uma disciplina.', 'error'); return; }
+    const n = this.selectedIds.size;
+    const acaoLabel = this.bulkAction === 'excluir' ? 'excluir' : this.bulkAction === 'ativar' ? 'ativar' : 'desativar';
+    const isDanger = this.bulkAction === 'excluir' || this.bulkAction === 'desativar';
+    const snap = this.bulkAction;
+    this.openConfirm(
+      'Ação em lote',
+      `Deseja ${acaoLabel} ${n} disciplina(s) selecionada(s)?`,
+      isDanger,
+      () => {
+        if (snap === 'excluir') {
+          this.disciplinas = this.disciplinas.filter(d => !this.selectedIds.has(d.id));
+          this.selectedIds.clear(); this.bulkAction = '';
+          this.applyFilters();
+          this.showMessage('Disciplinas excluídas com sucesso.', 'success');
+          return;
+        }
+        const status: StatusDisciplina = snap === 'ativar' ? 'ativa' : 'inativa';
+        this.disciplinas = this.disciplinas.map(d => this.selectedIds.has(d.id) ? { ...d, status } : d);
+        this.selectedIds.clear(); this.bulkAction = '';
+        this.applyFilters();
+        this.showMessage(`Disciplinas ${status === 'ativa' ? 'ativadas' : 'desativadas'} com sucesso.`, 'success');
+      }
     );
-    this.showMessage(`Disciplinas ${status === 'ativa' ? 'ativadas' : 'desativadas'} com sucesso.`, 'success');
   }
+
+  openConfirm(title: string, message: string, danger: boolean, callback: () => void): void {
+    this.confirm = { visible: true, title, message, danger, callback };
+  }
+
+  confirmAction(): void { this.confirm.visible = false; this.confirm.callback(); }
+  cancelConfirm(): void  { this.confirm.visible = false; }
 
   showMessage(message: string, type: 'success' | 'error'): void {
     this.message = message;
