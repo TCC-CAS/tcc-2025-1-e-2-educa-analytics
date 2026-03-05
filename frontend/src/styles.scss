@@ -1,0 +1,139 @@
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  color: #333;
+  text-align: left;
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Shell ocupa 100% da viewport; scroll fica no .main-content */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+app-root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+/* Estilos críticos de layout aplicados globalmente (antes do Angular bootstrapar)
+   para evitar reflow/jump quando os estilos encapsulados do AppComponent carregam */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  overflow: hidden;
+  text-align: left;
+}
+
+.content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  text-align: left !important;
+}
+
+/* Garante que TODOS os componentes lazy-loaded via router-outlet
+   fiquem à esquerda antes dos estilos encapsulados carregarem */
+.content-scroll > * {
+  display: block !important;
+  width: 100% !important;
+  text-align: left !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+  align-self: stretch !important;
+  box-sizing: border-box !important;
+}
+
+/* Regras por seletor de tag: aplicadas pelo browser imediatamente ao criar
+   o elemento no DOM, sem esperar o bootstrap Angular ou estilos encapsulados */
+app-home,
+app-matricula,
+app-lista-matriculas,
+app-turmas-list,
+app-turma-form,
+app-salas-list,
+app-sala-form,
+app-avaliacoes-list,
+app-avaliacao-form,
+app-caixa-list,
+app-caixa-form,
+app-lancamento-form,
+app-colaboradores-list,
+app-colaborador-form,
+app-dashboard-escolar,
+app-dashboard-financeiro,
+app-disciplinas-list,
+app-disciplina-form,
+app-educadores-list,
+app-educador-form,
+app-eventos-list,
+app-evento-form,
+app-fornecedores-list,
+app-fornecedor-form,
+app-frequencia-list,
+app-notas-list,
+app-dashboard {
+  display: block !important;
+  width: 100% !important;
+  text-align: left !important;
+  margin: 0 !important;
+}
+
+/* Propriedades visuais pre-aplicadas para evitar reflow/jump ao carregar estilos encapsulados */
+app-turmas-list,
+app-turma-form {
+  background: #f8f9fc !important;
+  min-height: 100vh !important;
+  box-sizing: border-box !important;
+  align-self: stretch !important;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+
+  &:hover {
+    background: #555;
+  }
+}

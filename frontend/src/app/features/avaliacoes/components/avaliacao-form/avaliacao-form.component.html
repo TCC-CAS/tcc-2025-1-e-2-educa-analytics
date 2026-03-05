@@ -1,0 +1,98 @@
+<div class="avaliacao-form-container" *ngIf="avaliacao">
+  <div class="header">
+    <button class="btn-voltar" (click)="voltar()">← Voltar</button>
+    <h1>{{ avaliacao.titulo }}</h1>
+    <div class="progresso-info">{{ progresso }}% concluído</div>
+  </div>
+
+  <div class="progresso-bar">
+    <div class="progresso-fill" [style.width.%]="progresso"></div>
+  </div>
+
+  <div class="descricao">
+    {{ avaliacao.descricao }}
+  </div>
+
+  <form #avaliacaoForm="ngForm" (ngSubmit)="enviarAvaliacao(avaliacaoForm)">
+    <div class="perguntas-section">
+      <div *ngFor="let pergunta of avaliacao.perguntas; let i = index" 
+           class="pergunta-item">
+        <div class="pergunta-numero">{{ i + 1 }}/{{ avaliacao.perguntas.length }}</div>
+        
+        <label class="pergunta-texto">
+          {{ pergunta.texto }}
+          <span *ngIf="pergunta.obrigatoria" class="obrigatoria">*</span>
+        </label>
+
+        <!-- Pergunta Escala (1-5) -->
+        <div *ngIf="pergunta.tipo === 'escala'" class="resposta-escala">
+          <div class="opcoes-escala">
+            <button *ngFor="let opt of [1,2,3,4,5]" 
+                    type="button"
+                    class="opcao-escala" 
+                    [class.selecionada]="respostas[pergunta.id] === opt"
+                    (click)="responderPergunta(pergunta.id, opt); $any(opt)">
+              {{ opt }}
+            </button>
+          </div>
+          <div class="labels-escala">
+            <span>Discordo</span>
+            <span>Neutro</span>
+            <span>Concordo</span>
+          </div>
+        </div>
+
+        <!-- Pergunta Sim/Não -->
+        <div *ngIf="pergunta.tipo === 'sim_nao'" class="resposta-sim-nao">
+          <button type="button"
+                  class="opcao-sim-nao"
+                  [class.selecionada]="respostas[pergunta.id] === 'sim'"
+                  (click)="responderPergunta(pergunta.id, 'sim')">
+            Sim
+          </button>
+          <button type="button"
+                  class="opcao-sim-nao"
+                  [class.selecionada]="respostas[pergunta.id] === 'nao'"
+                  (click)="responderPergunta(pergunta.id, 'nao')">
+            Não
+          </button>
+        </div>
+
+        <!-- Pergunta Múltipla Escolha -->
+        <div *ngIf="pergunta.tipo === 'multipla'" class="resposta-multipla">
+          <button *ngFor="let opcao of pergunta.opcoes"
+                  type="button"
+                  class="opcao-multipla"
+                  [class.selecionada]="respostas[pergunta.id] === opcao"
+                  (click)="responderPergunta(pergunta.id, opcao)">
+            {{ opcao }}
+          </button>
+        </div>
+
+        <!-- Pergunta Aberta -->
+        <div *ngIf="pergunta.tipo === 'aberta'" class="resposta-aberta">
+          <textarea 
+            [name]="pergunta.id"
+            [(ngModel)]="respostas[pergunta.id]"
+            (ngModelChange)="responderPergunta(pergunta.id, $event)"
+            rows="4"
+            placeholder="Digite sua resposta aqui..."
+            [required]="pergunta.obrigatoria"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-cancelar" (click)="voltar()">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-enviar">
+        Enviar Avaliação
+      </button>
+    </div>
+  </form>
+
+  <div class="nota-anonimidade">
+    <strong>🔒 Sua privacidade:</strong> Esta avaliação é completamente anônima. Seus dados pessoais não serão associados às suas respostas.
+  </div>
+</div>

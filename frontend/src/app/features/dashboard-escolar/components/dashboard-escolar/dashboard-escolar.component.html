@@ -1,0 +1,100 @@
+<div class="dashboard-escolar-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>Dashboard Escolar</h1>
+      <p class="subtitle">Índices de Satisfação Institucional (Dados Anônimos)</p>
+    </div>
+    <div class="respondentes-info">
+      <span class="info-label">Total de Respondentes:</span>
+      <span class="info-value">{{ respondentes.total }}</span>
+    </div>
+  </div>
+
+  <!-- Filtro de Período -->
+  <div class="periodo-filter">
+    <button class="periodo-btn" [class.active]="periodo === 'atual'" (click)="mudarPeriodo('atual')">
+      Período Atual
+    </button>
+    <button class="periodo-btn" [class.active]="periodo === 'trimestre'" (click)="mudarPeriodo('trimestre')">
+      Este Trimestre
+    </button>
+    <button class="periodo-btn" [class.active]="periodo === 'semestre'" (click)="mudarPeriodo('semestre')">
+      Este Semestre
+    </button>
+    <button class="periodo-btn" [class.active]="periodo === 'ano'" (click)="mudarPeriodo('ano')">
+      Este Ano
+    </button>
+  </div>
+
+  <!-- Índices Principais -->
+  <div class="indices-section">
+    <div *ngFor="let indice of indices" class="indice-card" [class]="'indice-' + indice.cor">
+      <div class="indice-header">
+        <h3>{{ indice.titulo }}</h3>
+        <span class="indice-respondentes">n={{ indice.respondentes }}</span>
+      </div>
+      <div class="indice-body">
+        <div class="valor-grande">{{ indice.valor }}%</div>
+        <div class="valor-descricao">{{ indice.descricao }}</div>
+        <div class="valor-intensidade">{{ obterTextoIntensidade(indice.valor) }}</div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="indice.valor"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dados Demográficos de Respondentes -->
+  <div class="respondentes-section">
+    <h2>Distribuição de Respondentes</h2>
+    <div class="respondentes-grid">
+      <div class="respondentes-card">
+        <span class="respondentes-icone">👨‍🏫</span>
+        <span class="respondentes-label">Educadores</span>
+        <span class="respondentes-valor">{{ respondentes.educadores }}</span>
+        <span class="respondentes-percent">{{ ((respondentes.educadores / respondentes.total) * 100).toFixed(0) }}%</span>
+      </div>
+      <div class="respondentes-card">
+        <span class="respondentes-icone">👨‍🎓</span>
+        <span class="respondentes-label">Educandos</span>
+        <span class="respondentes-valor">{{ respondentes.educandos }}</span>
+        <span class="respondentes-percent">{{ ((respondentes.educandos / respondentes.total) * 100).toFixed(0) }}%</span>
+      </div>
+      <div class="respondentes-card">
+        <span class="respondentes-icone">👶</span>
+        <span class="respondentes-label">Tutores</span>
+        <span class="respondentes-valor">{{ respondentes.tutores }}</span>
+        <span class="respondentes-percent">{{ ((respondentes.tutores / respondentes.total) * 100).toFixed(0) }}%</span>
+      </div>
+      <div class="respondentes-card">
+        <span class="respondentes-icone">💼</span>
+        <span class="respondentes-label">Administrativo</span>
+        <span class="respondentes-valor">{{ respondentes.administrativo }}</span>
+        <span class="respondentes-percent">{{ ((respondentes.administrativo / respondentes.total) * 100).toFixed(0) }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalhes por Categoria -->
+  <div class="detalhes-section">
+    <h2>Detalhamento por Categoria</h2>
+    <div *ngFor="let categoria of detalhesCategorias" class="categoria-detalhes">
+      <h3>{{ categoria.categoria }}</h3>
+      <div class="subcategorias-grid">
+        <div *ngFor="let sub of categoria.subcategorias" class="subcategoria-item">
+          <span class="sub-nome">{{ sub.nome }}</span>
+          <div class="mini-progress">
+            <div class="mini-progress-fill" [style.width.%]="sub.valor" [class]="obterCor(sub.valor)"></div>
+          </div>
+          <span class="sub-valor">{{ sub.valor }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nota de Sigilo -->
+  <div class="nota-sigilo">
+    <strong>ℹ️ Informação Importante:</strong> Todos os dados apresentados neste dashboard são compilados de forma anônima e agregada para garantir a privacidade dos respondentes. As respostas individuais não são identificáveis e são tratadas com total confidencialidade.
+  </div>
+</div>
