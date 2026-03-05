@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { AuthService, UserType, User } from '../../../../core/services/auth.service';
 
 interface QuickAccessItem {
@@ -27,7 +27,8 @@ interface UserHome {
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+  styleUrls: ['./home.component.scss'],
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
 export class HomeComponent implements OnInit {
   usuarioAtual: User | null = null;

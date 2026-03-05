@@ -16,7 +16,7 @@
         type="button"
         class="pr-selector-card"
         *ngFor="let edu of responsavel.educandos"
-        [class.ativo]="educandoSelecionado?.id === edu.id"
+        [class.ativo]="educandoSelecionado.id === edu.id"
         (click)="selecionarEducando(edu)">
         <div class="pr-sel-nome">{{ edu.nome }}</div>
         <div class="pr-sel-meta">{{ edu.turma.serie }} &bull; {{ edu.turma.turno }}</div>
