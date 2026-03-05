@@ -17,7 +17,7 @@
   <header class="page-header">
     <div>
       <h1>{{ turmaId ? 'Editar turma' : 'Cadastrar turma' }}</h1>
-      <p>Informe os dados da turma para salvar as alteracoes.</p>
+      <p>Informe os dados da turma para salvar as alterações.</p>
     </div>
   </header>
 
@@ -28,7 +28,7 @@
   <form #form="ngForm" class="form" (ngSubmit)="submit(form.valid === true)">
     <div class="field-grid">
       <label class="field">
-        <span>Codigo da turma</span>
+        <span>Código da turma</span>
         <input type="text" name="codigo" [(ngModel)]="model.codigo" required />
       </label>
       <label class="field">
@@ -47,37 +47,40 @@
       </label>
       <label class="field">
         <span>Ano Letivo</span>
-        <select name="anoLetivo" [(ngModel)]="model.anoLetivo" required>
+        <input type="text" name="anoLetivo" [(ngModel)]="model.anoLetivo" placeholder="Ex: 2026" maxlength="4" required />
+      </label>
+      <label class="field">
+        <span>Série</span>
+        <select name="serie" [(ngModel)]="model.serie" required>
           <option value="">Selecione</option>
-          <option value="2025">2025</option>
-          <option value="2026">2026</option>
+          <option value="1º Ano">1º Ano</option>
+          <option value="2º Ano">2º Ano</option>
+          <option value="3º Ano">3º Ano</option>
+          <option value="4º Ano">4º Ano</option>
+          <option value="5º Ano">5º Ano</option>
+          <option value="6º Ano">6º Ano</option>
+          <option value="7º Ano">7º Ano</option>
+          <option value="8º Ano">8º Ano</option>
+          <option value="9º Ano">9º Ano</option>
+          <option value="1ª Série EM">1ª Série EM</option>
+          <option value="2ª Série EM">2ª Série EM</option>
+          <option value="3ª Série EM">3ª Série EM</option>
         </select>
       </label>
       <label class="field">
-        <span>Serie</span>
-        <select name="serie" [(ngModel)]="model.serie" required>
-          <option value="">Selecione</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
-        </select>
+        <span>Sala</span>
+        <input type="text" name="sala" [(ngModel)]="model.sala" placeholder="Ex: Sala 101" />
       </label>
       <label class="field">
         <span>Quantidade de vagas</span>
         <input type="number" name="vagas" [(ngModel)]="model.vagas" required />
       </label>
       <label class="field">
-        <span>Inicio das aulas</span>
+        <span>Início das aulas</span>
         <input type="date" name="inicioAulas" [(ngModel)]="model.inicioAulas" required />
       </label>
       <label class="field">
-        <span>Termino das aulas</span>
+        <span>Término das aulas</span>
         <input type="date" name="fimAulas" [(ngModel)]="model.fimAulas" required />
       </label>
       <label class="field">
@@ -92,7 +95,7 @@
 
     <div class="form-actions">
       <button type="button" class="ghost" (click)="cancel()">Voltar</button>
-      <button type="submit" class="primary">{{ turmaId ? 'Salvar alteracoes' : 'Cadastrar turma' }}</button>
+      <button type="submit" class="primary">{{ turmaId ? 'Salvar alterações' : 'Cadastrar turma' }}</button>
     </div>
   </form>
 </div>

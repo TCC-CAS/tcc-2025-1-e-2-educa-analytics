@@ -237,7 +237,7 @@ a.primary {
 .table-head,
 .table-row {
   display: grid;
-  grid-template-columns: 44px 100px 1.8fr 1fr 0.9fr 0.7fr 0.8fr 1fr;
+  grid-template-columns: 44px 100px 1.8fr 1fr 0.9fr 0.7fr 0.7fr 0.7fr 1.2fr;
   gap: .75rem;
   align-items: center !important;
   padding: .85rem 1.1rem;
@@ -381,12 +381,96 @@ a.primary {
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
+// Modal: educandos da turma
+
+.modal-educandos {
+  max-width: 680px;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.modal-educandos-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: .75rem;
+  border-bottom: 1px solid $border;
+}
+
+.btn-fechar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  border: 1.5px solid $border;
+  background: $surface;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  svg { width: 15px; height: 15px; stroke: $text-muted; }
+  &:hover { background: #fee2e2; border-color: #dc2626; svg { stroke: #dc2626; } }
+}
+
+.alunos-table {
+  border: 1px solid $border;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.alunos-head,
+.alunos-row {
+  display: grid;
+  grid-template-columns: 2fr .9fr .8fr;
+  gap: .5rem;
+  padding: .65rem 1rem;
+  align-items: center;
+  font-size: .85rem;
+}
+
+.alunos-head {
+  background: $bg;
+  font-size: .72rem;
+  font-weight: 700;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border-bottom: 1.5px solid $border;
+}
+
+.alunos-row {
+  border-bottom: 1px solid $border;
+  color: $text;
+  &:last-child { border-bottom: none; }
+  &:hover { background: #f9fafb; }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: .2rem .55rem;
+  border-radius: 20px;
+  font-size: .72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  &.ativa     { background: #dcfce7; color: #166534; }
+  &.trancada  { background: #fef9c3; color: #854d0e; }
+  &.cancelada { background: #fee2e2; color: #991b1b; }
+}
+
+.alunos-vazio {
+  text-align: center;
+  color: $text-muted;
+  font-size: .9rem;
+  padding: 1.5rem 0 .5rem;
+  margin: 0;
+}
 
 // Responsivo
 
 @media (max-width: 1100px) {
   .table-head, .table-row {
-    grid-template-columns: 40px 90px 1.5fr .9fr .8fr .6fr .7fr .9fr;
+    grid-template-columns: 40px 90px 1.5fr .9fr .8fr .6fr .6fr .6fr 1.1fr;
   }
 }
 

@@ -5,16 +5,15 @@ type StatusTurma = 'ativa' | 'inativa';
 
 type Turno = 'Manhã' | 'Tarde' | 'Noite' | 'Integral';
 
-type AnoLetivo = '2025' | '2026';
-
-type Serie = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
+type Serie = '1º Ano' | '2º Ano' | '3º Ano' | '4º Ano' | '5º Ano' | '6º Ano' | '7º Ano' | '8º Ano' | '9º Ano' | '1ª Série EM' | '2ª Série EM' | '3ª Série EM';
 
 interface TurmaFormModel {
   codigo: string;
   nome: string;
   turno: Turno | '';
-  anoLetivo: AnoLetivo | '';
+  anoLetivo: string;
   serie: Serie | '';
+  sala: string;
   vagas: number | null;
   inicioAulas: string;
   fimAulas: string;
@@ -38,6 +37,7 @@ export class TurmaFormComponent {
     turno: '',
     anoLetivo: '',
     serie: '',
+    sala: '',
     vagas: null,
     inicioAulas: '',
     fimAulas: '',
@@ -53,7 +53,8 @@ export class TurmaFormComponent {
         nome: '2B - Segundo Ano B',
         turno: 'Tarde',
         anoLetivo: '2025',
-        serie: '2',
+        serie: '2º Ano',
+        sala: 'Sala 202',
         vagas: 28,
         inicioAulas: '2025-08-05',
         fimAulas: '2025-12-18',

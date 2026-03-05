@@ -7,7 +7,7 @@ type Turno = 'Manhã' | 'Tarde' | 'Noite' | 'Integral';
 
 type AnoLetivo = '2025' | '2026';
 
-type Serie = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
+type Serie = '1º Ano' | '2º Ano' | '3º Ano' | '4º Ano' | '5º Ano' | '6º Ano' | '7º Ano' | '8º Ano' | '9º Ano' | '1ª Série EM' | '2ª Série EM' | '3ª Série EM';
 
 interface Turma {
   id: number;
@@ -16,6 +16,7 @@ interface Turma {
   turno: Turno;
   anoLetivo: AnoLetivo;
   serie: Serie;
+  sala: string;
   status: StatusTurma;
   vagas: number;
   inicioAulas: string;
@@ -29,6 +30,13 @@ interface TurmaFiltro {
   anoLetivo: string;
   serie: string;
   status: string;
+}
+
+interface Aluno {
+  id: number;
+  nome: string;
+  serie: string;
+  status: 'Ativa' | 'Trancada' | 'Cancelada';
 }
 
 @Component({
@@ -45,7 +53,8 @@ export class TurmasListComponent implements AfterViewInit {
       nome: '1A - Primeiro Ano A',
       turno: 'Manhã',
       anoLetivo: '2025',
-      serie: '1',
+      serie: '1º Ano',
+      sala: 'Sala 101',
       status: 'ativa',
       vagas: 30,
       inicioAulas: '2025-02-10',
@@ -57,7 +66,8 @@ export class TurmasListComponent implements AfterViewInit {
       nome: '2B - Segundo Ano B',
       turno: 'Tarde',
       anoLetivo: '2025',
-      serie: '2',
+      serie: '2º Ano',
+      sala: 'Sala 202',
       status: 'inativa',
       vagas: 28,
       inicioAulas: '2025-08-05',
@@ -69,7 +79,8 @@ export class TurmasListComponent implements AfterViewInit {
       nome: '3A - Terceiro Ano A',
       turno: 'Noite',
       anoLetivo: '2026',
-      serie: '3',
+      serie: '3º Ano',
+      sala: 'Sala 301',
       status: 'ativa',
       vagas: 25,
       inicioAulas: '2026-02-02',
@@ -86,6 +97,37 @@ export class TurmasListComponent implements AfterViewInit {
     serie: '',
     status: ''
   };
+
+  private readonly educandosMock: Record<number, Aluno[]> = {
+    1: [
+      { id: 1, nome: 'Ana Paula Ferreira',    serie: '1º Ano', status: 'Ativa' },
+      { id: 2, nome: 'Bruno Lima Souza',       serie: '1º Ano', status: 'Ativa' },
+      { id: 3, nome: 'Carla Mendes Rodrigues', serie: '1º Ano', status: 'Trancada' },
+    ],
+    2: [
+      { id: 4, nome: 'Daniel Costa Alves',   serie: '2º Ano', status: 'Ativa' },
+      { id: 5, nome: 'Elisa Torres Martins', serie: '2º Ano', status: 'Ativa' },
+    ],
+    3: [
+      { id: 6, nome: 'Felipe Ramos de Oliveira', serie: '3º Ano', status: 'Ativa' },
+      { id: 7, nome: 'Gabriela Nunes Pereira',   serie: '3º Ano', status: 'Cancelada' },
+      { id: 8, nome: 'Hugo Carvalho Silva',       serie: '3º Ano', status: 'Ativa' },
+      { id: 9, nome: 'Isa Brandão Campos',        serie: '3º Ano', status: 'Ativa' },
+    ],
+  };
+
+  turmaVisualizacao: Turma | null = null;
+  get educandosTurma(): Aluno[] {
+    return this.turmaVisualizacao ? (this.educandosMock[this.turmaVisualizacao.id] ?? []) : [];
+  }
+
+  verEducandos(turma: Turma): void {
+    this.turmaVisualizacao = turma;
+  }
+
+  fecharEducandos(): void {
+    this.turmaVisualizacao = null;
+  }
 
   selectedIds = new Set<number>();
   bulkAction = '';

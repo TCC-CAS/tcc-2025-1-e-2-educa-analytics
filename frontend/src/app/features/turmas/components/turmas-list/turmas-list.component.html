@@ -1,5 +1,43 @@
 <div class="turmas-page">
 
+  <!-- Modal: Educandos da turma -->
+  <div class="modal-overlay" *ngIf="turmaVisualizacao" (click)="fecharEducandos()">
+    <div class="modal modal-educandos" (click)="$event.stopPropagation()">
+      <div class="modal-educandos-header">
+        <div>
+          <h3 class="modal-title" style="text-align:left">Educandos — {{ turmaVisualizacao.nome }}</h3>
+          <p class="modal-message" style="text-align:left">{{ turmaVisualizacao.serie }} &bull; {{ turmaVisualizacao.turno }} &bull; {{ turmaVisualizacao.sala }}</p>
+        </div>
+        <button type="button" class="btn-fechar" (click)="fecharEducandos()" title="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="alunos-table" *ngIf="educandosTurma.length > 0; else semAlunos">
+        <div class="alunos-head">
+          <span>Nome</span>
+          <span>Série</span>
+          <span>Status</span>
+        </div>
+        <div class="alunos-row" *ngFor="let aluno of educandosTurma">
+          <span>{{ aluno.nome }}</span>
+          <span>{{ aluno.serie }}</span>
+          <span>
+            <span class="status-badge"
+              [class.ativa]="aluno.status === 'Ativa'"
+              [class.trancada]="aluno.status === 'Trancada'"
+              [class.cancelada]="aluno.status === 'Cancelada'">
+              {{ aluno.status }}
+            </span>
+          </span>
+        </div>
+      </div>
+      <ng-template #semAlunos>
+        <p class="alunos-vazio">Nenhum educando matriculado nesta turma.</p>
+      </ng-template>
+    </div>
+  </div>
+
   <!-- Modal de Confirmação -->
   <div class="modal-overlay" *ngIf="confirm.visible" (click)="cancelConfirm()">
     <div class="modal" (click)="$event.stopPropagation()">
@@ -62,15 +100,18 @@
       <label for="filtroSerie">Série</label>
       <select id="filtroSerie" [(ngModel)]="filtro.serie" (change)="applyFilters()">
         <option value="">Todas</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
+        <option value="1º Ano">1º Ano</option>
+        <option value="2º Ano">2º Ano</option>
+        <option value="3º Ano">3º Ano</option>
+        <option value="4º Ano">4º Ano</option>
+        <option value="5º Ano">5º Ano</option>
+        <option value="6º Ano">6º Ano</option>
+        <option value="7º Ano">7º Ano</option>
+        <option value="8º Ano">8º Ano</option>
+        <option value="9º Ano">9º Ano</option>
+        <option value="1ª Série EM">1ª Série EM</option>
+        <option value="2ª Série EM">2ª Série EM</option>
+        <option value="3ª Série EM">3ª Série EM</option>
       </select>
     </div>
     <div class="field">
@@ -103,11 +144,12 @@
   <section class="table">
     <div class="table-head">
       <span></span>
-      <span>Codigo</span>
+      <span>Código</span>
       <span>Turma</span>
       <span>Período</span>
       <span>Ano Letivo</span>
-      <span>Serie</span>
+      <span>Série</span>
+      <span>Sala</span>
       <span>Status</span>
       <span>Ações</span>
     </div>
@@ -121,12 +163,16 @@
       <span>{{ turma.turno }}</span>
       <span>{{ turma.anoLetivo }}</span>
       <span>{{ turma.serie }}</span>
+      <span>{{ turma.sala }}</span>
       <span>
         <span class="status" [class.inactive]="turma.status === 'inativa'">
           {{ turma.status === 'ativa' ? 'Ativa' : 'Inativa' }}
         </span>
       </span>
       <span class="row-actions">
+        <button type="button" class="btn-icone" title="Ver educandos" (click)="verEducandos(turma)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </button>
         <button type="button" class="btn-icone" title="Editar" (click)="editTurma(turma)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
