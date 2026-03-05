@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 interface Lancamento {
   id?: number;
   data: string;
   tipoConta: string;
+  formaPagamento: string;
+  tipoDespesa: string;
   descricao: string;
   fornecedor: string;
   valor: number;
@@ -13,15 +15,27 @@ interface Lancamento {
 @Component({
   selector: 'app-caixa-form',
   templateUrl: './caixa-form.component.html',
-  styleUrls: ['./caixa-form.component.scss']
+  styleUrls: ['./caixa-form.component.scss'],
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
 export class CaixaFormComponent implements OnInit {
   lancamentoId: number | null = null;
   isEdicao: boolean = false;
+
+  // Modal de confirmação
+  confirm = {
+    visible: false,
+    title: '',
+    message: '',
+    danger: false,
+    callback: () => {}
+  };
   
   lancamento: Lancamento = {
     data: '',
     tipoConta: '',
+    formaPagamento: '',
+    tipoDespesa: '',
     descricao: '',
     fornecedor: '',
     valor: 0
@@ -57,7 +71,9 @@ export class CaixaFormComponent implements OnInit {
     this.lancamento = {
       id: this.lancamentoId!,
       data: '2026-02-20',
-      tipoConta: 'credito',
+      tipoConta: 'entrada',
+      formaPagamento: 'pix',
+      tipoDespesa: 'N/A',
       descricao: 'Mensalidade Fevereiro - João Silva',
       fornecedor: 'N/A',
       valor: 450.00
@@ -76,15 +92,27 @@ export class CaixaFormComponent implements OnInit {
     }
 
     if (this.isEdicao) {
-      console.log('Atualizar lançamento:', this.lancamento);
-      alert('Lançamento atualizado com sucesso!');
+      this.openConfirm(
+        'Atualizar lançamento',
+        `Tem certeza que deseja atualizar o lançamento "${this.lancamento.descricao}"?`,
+        false,
+        () => {
+          console.log('Atualizar lançamento:', this.lancamento);
+          this.voltar();
+        }
+      );
     } else {
       console.log('Criar novo lançamento:', this.lancamento);
-      alert('Lançamento registrado com sucesso!');
+      this.voltar();
     }
-
-    this.voltar();
   }
+
+  openConfirm(title: string, message: string, danger: boolean, callback: () => void): void {
+    this.confirm = { visible: true, title, message, danger, callback };
+  }
+
+  confirmAction(): void { this.confirm.visible = false; this.confirm.callback(); }
+  cancelConfirm(): void  { this.confirm.visible = false; }
 
   voltar(): void {
     this.router.navigate(['/caixa']);

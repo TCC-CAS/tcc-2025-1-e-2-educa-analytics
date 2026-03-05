@@ -1,80 +1,102 @@
-<div class="caixa-form-container">
-  <div class="header">
-    <h1>{{ isEdicao ? 'Editar Lançamento' : 'Novo Lançamento' }}</h1>
+<div class="caixa-form-page">
+
+  <!-- Modal de Confirmação -->
+  <div class="modal-overlay" *ngIf="confirm.visible" (click)="cancelConfirm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon" [class.danger]="confirm.danger">
+        <svg *ngIf="!confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg *ngIf="confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="10.29 3.86 1.82 18 2 18 22 18 21.73 18 13.71 3.86 12 1 10.29 3.86"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h3 class="modal-title">{{ confirm.title }}</h3>
+      <p class="modal-message">{{ confirm.message }}</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
+        <button type="button" class="modal-btn"
+          [class.modal-confirm-danger]="confirm.danger"
+          [class.modal-confirm]="!confirm.danger"
+          (click)="confirmAction()">Confirmar</button>
+      </div>
+    </div>
   </div>
 
-  <form #lancamentoForm="ngForm" (ngSubmit)="salvar(lancamentoForm)">
-    <div class="form-card">
-      <h2>Informações do Lançamento</h2>
-      <div class="form-grid">
-        <div class="form-field">
+  <div class="form-wrapper">
+
+    <header class="page-header">
+      <h1>{{ isEdicao ? 'Editar Lançamento' : 'Novo Lançamento' }}</h1>
+      <p>{{ isEdicao ? 'Atualize os dados do lançamento.' : 'Preencha os dados para registrar um novo lançamento.' }}</p>
+    </header>
+
+    <form #lancamentoForm="ngForm" (ngSubmit)="salvar(lancamentoForm)" class="form">
+      <div class="section-label">Informações do Lançamento</div>
+      <div class="field-grid">
+
+        <div class="field">
           <label for="data">Data da Movimentação *</label>
-          <input 
-            type="date" 
-            id="data" 
-            name="data"
-            [(ngModel)]="lancamento.data"
-            required>
+          <input type="date" id="data" name="data" [(ngModel)]="lancamento.data" required>
         </div>
 
-        <div class="form-field">
+        <div class="field">
           <label for="tipoConta">Tipo de Operação *</label>
-          <select 
-            id="tipoConta" 
-            name="tipoConta"
-            [(ngModel)]="lancamento.tipoConta"
-            required>
+          <select id="tipoConta" name="tipoConta" [(ngModel)]="lancamento.tipoConta" required>
             <option value="">Selecione</option>
-            <option value="credito">Crédito (Recebimento)</option>
-            <option value="debito">Débito (Pagamento)</option>
+            <option value="entrada">Entrada (Recebimento)</option>
+            <option value="saida">Saída (Pagamento)</option>
           </select>
         </div>
 
-        <div class="form-field full-width">
+        <div class="field">
+          <label for="formaPagamento">Forma de Pagamento *</label>
+          <select id="formaPagamento" name="formaPagamento" [(ngModel)]="lancamento.formaPagamento" required>
+            <option value="">Selecione</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="pix">Pix</option>
+            <option value="credito">Cartão de Crédito</option>
+            <option value="debito">Cartão de Débito</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="tipoDespesa">Tipo de Despesa</label>
+          <select id="tipoDespesa" name="tipoDespesa" [(ngModel)]="lancamento.tipoDespesa">
+            <option value="">Selecione</option>
+            <option value="Material Escolar">Material Escolar</option>
+            <option value="Alimentação">Alimentação</option>
+            <option value="Manutenção">Manutenção</option>
+            <option value="Energia / Água / Telefone">Energia / Água / Telefone</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Uniforme">Uniforme</option>
+            <option value="Outros">Outros</option>
+            <option value="N/A">N/A</option>
+          </select>
+        </div>
+
+        <div class="field full">
           <label for="descricao">Descrição *</label>
-          <input 
-            type="text" 
-            id="descricao" 
-            name="descricao"
-            [(ngModel)]="lancamento.descricao"
-            required
+          <input type="text" id="descricao" name="descricao" [(ngModel)]="lancamento.descricao" required
             placeholder="Ex: Mensalidade Fevereiro, Pagamento Fornecedor">
         </div>
 
-        <div class="form-field">
+        <div class="field">
           <label for="fornecedor">Fornecedor *</label>
-          <select 
-            id="fornecedor" 
-            name="fornecedor"
-            [(ngModel)]="lancamento.fornecedor"
-            required>
+          <select id="fornecedor" name="fornecedor" [(ngModel)]="lancamento.fornecedor" required>
             <option value="">Selecione</option>
-            <option *ngFor="let fornecedor of fornecedores" [value]="fornecedor">
-              {{ fornecedor }}
-            </option>
+            <option *ngFor="let fornecedor of fornecedores" [value]="fornecedor">{{ fornecedor }}</option>
           </select>
         </div>
 
-        <div class="form-field">
+        <div class="field">
           <label for="valor">Valor (R$) *</label>
-          <input 
-            type="number" 
-            id="valor" 
-            name="valor"
-            [(ngModel)]="lancamento.valor"
-            required
-            min="0.01"
-            step="0.01"
-            placeholder="0,00">
+          <input type="number" id="valor" name="valor" [(ngModel)]="lancamento.valor" required
+            min="0.01" step="0.01" placeholder="0,00">
         </div>
-      </div>
-    </div>
 
-    <div class="form-actions">
-      <button type="button" class="btn-ghost" (click)="voltar()">Cancelar</button>
-      <button type="submit" class="btn-primary">
-        {{ isEdicao ? 'Atualizar' : 'Registrar' }}
-      </button>
-    </div>
-  </form>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="ghost" (click)="voltar()">Cancelar</button>
+        <button type="submit" class="primary">{{ isEdicao ? 'Atualizar' : 'Registrar' }}</button>
+      </div>
+    </form>
+
+  </div>
 </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 interface Lancamento {
@@ -14,7 +14,8 @@ interface Lancamento {
 @Component({
   selector: 'app-lancamento-form',
   templateUrl: './lancamento-form.component.html',
-  styleUrls: ['./lancamento-form.component.scss']
+  styleUrls: ['./lancamento-form.component.scss'],
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
 export class LancamentoFormComponent implements OnInit {
   lancamentoId: number | null = null;
