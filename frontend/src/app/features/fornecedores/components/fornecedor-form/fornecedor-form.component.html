@@ -1,128 +1,100 @@
-<div class="fornecedor-form-container">
-  <div class="header">
-    <h1>{{ isEdicao ? 'Editar Fornecedor' : 'Novo Fornecedor' }}</h1>
-  </div>
+<div class="fornecedor-form-page">
+  <div class="form-wrapper">
 
-  <form #fornecedorForm="ngForm" (ngSubmit)="salvar(fornecedorForm)">
+  <header class="page-header">
+    <div>
+      <h1>{{ isEdicao ? 'Editar Fornecedor' : 'Novo Fornecedor' }}</h1>
+      <p>Informe os dados do fornecedor para salvar as informações.</p>
+    </div>
+  </header>
+
+  <form #fornecedorForm="ngForm" class="form" (ngSubmit)="salvar(fornecedorForm)">
+
     <!-- Tipo de Pessoa -->
-    <div class="form-card">
-      <h2>Tipo de Pessoa</h2>
-      <div class="tipo-pessoa">
-        <label class="radio-label">
-          <input 
-            type="radio" 
-            name="tipo" 
-            value="PF" 
-            [(ngModel)]="fornecedor.tipo"
-            required>
-          <span>Pessoa Física (PF)</span>
-        </label>
-        <label class="radio-label">
-          <input 
-            type="radio" 
-            name="tipo" 
-            value="PJ" 
-            [(ngModel)]="fornecedor.tipo"
-            required>
-          <span>Pessoa Jurídica (PJ)</span>
-        </label>
-      </div>
+    <div class="section-label">Tipo de Pessoa</div>
+    <div class="tipo-pessoa">
+      <label class="radio-label">
+        <input type="radio" name="tipo" value="PF" [(ngModel)]="fornecedor.tipo" required>
+        <span>Pessoa Física (PF)</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="tipo" value="PJ" [(ngModel)]="fornecedor.tipo" required>
+        <span>Pessoa Jurídica (PJ)</span>
+      </label>
     </div>
 
     <!-- Dados Básicos -->
-    <div class="form-card">
-      <h2>Dados Básicos</h2>
-      <div class="form-grid">
-        <div class="form-field" [class.full-width]="!mostrarRazaoSocial">
-          <label [attr.for]="'nome'">{{ labelNome }} *</label>
-          <input 
-            type="text" 
-            id="nome" 
-            name="nome"
-            [(ngModel)]="fornecedor.nome"
-            required
-            [placeholder]="fornecedor.tipo === 'PF' ? 'Ex: João Silva' : 'Ex: Papelaria Central'">
-        </div>
+    <div class="section-label" style="margin-top:1.25rem">Dados Básicos</div>
+    <div class="field-grid">
+      <label class="field" [class.full-width]="!mostrarRazaoSocial">
+        <span>{{ labelNome }} *</span>
+        <input type="text" name="nome" [(ngModel)]="fornecedor.nome" required
+          [placeholder]="fornecedor.tipo === 'PF' ? 'Ex: João Silva' : 'Ex: Papelaria Central'">
+      </label>
 
-        <div class="form-field" *ngIf="mostrarRazaoSocial">
-          <label for="razaoSocial">Razão Social *</label>
-          <input 
-            type="text" 
-            id="razaoSocial" 
-            name="razaoSocial"
-            [(ngModel)]="fornecedor.razaoSocial"
-            [required]="mostrarRazaoSocial"
-            placeholder="Ex: Papelaria Central Ltda">
-        </div>
+      <label class="field" *ngIf="mostrarRazaoSocial">
+        <span>Razão Social *</span>
+        <input type="text" name="razaoSocial" [(ngModel)]="fornecedor.razaoSocial"
+          [required]="mostrarRazaoSocial" placeholder="Ex: Papelaria Central Ltda">
+      </label>
 
-        <div class="form-field">
-          <label [attr.for]="'cpfCnpj'">{{ labelDocumento }} *</label>
-          <input 
-            type="text" 
-            id="cpfCnpj" 
-            name="cpfCnpj"
-            [(ngModel)]="fornecedor.cpfCnpj"
-            required
-            [placeholder]="fornecedor.tipo === 'PF' ? '000.000.000-00' : '00.000.000/0000-00'">
-        </div>
+      <label class="field">
+        <span>{{ labelDocumento }} *</span>
+        <input type="text" name="cpfCnpj" [(ngModel)]="fornecedor.cpfCnpj" required
+          [placeholder]="fornecedor.tipo === 'PF' ? '000.000.000-00' : '00.000.000/0000-00'">
+      </label>
 
-        <div class="form-field">
-          <label for="telefone">Telefone *</label>
-          <input 
-            type="tel" 
-            id="telefone" 
-            name="telefone"
-            [(ngModel)]="fornecedor.telefone"
-            required
-            placeholder="(00) 00000-0000">
-        </div>
+      <label class="field">
+        <span>Telefone *</span>
+        <input type="tel" name="telefone" [(ngModel)]="fornecedor.telefone" required
+          placeholder="(00) 00000-0000">
+      </label>
 
-        <div class="form-field full-width">
-          <label for="email">E-mail *</label>
-          <input 
-            type="email" 
-            id="email" 
-            name="email"
-            [(ngModel)]="fornecedor.email"
-            required
-            placeholder="exemplo@email.com">
-        </div>
-      </div>
+      <label class="field full-width">
+        <span>E-mail *</span>
+        <input type="email" name="email" [(ngModel)]="fornecedor.email" required
+          placeholder="exemplo@email.com">
+      </label>
+
+      <label class="field">
+        <span>Tipo de Despesa *</span>
+        <select name="tipoDespesa" [(ngModel)]="fornecedor.tipoDespesa" required>
+          <option value="" disabled>Selecione o tipo</option>
+          <option value="Material Escolar">Material Escolar</option>
+          <option value="Alimentação">Alimentação</option>
+          <option value="Manutenção">Manutenção</option>
+          <option value="Serviços de TI">Serviços de TI</option>
+          <option value="Limpeza e Higiene">Limpeza e Higiene</option>
+          <option value="Transporte">Transporte</option>
+          <option value="Uniforme">Uniforme</option>
+          <option value="Energia / Água / Telefone">Energia / Água / Telefone</option>
+          <option value="Outros">Outros</option>
+        </select>
+      </label>
     </div>
 
     <!-- Endereço -->
-    <div class="form-card">
-      <h2>Endereço</h2>
-      <div class="form-grid">
-        <div class="form-field">
-          <label for="cep">CEP *</label>
-          <input 
-            type="text" 
-            id="cep" 
-            name="cep"
-            [(ngModel)]="fornecedor.cep"
-            required
-            placeholder="00000-000">
-        </div>
+    <div class="section-label" style="margin-top:1.25rem">Endereço</div>
+    <div class="field-grid">
+      <label class="field">
+        <span>CEP *</span>
+        <input type="text" name="cep" [(ngModel)]="fornecedor.cep" required
+          placeholder="00000-000">
+      </label>
 
-        <div class="form-field full-width">
-          <label for="endereco">Endereço Completo *</label>
-          <input 
-            type="text" 
-            id="endereco" 
-            name="endereco"
-            [(ngModel)]="fornecedor.endereco"
-            required
-            placeholder="Rua, número, bairro, cidade - UF">
-        </div>
-      </div>
+      <label class="field full-width">
+        <span>Endereço Completo *</span>
+        <input type="text" name="endereco" [(ngModel)]="fornecedor.endereco" required
+          placeholder="Rua, número, bairro, cidade - UF">
+      </label>
     </div>
 
     <div class="form-actions">
-      <button type="button" class="btn-ghost" (click)="voltar()">Cancelar</button>
-      <button type="submit" class="btn-primary">
-        {{ isEdicao ? 'Atualizar' : 'Cadastrar' }}
-      </button>
+      <button type="button" class="ghost" (click)="voltar()">Cancelar</button>
+      <button type="submit" class="primary">{{ isEdicao ? 'Atualizar' : 'Cadastrar' }}</button>
     </div>
+
   </form>
+
+  </div>
 </div>

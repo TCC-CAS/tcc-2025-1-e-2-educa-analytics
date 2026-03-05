@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 interface Fornecedor {
@@ -11,12 +11,14 @@ interface Fornecedor {
   telefone: string;
   cep: string;
   endereco: string;
+  tipoDespesa: string;
 }
 
 @Component({
   selector: 'app-fornecedor-form',
   templateUrl: './fornecedor-form.component.html',
-  styleUrls: ['./fornecedor-form.component.scss']
+  styleUrls: ['./fornecedor-form.component.scss'],
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
 export class FornecedorFormComponent implements OnInit {
   fornecedorId: number | null = null;
@@ -30,7 +32,8 @@ export class FornecedorFormComponent implements OnInit {
     email: '',
     telefone: '',
     cep: '',
-    endereco: ''
+    endereco: '',
+    tipoDespesa: ''
   };
 
   constructor(
@@ -58,7 +61,8 @@ export class FornecedorFormComponent implements OnInit {
       email: 'contato@papelariacentral.com.br',
       telefone: '(31) 3456-7890',
       cep: '30130-000',
-      endereco: 'Av. Afonso Pena, 1500'
+      endereco: 'Av. Afonso Pena, 1500',
+      tipoDespesa: 'Material Escolar'
     };
   }
 

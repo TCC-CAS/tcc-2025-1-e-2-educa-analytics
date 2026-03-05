@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 interface Fornecedor {
@@ -11,13 +11,15 @@ interface Fornecedor {
   telefone: string;
   cep: string;
   endereco: string;
+  tipoDespesa: string;
   ativo: boolean;
 }
 
 @Component({
   selector: 'app-fornecedores-list',
   templateUrl: './fornecedores-list.component.html',
-  styleUrls: ['./fornecedores-list.component.scss']
+  styleUrls: ['./fornecedores-list.component.scss'],
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
 export class FornecedoresListComponent implements OnInit {
   fornecedores: Fornecedor[] = [];
@@ -27,9 +29,24 @@ export class FornecedoresListComponent implements OnInit {
   filtroTipo: string = '';
   filtroNome: string = '';
   filtroStatus: string = '';
+  filtroTipoDespesa: string = '';
   
   // Seleção
   selecionados: Set<number> = new Set();
+  bulkAction: string = '';
+
+  // Mensagem de feedback
+  message: string = '';
+  messageType: 'success' | 'error' = 'success';
+
+  // Modal de confirmação
+  confirm = {
+    visible: false,
+    title: '',
+    message: '',
+    danger: false,
+    callback: () => {}
+  };
 
   constructor(private router: Router) {}
 
@@ -50,6 +67,7 @@ export class FornecedoresListComponent implements OnInit {
         telefone: '(31) 3456-7890',
         cep: '30130-000',
         endereco: 'Av. Afonso Pena, 1500',
+        tipoDespesa: 'Material Escolar',
         ativo: true
       },
       {
@@ -62,6 +80,7 @@ export class FornecedoresListComponent implements OnInit {
         telefone: '(31) 3506-1500',
         cep: '30190-922',
         endereco: 'Av. Barbacena, 1200',
+        tipoDespesa: 'Energia / Água / Telefone',
         ativo: true
       },
       {
@@ -73,6 +92,7 @@ export class FornecedoresListComponent implements OnInit {
         telefone: '(31) 98765-4321',
         cep: '30140-071',
         endereco: 'Rua Rio de Janeiro, 1000',
+        tipoDespesa: 'Manutenção',
         ativo: true
       },
       {
@@ -85,6 +105,7 @@ export class FornecedoresListComponent implements OnInit {
         telefone: '(31) 3200-5500',
         cep: '31110-000',
         endereco: 'Rua dos Goi  tácazes, 500',
+        tipoDespesa: 'Alimentação',
         ativo: false
       }
     ];
@@ -101,8 +122,10 @@ export class FornecedoresListComponent implements OnInit {
       const matchStatus = !this.filtroStatus || 
         (this.filtroStatus === 'ativo' && fornecedor.ativo) ||
         (this.filtroStatus === 'inativo' && !fornecedor.ativo);
+      const matchTipoDespesa = !this.filtroTipoDespesa ||
+        fornecedor.tipoDespesa === this.filtroTipoDespesa;
       
-      return matchTipo && matchNome && matchStatus;
+      return matchTipo && matchNome && matchStatus && matchTipoDespesa;
     });
   }
 
@@ -110,6 +133,7 @@ export class FornecedoresListComponent implements OnInit {
     this.filtroTipo = '';
     this.filtroNome = '';
     this.filtroStatus = '';
+    this.filtroTipoDespesa = '';
     this.aplicarFiltros();
   }
 
@@ -134,54 +158,31 @@ export class FornecedoresListComponent implements OnInit {
     return this.selecionados.size;
   }
 
-  ativarSelecionados(): void {
-    if (this.quantidadeSelecionados === 0) {
-      alert('Selecione pelo menos um fornecedor');
-      return;
-    }
-    
-    if (confirm(`Tem certeza que deseja ativar ${this.quantidadeSelecionados} fornecedor(es)?`)) {
-      // Implementar chamada à API
-      this.fornecedores.forEach(f => {
-        if (this.selecionados.has(f.id)) {
-          f.ativo = true;
-        }
-      });
-      this.selecionados.clear();
-      this.aplicarFiltros();
-    }
+  private _ativarSelecionados(): void {
+    this.fornecedores.forEach(f => { if (this.selecionados.has(f.id)) f.ativo = true; });
+    const n = this.selecionados.size;
+    this.selecionados.clear();
+    this.bulkAction = '';
+    this.aplicarFiltros();
+    this.showMessage(`${n} fornecedor(es) ativado(s) com sucesso.`, 'success');
   }
 
-  desativarSelecionados(): void {
-    if (this.quantidadeSelecionados === 0) {
-      alert('Selecione pelo menos um fornecedor');
-      return;
-    }
-    
-    if (confirm(`Tem certeza que deseja desativar ${this.quantidadeSelecionados} fornecedor(es)?`)) {
-      // Implementar chamada à API
-      this.fornecedores.forEach(f => {
-        if (this.selecionados.has(f.id)) {
-          f.ativo = false;
-        }
-      });
-      this.selecionados.clear();
-      this.aplicarFiltros();
-    }
+  private _desativarSelecionados(): void {
+    this.fornecedores.forEach(f => { if (this.selecionados.has(f.id)) f.ativo = false; });
+    const n = this.selecionados.size;
+    this.selecionados.clear();
+    this.bulkAction = '';
+    this.aplicarFiltros();
+    this.showMessage(`${n} fornecedor(es) desativado(s) com sucesso.`, 'success');
   }
 
-  excluirSelecionados(): void {
-    if (this.quantidadeSelecionados === 0) {
-      alert('Selecione pelo menos um fornecedor');
-      return;
-    }
-    
-    if (confirm(`Tem certeza que deseja excluir ${this.quantidadeSelecionados} fornecedor(es)? Esta ação não pode ser desfeita.`)) {
-      // Implementar chamada à API
-      this.fornecedores = this.fornecedores.filter(f => !this.selecionados.has(f.id));
-      this.selecionados.clear();
-      this.aplicarFiltros();
-    }
+  private _excluirSelecionados(): void {
+    const n = this.selecionados.size;
+    this.fornecedores = this.fornecedores.filter(f => !this.selecionados.has(f.id));
+    this.selecionados.clear();
+    this.bulkAction = '';
+    this.aplicarFiltros();
+    this.showMessage(`${n} fornecedor(es) excluído(s) com sucesso.`, 'success');
   }
 
   novo(): void {
@@ -193,10 +194,66 @@ export class FornecedoresListComponent implements OnInit {
   }
 
   excluir(fornecedor: Fornecedor): void {
-    if (confirm(`Tem certeza que deseja excluir o fornecedor "${fornecedor.nome}"?`)) {
-      // Implementar chamada à API
-      this.fornecedores = this.fornecedores.filter(f => f.id !== fornecedor.id);
-      this.aplicarFiltros();
-    }
+    this.openConfirm(
+      'Excluir fornecedor',
+      `Tem certeza que deseja excluir o fornecedor "${fornecedor.nome}"? Esta ação não pode ser desfeita.`,
+      true,
+      () => {
+        this.fornecedores = this.fornecedores.filter(f => f.id !== fornecedor.id);
+        this.aplicarFiltros();
+        this.showMessage(`Fornecedor "${fornecedor.nome}" excluído com sucesso.`, 'success');
+      }
+    );
   }
+
+  toggleAtivo(fornecedor: Fornecedor): void {
+    const acao = fornecedor.ativo ? 'desativar' : 'ativar';
+    this.openConfirm(
+      `${acao.charAt(0).toUpperCase() + acao.slice(1)} fornecedor`,
+      `Tem certeza que deseja ${acao} o fornecedor "${fornecedor.nome}"?`,
+      acao === 'desativar',
+      () => {
+        fornecedor.ativo = !fornecedor.ativo;
+        this.aplicarFiltros();
+        this.showMessage(`Fornecedor "${fornecedor.nome}" ${fornecedor.ativo ? 'ativado' : 'desativado'} com sucesso.`, 'success');
+      }
+    );
+  }
+
+  performBulkAction(): void {
+    if (!this.bulkAction) {
+      this.showMessage('Selecione uma ação em lote.', 'error');
+      return;
+    }
+    if (this.quantidadeSelecionados === 0) {
+      this.showMessage('Selecione pelo menos um fornecedor.', 'error');
+      return;
+    }
+    const n = this.quantidadeSelecionados;
+    const acaoLabel = this.bulkAction === 'excluir' ? 'excluir' : this.bulkAction === 'ativar' ? 'ativar' : 'desativar';
+    const isDanger = this.bulkAction === 'excluir' || this.bulkAction === 'desativar';
+    const snapshot = this.bulkAction;
+    this.openConfirm(
+      'Ação em lote',
+      `Tem certeza que deseja ${acaoLabel} ${n} fornecedor(es) selecionado(s)?`,
+      isDanger,
+      () => {
+        if (snapshot === 'ativar')    this._ativarSelecionados();
+        if (snapshot === 'desativar') this._desativarSelecionados();
+        if (snapshot === 'excluir')   this._excluirSelecionados();
+      }
+    );
+  }
+
+  showMessage(msg: string, type: 'success' | 'error'): void {
+    this.message = msg;
+    this.messageType = type;
+  }
+
+  openConfirm(title: string, message: string, danger: boolean, callback: () => void): void {
+    this.confirm = { visible: true, title, message, danger, callback };
+  }
+
+  confirmAction(): void { this.confirm.visible = false; this.confirm.callback(); }
+  cancelConfirm(): void  { this.confirm.visible = false; }
 }
