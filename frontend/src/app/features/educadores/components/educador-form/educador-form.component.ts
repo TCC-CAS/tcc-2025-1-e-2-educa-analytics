@@ -1,176 +1,190 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 
-interface Formacao {
+type EducadorTab = 'dados' | 'formacao';
+
+interface ViaCepResponse {
+  cep: string; logradouro: string; complemento: string;
+  bairro: string; localidade: string; uf: string; erro?: boolean;
+}
+
+interface Endereco {
+  cep: string; logradouro: string; numero: string;
+  complemento: string; bairro: string; uf: string; cidade: string;
+}
+
+interface FormacaoAcademica {
   id?: number;
+  grau: string;
   instituicao: string;
   areaEstudo: string;
   dataInicio: string;
   dataTermino: string;
-  descricao: string;
-}
-
-interface Educador {
-  id?: number;
-  nomeCompleto: string;
-  dataNascimento: string;
-  cpf: string;
-  genero: string;
-  raca: string;
-  endereco: string;
-  telefone: string;
-  email: string;
-  formacaoAcademica: string;
-  disciplinaLecionada: string;
-  turno: string;
-  matriculaFuncional: string;
-  senha?: string;
-  confirmacaoSenha?: string;
-  formacoes: Formacao[];
-  status: 'ativo' | 'inativo';
+  situacao: string;
 }
 
 @Component({
   selector: 'app-educador-form',
   templateUrl: './educador-form.component.html',
-  styleUrls: ['./educador-form.component.scss']
+  styleUrls: ['./educador-form.component.scss'],
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
 export class EducadorFormComponent implements OnInit {
+
   educadorId: number | null = null;
-  isEdicao: boolean = false;
-  
-  educador: Educador = {
-    nomeCompleto: '',
-    dataNascimento: '',
-    cpf: '',
-    genero: '',
-    raca: '',
-    endereco: '',
-    telefone: '',
-    email: '',
-    formacaoAcademica: '',
-    disciplinaLecionada: '',
-    turno: '',
-    matriculaFuncional: '',
-    senha: '',
-    confirmacaoSenha: '',
-    formacoes: [],
-    status: 'ativo'
-  };
+  isEdicao = false;
+  activeTab: EducadorTab = 'dados';
 
-  // Nova formação
-  novaFormacao: Formacao = {
-    instituicao: '',
-    areaEstudo: '',
-    dataInicio: '',
-    dataTermino: '',
-    descricao: ''
-  };
+  // Identificacao
+  matriculaFuncional = '';
+  nomeCompleto = '';
+  nacionalidade = '';
+  generoSelecionado = '';
+  generoOutro = false;
+  generoCustom = '';
+  corRaca = '';
+  dataNascimento = '';
+  idade: number | null = null;
 
-  mostrarFormFormacao: boolean = false;
+  // Endereco
+  endereco: Endereco = { cep: '', logradouro: '', numero: '', complemento: '', bairro: '', uf: '', cidade: '' };
+  cepLoading = false;
+  cepErro = false;
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router
-  ) {}
+  // Contato
+  telefone = '';
+  email = '';
+
+  // Documentos
+  rg = '';
+  orgaoEmissor = '';
+  estadoEmissor = '';
+  cpf = '';
+
+  // Dados Profissionais
+  disciplinaLecionada = '';
+  turno = '';
+
+  // Formacoes
+  formacoes: FormacaoAcademica[] = [];
+  novaFormacao: FormacaoAcademica = { grau: '', instituicao: '', areaEstudo: '', dataInicio: '', dataTermino: '', situacao: 'concluido' };
+  mostrarFormFormacao = false;
+
+  // Validacao
+  mostrarErros = false;
+  errosValidacao: { tab: EducadorTab; tabLabel: string; campos: string[] }[] = [];
+
+  // Modal
+  confirm = { visible: false, title: '', message: '', danger: false, callback: () => {} };
+
+  constructor(private route: ActivatedRoute, private router: Router, private http: HttpClient) {}
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.educadorId = parseInt(id);
       this.isEdicao = true;
-      this.carregarEducador();
-    }
-  }
-
-  carregarEducador(): void {
-    // Mock - substituir por chamada à API
-    this.educador = {
-      id: this.educadorId!,
-      nomeCompleto: 'Ana Paula Silva',
-      dataNascimento: '1985-05-15',
-      cpf: '123.456.789-00',
-      genero: 'Feminino',
-      raca: 'Branca',
-      endereco: 'Rua das Flores, 123 - Centro - São Paulo/SP',
-      telefone: '(11) 98765-4321',
-      email: 'ana.silva@escola.edu.br',
-      formacaoAcademica: 'Licenciatura em Matemática',
-      disciplinaLecionada: 'Matemática',
-      turno: 'Matutino',
-      matriculaFuncional: 'EDU001',
-      formacoes: [
-        {
-          id: 1,
-          instituicao: 'Universidade de São Paulo',
-          areaEstudo: 'Licenciatura em Matemática',
-          dataInicio: '2003-02-01',
-          dataTermino: '2006-12-15',
-          descricao: 'Graduação em Licenciatura Plena'
-        }
-      ],
-      status: 'ativo'
-    };
-  }
-
-  salvar(form: any): void {
-    if (!form.valid) {
-      alert('Por favor, preencha todos os campos obrigatórios');
-      return;
-    }
-
-    if (!this.isEdicao && this.educador.senha !== this.educador.confirmacaoSenha) {
-      alert('A senha e a confirmação de senha não coincidem');
-      return;
-    }
-
-    if (this.isEdicao) {
-      console.log('Atualizar educador:', this.educador);
-      // Implementar chamada à API
     } else {
-      console.log('Criar novo educador:', this.educador);
-      // Implementar chamada à API
-    }
-
-    this.voltar();
-  }
-
-  voltar(): void {
-    this.router.navigate(['/educadores']);
-  }
-
-  // Gerenciamento de formações
-  toggleFormFormacao(): void {
-    this.mostrarFormFormacao = !this.mostrarFormFormacao;
-    if (!this.mostrarFormFormacao) {
-      this.limparFormFormacao();
+      this.matriculaFuncional = 'EDU-' + Math.floor(10000 + Math.random() * 90000);
     }
   }
 
-  adicionarFormacao(formFormacao: any): void {
-    if (!formFormacao.valid) {
-      alert('Por favor, preencha todos os campos da formação');
-      return;
-    }
+  setTab(tab: EducadorTab): void { this.activeTab = tab; }
+  nextTab(): void { this.activeTab = 'formacao'; }
 
-    this.educador.formacoes.push({ ...this.novaFormacao });
-    this.limparFormFormacao();
+  onGeneroChange(value: string): void {
+    this.generoOutro = value === 'outro';
+    if (!this.generoOutro) this.generoCustom = '';
+  }
+
+  onNascimentoChange(value: string): void {
+    if (!value) { this.idade = null; return; }
+    const hoje = new Date(); const nasc = new Date(value);
+    let anos = hoje.getFullYear() - nasc.getFullYear();
+    const m = hoje.getMonth() - nasc.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) anos--;
+    this.idade = anos >= 0 ? anos : null;
+  }
+
+  buscarCep(): void {
+    const cep = this.endereco.cep.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    this.cepLoading = true; this.cepErro = false;
+    this.http.get<ViaCepResponse>(`https://viacep.com.br/ws/${cep}/json/`).subscribe({
+      next: (res) => {
+        this.cepLoading = false;
+        if (res.erro) { this.cepErro = true; return; }
+        this.endereco.logradouro = res.logradouro;
+        this.endereco.complemento = res.complemento;
+        this.endereco.bairro = res.bairro;
+        this.endereco.uf = res.uf;
+        this.endereco.cidade = res.localidade;
+      },
+      error: () => { this.cepLoading = false; this.cepErro = true; }
+    });
+  }
+
+  abrirFormFormacao(): void {
+    this.novaFormacao = { grau: '', instituicao: '', areaEstudo: '', dataInicio: '', dataTermino: '', situacao: 'concluido' };
+    this.mostrarFormFormacao = true;
+  }
+
+  adicionarFormacao(): void {
+    if (!this.novaFormacao.grau || !this.novaFormacao.instituicao || !this.novaFormacao.areaEstudo) return;
+    this.formacoes.push({ ...this.novaFormacao, id: Date.now() });
     this.mostrarFormFormacao = false;
   }
 
-  limparFormFormacao(): void {
-    this.novaFormacao = {
-      instituicao: '',
-      areaEstudo: '',
-      dataInicio: '',
-      dataTermino: '',
-      descricao: ''
-    };
+  cancelarFormacao(): void { this.mostrarFormFormacao = false; }
+
+  removerFormacao(id: number | undefined): void {
+    this.formacoes = this.formacoes.filter(f => f.id !== id);
   }
 
-  removerFormacao(index: number): void {
-    if (confirm('Tem certeza que deseja remover esta formação?')) {
-      this.educador.formacoes.splice(index, 1);
-    }
+  validar(): boolean {
+    this.errosValidacao = [];
+    const d: string[] = [];
+    if (!this.nomeCompleto) d.push('Nome completo');
+    if (!this.nacionalidade) d.push('Nacionalidade');
+    if (!this.generoSelecionado) d.push('Genero');
+    if (!this.corRaca) d.push('Cor / Raca');
+    if (!this.dataNascimento) d.push('Data de nascimento');
+    if (!this.endereco.cep) d.push('CEP');
+    if (!this.endereco.logradouro) d.push('Endereco');
+    if (!this.endereco.numero) d.push('Numero');
+    if (!this.telefone) d.push('Telefone');
+    if (!this.email) d.push('E-mail');
+    if (!this.rg) d.push('RG');
+    if (!this.cpf) d.push('CPF');
+    if (d.length) this.errosValidacao.push({ tab: 'dados', tabLabel: 'Dados Pessoais', campos: d });
+    const f: string[] = [];
+    if (!this.disciplinaLecionada) f.push('Disciplina lecionada');
+    if (!this.turno) f.push('Turno');
+    if (f.length) this.errosValidacao.push({ tab: 'formacao', tabLabel: 'Formacao Academica', campos: f });
+    return this.errosValidacao.length === 0;
   }
+
+  abrirConfirmacao(): void {
+    this.mostrarErros = true;
+    if (!this.validar()) return;
+    this.openConfirm(
+      this.isEdicao ? 'Atualizar educador' : 'Cadastrar educador',
+      `Confirma o cadastro de "${this.nomeCompleto}" como educador?`,
+      false, () => this.salvar()
+    );
+  }
+
+  salvar(): void {
+    console.log('Salvar educador:', { matriculaFuncional: this.matriculaFuncional, nomeCompleto: this.nomeCompleto });
+    this.router.navigate(['/educadores']);
+  }
+
+  voltar(): void { this.router.navigate(['/educadores']); }
+
+  openConfirm(title: string, message: string, danger: boolean, callback: () => void): void {
+    this.confirm = { visible: true, title, message, danger, callback };
+  }
+  confirmAction(): void { this.confirm.visible = false; this.confirm.callback(); }
+  cancelConfirm(): void  { this.confirm.visible = false; }
 }

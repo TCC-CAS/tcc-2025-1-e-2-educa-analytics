@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 interface Educador {
@@ -14,7 +14,8 @@ interface Educador {
 @Component({
   selector: 'app-educadores-list',
   templateUrl: './educadores-list.component.html',
-  styleUrls: ['./educadores-list.component.scss']
+  styleUrls: ['./educadores-list.component.scss'],
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
 export class EducadoresListComponent implements OnInit {
   educadores: Educador[] = [];
@@ -103,6 +104,10 @@ export class EducadoresListComponent implements OnInit {
 
   editar(id: number): void {
     this.router.navigate([`/educadores/${id}/editar`]);
+  }
+
+  verTurmas(id: number): void {
+    this.router.navigate([`/educadores/${id}/minhas-turmas`]);
   }
 
   excluir(educador: Educador): void {

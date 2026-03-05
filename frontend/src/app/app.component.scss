@@ -88,6 +88,41 @@
   font-weight: 600;
 }
 
+.menu-item-sub {
+  font-size: 0.82rem;
+  padding-left: 1.8rem;
+  opacity: 0.82;
+
+  .dot {
+    width: 5px;
+    height: 5px;
+    background: rgba(243, 201, 105, 0.6);
+  }
+
+  &:hover { opacity: 1; }
+  &.active { opacity: 1; font-weight: 600; }
+}
+
+.menu-section-label {
+  display: flex;
+  align-items: center;
+  padding: .55rem 1.2rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
+  margin-top: .4rem;
+
+  .dot {
+    width: 5px;
+    height: 5px;
+    background: rgba(243, 201, 105, 0.4);
+  }
+}
+
 .dot {
   width: 8px;
   height: 8px;

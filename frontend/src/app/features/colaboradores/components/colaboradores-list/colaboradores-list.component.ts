@@ -1,11 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+
+type TipoColaborador = 'educador' | 'colaborador' | 'diretor';
 
 interface Colaborador {
   id: number;
   matriculaFuncional: string;
   nomeCompleto: string;
   cargo: string;
+  tipo: TipoColaborador;
   status: 'ativo' | 'inativo';
   selected?: boolean;
 }
@@ -13,25 +16,33 @@ interface Colaborador {
 @Component({
   selector: 'app-colaboradores-list',
   templateUrl: './colaboradores-list.component.html',
-  styleUrls: ['./colaboradores-list.component.scss']
+  styleUrls: ['./colaboradores-list.component.scss'],
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
 export class ColaboradoresListComponent implements OnInit {
   colaboradores: Colaborador[] = [];
   colaboradoresFiltrados: Colaborador[] = [];
-  
+
   // Filtros
   filtroMatricula: string = '';
   filtroNome: string = '';
   filtroCargo: string = '';
   filtroStatus: string = '';
-  
+  filtroTipo: string = '';
+
   // Seleção múltipla
   todosSelecionados: boolean = false;
   algumSelecionado: boolean = false;
-  
+
   // Ação em lote
   acaoLote: string = '';
-  
+
+  tipoLabel: Record<TipoColaborador, string> = {
+    educador: 'Educador',
+    colaborador: 'Colaborador',
+    diretor: 'Diretor'
+  };
+
   constructor(private router: Router) {}
 
   ngOnInit(): void {
@@ -39,45 +50,70 @@ export class ColaboradoresListComponent implements OnInit {
   }
 
   carregarColaboradores(): void {
-    // Mock data - substituir por chamada à API
     this.colaboradores = [
-      { 
-        id: 1, 
-        matriculaFuncional: 'COL001', 
-        nomeCompleto: 'Maria Santos Costa', 
+      {
+        id: 1,
+        matriculaFuncional: 'EDU-00001',
+        nomeCompleto: 'Carlos Eduardo Ferreira',
+        cargo: 'Professor de Matemática',
+        tipo: 'educador',
+        status: 'ativo'
+      },
+      {
+        id: 2,
+        matriculaFuncional: 'EDU-00002',
+        nomeCompleto: 'Fernanda Alves Lima',
+        cargo: 'Professora de Português',
+        tipo: 'educador',
+        status: 'ativo'
+      },
+      {
+        id: 3,
+        matriculaFuncional: 'COL-00001',
+        nomeCompleto: 'Maria Santos Costa',
         cargo: 'Secretária Escolar',
+        tipo: 'colaborador',
         status: 'ativo'
       },
-      { 
-        id: 2, 
-        matriculaFuncional: 'COL002', 
-        nomeCompleto: 'João Silva Pereira', 
+      {
+        id: 4,
+        matriculaFuncional: 'COL-00002',
+        nomeCompleto: 'João Silva Pereira',
         cargo: 'Auxiliar Administrativo',
+        tipo: 'colaborador',
         status: 'ativo'
       },
-      { 
-        id: 3, 
-        matriculaFuncional: 'COL003', 
-        nomeCompleto: 'Ana Oliveira Lima', 
+      {
+        id: 5,
+        matriculaFuncional: 'COL-00003',
+        nomeCompleto: 'Ana Oliveira Lima',
         cargo: 'Bibliotecária',
+        tipo: 'colaborador',
         status: 'inativo'
+      },
+      {
+        id: 6,
+        matriculaFuncional: 'DIR-00001',
+        nomeCompleto: 'Roberto Mendes Souza',
+        cargo: 'Diretor Geral',
+        tipo: 'diretor',
+        status: 'ativo'
       }
     ];
     this.aplicarFiltros();
   }
 
   aplicarFiltros(): void {
-    this.colaboradoresFiltrados = this.colaboradores.filter(colaborador => {
-      const matchMatricula = !this.filtroMatricula || 
-        colaborador.matriculaFuncional.toLowerCase().includes(this.filtroMatricula.toLowerCase());
-      const matchNome = !this.filtroNome || 
-        colaborador.nomeCompleto.toLowerCase().includes(this.filtroNome.toLowerCase());
-      const matchCargo = !this.filtroCargo || 
-        colaborador.cargo.toLowerCase().includes(this.filtroCargo.toLowerCase());
-      const matchStatus = !this.filtroStatus || 
-        colaborador.status === this.filtroStatus;
-      
-      return matchMatricula && matchNome && matchCargo && matchStatus;
+    this.colaboradoresFiltrados = this.colaboradores.filter(c => {
+      const matchMatricula = !this.filtroMatricula ||
+        c.matriculaFuncional.toLowerCase().includes(this.filtroMatricula.toLowerCase());
+      const matchNome = !this.filtroNome ||
+        c.nomeCompleto.toLowerCase().includes(this.filtroNome.toLowerCase());
+      const matchCargo = !this.filtroCargo ||
+        c.cargo.toLowerCase().includes(this.filtroCargo.toLowerCase());
+      const matchStatus = !this.filtroStatus || c.status === this.filtroStatus;
+      const matchTipo = !this.filtroTipo || c.tipo === this.filtroTipo;
+      return matchMatricula && matchNome && matchCargo && matchStatus && matchTipo;
     });
   }
 
@@ -86,6 +122,7 @@ export class ColaboradoresListComponent implements OnInit {
     this.filtroNome = '';
     this.filtroCargo = '';
     this.filtroStatus = '';
+    this.filtroTipo = '';
     this.aplicarFiltros();
   }
 
@@ -93,13 +130,16 @@ export class ColaboradoresListComponent implements OnInit {
     this.router.navigate(['/colaboradores/novo']);
   }
 
+  novoEducador(): void {
+    this.router.navigate(['/educadores/novo']);
+  }
+
   editar(id: number): void {
     this.router.navigate([`/colaboradores/${id}/editar`]);
   }
 
   excluir(colaborador: Colaborador): void {
-    if (confirm(`Tem certeza que deseja excluir o colaborador ${colaborador.nomeCompleto}?`)) {
-      // Implementar chamada à API
+    if (confirm(`Tem certeza que deseja excluir ${colaborador.nomeCompleto}?`)) {
       this.colaboradores = this.colaboradores.filter(c => c.id !== colaborador.id);
       this.aplicarFiltros();
       this.verificarSelecao();
@@ -108,18 +148,14 @@ export class ColaboradoresListComponent implements OnInit {
 
   ativar(colaborador: Colaborador): void {
     colaborador.status = 'ativo';
-    // Implementar chamada à API
   }
 
   desativar(colaborador: Colaborador): void {
     colaborador.status = 'inativo';
-    // Implementar chamada à API
   }
 
   toggleTodos(): void {
-    this.colaboradoresFiltrados.forEach(colaborador => {
-      colaborador.selected = this.todosSelecionados;
-    });
+    this.colaboradoresFiltrados.forEach(c => { c.selected = this.todosSelecionados; });
     this.verificarSelecao();
   }
 
@@ -138,47 +174,18 @@ export class ColaboradoresListComponent implements OnInit {
 
   executarAcaoLote(): void {
     const selecionados = this.colaboradoresFiltrados.filter(c => c.selected);
-    
-    if (selecionados.length === 0) {
-      alert('Selecione pelo menos um colaborador');
-      return;
-    }
-
-    if (!this.acaoLote) {
-      alert('Selecione uma ação');
-      return;
-    }
-
+    if (selecionados.length === 0) { alert('Selecione pelo menos um registro'); return; }
+    if (!this.acaoLote) { alert('Selecione uma ação'); return; }
     const nomes = selecionados.map(c => c.nomeCompleto).join(', ');
-    let mensagem = '';
-
-    switch(this.acaoLote) {
-      case 'ativar':
-        mensagem = `Tem certeza que deseja ativar os colaboradores: ${nomes}?`;
-        break;
-      case 'desativar':
-        mensagem = `Tem certeza que deseja desativar os colaboradores: ${nomes}?`;
-        break;
-      case 'excluir':
-        mensagem = `Tem certeza que deseja excluir os colaboradores: ${nomes}?`;
-        break;
-    }
-
-    if (confirm(mensagem)) {
-      selecionados.forEach(colaborador => {
-        switch(this.acaoLote) {
-          case 'ativar':
-            colaborador.status = 'ativo';
-            break;
-          case 'desativar':
-            colaborador.status = 'inativo';
-            break;
-          case 'excluir':
-            this.colaboradores = this.colaboradores.filter(c => c.id !== colaborador.id);
-            break;
-        }
+    const msg = this.acaoLote === 'excluir'
+      ? `Excluir: ${nomes}?`
+      : `${this.acaoLote === 'ativar' ? 'Ativar' : 'Desativar'}: ${nomes}?`;
+    if (confirm(msg)) {
+      selecionados.forEach(c => {
+        if (this.acaoLote === 'ativar') c.status = 'ativo';
+        else if (this.acaoLote === 'desativar') c.status = 'inativo';
+        else this.colaboradores = this.colaboradores.filter(x => x.id !== c.id);
       });
-      
       this.aplicarFiltros();
       this.todosSelecionados = false;
       this.acaoLote = '';

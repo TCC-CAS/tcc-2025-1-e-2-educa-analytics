@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { EducadoresListComponent } from './components/educadores-list/educadores-list.component';
 import { EducadorFormComponent } from './components/educador-form/educador-form.component';
+import { MinhasTurmasComponent } from './components/minhas-turmas/minhas-turmas.component';
 
 const routes: Routes = [
   {
@@ -15,6 +16,10 @@ const routes: Routes = [
   {
     path: ':id/editar',
     component: EducadorFormComponent
+  },
+  {
+    path: ':id/minhas-turmas',
+    component: MinhasTurmasComponent
   }
 ];
 

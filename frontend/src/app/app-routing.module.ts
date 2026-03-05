@@ -45,14 +45,6 @@ const routes: Routes = [
     loadChildren: () => import('./features/eventos/eventos.module').then(m => m.EventosModule)
   },
   {
-    path: 'frequencia',
-    loadChildren: () => import('./features/frequencia/frequencia.module').then(m => m.FrequenciaModule)
-  },
-  {
-    path: 'notas',
-    loadChildren: () => import('./features/notas/notas.module').then(m => m.NotasModule)
-  },
-  {
     path: 'caixa',
     loadChildren: () => import('./features/caixa/caixa.module').then(m => m.CaixaModule)
   },
@@ -71,6 +63,14 @@ const routes: Routes = [
   {
     path: 'avaliacoes',
     loadChildren: () => import('./features/avaliacoes/avaliacoes.module').then(m => m.AvaliacoesModule)
+  },
+  {
+    path: 'educandos',
+    loadChildren: () => import('./features/educandos/educandos.module').then(m => m.EducandosModule)
+  },
+  {
+    path: 'responsaveis',
+    loadChildren: () => import('./features/responsaveis/responsaveis.module').then(m => m.ResponsaveisModule)
   }
 ];
 

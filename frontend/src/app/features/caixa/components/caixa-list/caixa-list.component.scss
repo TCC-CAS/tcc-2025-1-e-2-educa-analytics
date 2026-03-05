@@ -1,19 +1,20 @@
 .caixa-list-container {
   padding: 24px;
   max-width: 1400px;
-  margin: 0 auto;
+  margin: 0;
 }
 
 .header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .5rem;
+  margin-bottom: 1.75rem;
 
   h1 {
     margin: 0;
-    font-size: 28px;
-    font-weight: 500;
+    font-size: 1.5rem;
+    font-weight: 700;
     color: #202124;
   }
 }
@@ -100,7 +101,7 @@
     font-weight: 700;
   }
 
-  &.credito {
+  &.entrada {
     border-left: 4px solid #137333;
 
     .value {
@@ -108,7 +109,7 @@
     }
   }
 
-  &.debito {
+  &.saida {
     border-left: 4px solid #c5221f;
 
     .value {
@@ -188,25 +189,25 @@ table {
   display: inline-block;
   padding: 4px 12px;
   border-radius: 12px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
 
-  &.badge-credito {
+  &.badge-entrada {
     background: #e6f4ea;
     color: #137333;
   }
 
-  &.badge-debito {
+  &.badge-saida {
     background: #fce8e6;
     color: #c5221f;
   }
 }
 
-.valor-credito {
+.valor-entrada {
   color: #137333 !important;
 }
 
-.valor-debito {
+.valor-saida {
   color: #c5221f !important;
 }
 
@@ -250,21 +251,30 @@ table {
 }
 
 .btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
-  border: none;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 16px;
-  padding: 6px;
-  margin: 0 4px;
-  border-radius: 4px;
-  transition: background 0.2s;
+  padding: .3rem .45rem;
+  margin: 0 2px;
+  color: #6b7280;
+  transition: background .15s, border-color .15s, color .15s;
+
+  svg { width: 15px; height: 15px; }
 
   &:hover {
-    background: #f8f9fa;
+    background: #eef2ff;
+    border-color: #4f46e5;
+    color: #4f46e5;
   }
 
   &.btn-delete:hover {
-    background: #fce8e6;
+    background: #fee2e2;
+    border-color: #dc2626;
+    color: #dc2626;
   }
 }
 
@@ -274,6 +284,85 @@ table {
   padding: 48px 16px !important;
   font-style: italic;
 }
+
+// Mensagem de feedback
+
+.message {
+  margin-bottom: 1rem;
+  padding: .75rem 1rem;
+  border-radius: 10px;
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  font-size: .875rem;
+  font-weight: 500;
+
+  &.error { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+}
+
+// Modal de confirmação
+
+$primary:      #4f46e5;
+$primary-dark: #4338ca;
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn .15s ease;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 2rem 2rem 1.5rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .75rem;
+  animation: slideUp .2s ease;
+}
+
+.modal-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #e0e7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  svg { width: 26px; height: 26px; stroke: $primary; }
+  &.danger { background: #fee2e2; svg { stroke: #dc2626; } }
+}
+
+.modal-title   { margin: 0; font-size: 1.1rem; font-weight: 700; text-align: center; }
+.modal-message { margin: 0; font-size: .875rem; color: #6b7280; text-align: center; line-height: 1.5; }
+.modal-actions { display: flex; gap: .75rem; margin-top: .5rem; width: 100%; }
+
+.modal-btn {
+  flex: 1;
+  height: 40px;
+  border-radius: 8px;
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background .15s;
+}
+
+.modal-cancel         { background: #f8f9fc; border: 1.5px solid #e5e7eb; color: #6b7280; &:hover { background: #eef0f4; } }
+.modal-confirm        { background: $primary; color: #fff; &:hover { background: $primary-dark; } }
+.modal-confirm-danger { background: #dc2626; color: #fff; &:hover { background: #b91c1c; } }
+
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 @media (max-width: 768px) {
   .caixa-list-container {

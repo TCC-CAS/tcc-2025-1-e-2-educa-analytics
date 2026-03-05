@@ -33,13 +33,37 @@
         <span class="dot"></span>
         Disciplinas
       </a>
-      <a class="menu-item" routerLink="/educadores" routerLinkActive="active">
+      <a class="menu-item" routerLink="/educadores" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         <span class="dot"></span>
         Educadores
       </a>
-      <a class="menu-item" routerLink="/colaboradores" routerLinkActive="active">
+      <a class="menu-item" routerLink="/educadores/1/minhas-turmas" routerLinkActive="active">
+        <span class="dot"></span>
+        Minhas Turmas
+      </a>
+      <a class="menu-item" routerLink="/educandos" routerLinkActive="active">
+        <span class="dot"></span>
+        Portal do Educando
+      </a>
+      <a class="menu-item" routerLink="/responsaveis" routerLinkActive="active">
+        <span class="dot"></span>
+        Portal do Responsável
+      </a>
+      <span class="menu-item menu-section-label">
         <span class="dot"></span>
         Colaboradores
+      </span>
+      <a class="menu-item menu-item-sub" routerLink="/colaboradores" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <span class="dot"></span>
+        Lista de Colaboradores
+      </a>
+      <a class="menu-item menu-item-sub" routerLink="/colaboradores/novo" routerLinkActive="active">
+        <span class="dot"></span>
+        Novo Colaborador
+      </a>
+      <a class="menu-item menu-item-sub" routerLink="/educadores/novo" routerLinkActive="active">
+        <span class="dot"></span>
+        Cadastro de Educador
       </a>
       <a class="menu-item" routerLink="/eventos" routerLinkActive="active">
         <span class="dot"></span>
@@ -48,10 +72,6 @@
       <a class="menu-item" routerLink="/frequencia" routerLinkActive="active">
         <span class="dot"></span>
         Frequência
-      </a>
-      <a class="menu-item" routerLink="/notas" routerLinkActive="active">
-        <span class="dot"></span>
-        Notas
       </a>
       <a class="menu-item" routerLink="/caixa" routerLinkActive="active">
         <span class="dot"></span>

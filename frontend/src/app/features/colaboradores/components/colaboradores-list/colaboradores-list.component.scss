@@ -1,21 +1,33 @@
 .colaboradores-list-container {
   padding: 24px;
   max-width: 1400px;
-  margin: 0 auto;
+  margin: 0;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 32px;
 
   h1 {
-    margin: 0;
+    margin: 0 0 4px 0;
     font-size: 28px;
     font-weight: 500;
     color: #202124;
   }
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: #5f6368;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .filters-section {
@@ -161,6 +173,46 @@ table {
   text-align: right;
 }
 
+.acoes {
+  display: flex;
+  gap: .35rem;
+  justify-content: flex-end;
+}
+
+.btn-icone {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #dadce0;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .15s;
+  svg { width: 15px; height: 15px; stroke: #5f6368; }
+
+  &:hover {
+    background: #eef2ff;
+    svg { stroke: #1a73e8; }
+  }
+
+  &.btn-icone-ativar:hover {
+    background: #e6f4ea;
+    svg { stroke: #137333; }
+  }
+
+  &.btn-icone-desativar:hover {
+    background: #fef9c3;
+    svg { stroke: #854d0e; }
+  }
+
+  &.btn-icone-delete:hover {
+    background: #fce8e6;
+    svg { stroke: #c5221f; }
+  }
+}
+
 .badge {
   display: inline-block;
   padding: 4px 12px;
@@ -177,6 +229,18 @@ table {
     background: #fce8e6;
     color: #c5221f;
   }
+}
+
+.tipo-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+
+  &.tipo-educador   { background: #e8f0fe; color: #1a73e8; }
+  &.tipo-colaborador { background: #fef9c3; color: #854d0e; }
+  &.tipo-diretor    { background: #e6f4ea; color: #137333; }
 }
 
 .btn-primary {
