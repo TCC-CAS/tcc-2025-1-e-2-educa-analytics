@@ -1,0 +1,448 @@
+// ── Design tokens ─────────────────────────────────────────────────
+$primary:      #4f46e5;
+$primary-dark: #4338ca;
+$surface:      #fff;
+$bg:           #f8f9fc;
+$border:       #e5e7eb;
+$text:         #111827;
+$text-muted:   #6b7280;
+$radius:       10px;
+$shadow-sm:    0 1px 3px rgba(0,0,0,.08);
+
+// ── Layout ────────────────────────────────────────────────────────
+.pr-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+  font-family: inherit;
+  color: $text;
+}
+
+// ── Header do responsável ─────────────────────────────────────────
+.pr-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.pr-titulo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: $text;
+  margin: 0 0 .25rem;
+}
+
+.pr-subtitulo {
+  font-size: .875rem;
+  color: $text-muted;
+  margin: 0;
+}
+
+.pr-responsavel-nome {
+  font-size: .85rem;
+  font-weight: 600;
+  color: $text-muted;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 99px;
+  padding: .35rem 1rem;
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+// ── Seletor de educandos ──────────────────────────────────────────
+.pr-selector-section {
+  margin-bottom: 1.75rem;
+}
+
+.pr-selector-label {
+  display: block;
+  font-size: .7rem;
+  font-weight: 700;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: .65rem;
+}
+
+.pr-selector-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
+.pr-selector-card {
+  flex: 1;
+  min-width: 200px;
+  max-width: 280px;
+  background: $surface;
+  border: 1.5px solid $border;
+  border-radius: $radius;
+  padding: .85rem 1.1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+  box-shadow: $shadow-sm;
+
+  &:hover {
+    border-color: lighten($primary, 20%);
+    background: #fafafa;
+  }
+
+  &.ativo {
+    border-color: $primary;
+    background: #eef2ff;
+    box-shadow: 0 2px 10px rgba(79,70,229,.12);
+
+    .pr-sel-nome { color: $primary-dark; }
+  }
+}
+
+.pr-sel-nome {
+  font-size: .9rem;
+  font-weight: 700;
+  color: $text;
+  margin-bottom: .2rem;
+}
+
+.pr-sel-meta {
+  font-size: .75rem;
+  color: $text-muted;
+  margin-bottom: .5rem;
+}
+
+.pr-sel-badges {
+  display: flex;
+  gap: .4rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pr-sel-status {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: .2rem .55rem;
+  border-radius: 99px;
+  &.ativa     { background: #dcfce7; color: #166534; }
+  &.trancada  { background: #fef9c3; color: #854d0e; }
+  &.cancelada { background: #fee2e2; color: #991b1b; }
+}
+
+.pr-sel-alerta {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: .2rem .55rem;
+  border-radius: 99px;
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+// ── Painel do educando selecionado ────────────────────────────────
+.pr-edu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  padding: 1.1rem 1.4rem;
+  box-shadow: $shadow-sm;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.pr-edu-nome {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: $text;
+  margin: 0 0 .2rem;
+}
+
+.pr-edu-meta {
+  font-size: .8rem;
+  color: $text-muted;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  align-items: center;
+  .sep { opacity: .4; }
+}
+
+.pr-disc-titulo {
+  font-size: .9rem;
+  font-weight: 700;
+  color: $text;
+  margin: 0 0 .85rem;
+}
+
+// ── Shared: status badge ──────────────────────────────────────────
+.pe-status-badge {
+  font-size: .72rem;
+  font-weight: 700;
+  padding: .3rem .8rem;
+  border-radius: 99px;
+  white-space: nowrap;
+  &.ativa     { background: #dcfce7; color: #166534; }
+  &.trancada  { background: #fef9c3; color: #854d0e; }
+  &.cancelada { background: #fee2e2; color: #991b1b; }
+}
+
+// ── Discipline cards (idêntico ao portal-educando) ────────────────
+.pe-disc-list {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.pe-disc-card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: $shadow-sm;
+  overflow: hidden;
+  transition: border-color .15s;
+
+  &.expandida {
+    border-color: $primary;
+    box-shadow: 0 2px 10px rgba(79,70,229,.1);
+
+    .pe-chevron { transform: rotate(180deg); }
+  }
+}
+
+.pe-disc-head {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background .12s;
+
+  &:hover { background: #fafafa; }
+}
+
+.pe-disc-head-left { flex: 1; }
+
+.pe-disc-nome {
+  font-size: .95rem;
+  font-weight: 700;
+  color: $text;
+  margin-bottom: .15rem;
+}
+
+.pe-disc-area {
+  font-size: .75rem;
+  color: $text-muted;
+}
+
+.pe-disc-head-stats {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.pe-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .72rem;
+  font-weight: 700;
+  padding: .25rem .65rem;
+  border-radius: 99px;
+  &.ok     { background: #dcfce7; color: #166534; }
+  &.warn   { background: #fef9c3; color: #854d0e; }
+  &.danger { background: #fee2e2; color: #991b1b; }
+  &.media  { background: #ede9fe; color: $primary-dark; }
+}
+
+.pe-chevron {
+  width: 18px;
+  height: 18px;
+  color: $text-muted;
+  flex-shrink: 0;
+  transition: transform .2s;
+}
+
+// ── Expanded body ─────────────────────────────────────────────────
+.pe-disc-body {
+  border-top: 1px solid $border;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background: $bg;
+}
+
+.pe-section-label {
+  font-size: .7rem;
+  font-weight: 700;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin: 0 0 .65rem;
+}
+
+// ── Frequência ────────────────────────────────────────────────────
+.pe-freq-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pe-freq-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.pe-freq-bar { flex: 1; height: 9px; }
+
+.pe-freq-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  align-items: center;
+}
+
+.pe-freq-total {
+  font-size: .72rem;
+  color: $text-muted;
+  margin-left: .25rem;
+}
+
+.pe-freq-aviso {
+  font-size: .8rem;
+  font-weight: 600;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 7px;
+  padding: .5rem .85rem;
+  margin: .85rem 0 0;
+}
+
+// ── Freq bar ──────────────────────────────────────────────────────
+.freq-pct-bar {
+  background: #e5e7eb;
+  border-radius: 99px;
+  overflow: hidden;
+  height: 8px;
+
+  .freq-pct-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width .4s;
+    &.ok     { background: #22c55e; }
+    &.warn   { background: #f59e0b; }
+    &.danger { background: #ef4444; }
+  }
+}
+
+.freq-pct-label {
+  font-size: .78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  &.ok     { color: #166534; }
+  &.warn   { color: #854d0e; }
+  &.danger { color: #991b1b; }
+}
+
+.freq-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: .15rem .55rem;
+  border-radius: 20px;
+  font-size: .7rem;
+  font-weight: 700;
+  gap: .2rem;
+  &.presente    { background: #dcfce7; color: #166534; }
+  &.ausente     { background: #fee2e2; color: #991b1b; }
+  &.justificado { background: #fef9c3; color: #854d0e; }
+}
+
+// ── Notas table ───────────────────────────────────────────────────
+.pe-notas-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .835rem;
+  border: 1px solid $border;
+  border-radius: $radius;
+  overflow: hidden;
+  background: $surface;
+
+  th, td {
+    padding: .55rem .85rem;
+    border-bottom: 1px solid $border;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  thead th {
+    background: $bg;
+    font-size: .7rem;
+    font-weight: 700;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: #f9fafb; }
+
+  tfoot td {
+    background: $bg;
+    border-top: 1.5px solid $border;
+    border-bottom: none;
+  }
+}
+
+.pe-at-nome { font-weight: 500; color: $text; min-width: 150px; }
+.pe-td-mono { font-variant-numeric: tabular-nums; }
+
+.pe-td-nota {
+  font-weight: 700;
+  color: $primary-dark;
+  font-variant-numeric: tabular-nums;
+  &.sem-nota { color: $text-muted; font-weight: 400; }
+}
+
+.pe-td-media { color: $text-muted; }
+
+.pe-tfoot-label {
+  font-size: .72rem;
+  font-weight: 700;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.pe-tfoot-media {
+  font-size: .9rem;
+  font-weight: 700;
+  color: $primary-dark;
+}
+
+.pe-empty {
+  color: $text-muted;
+  font-size: .875rem;
+  margin: 0;
+}
+
+// ── Tipo badge ────────────────────────────────────────────────────
+.tipo-badge {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 700;
+  padding: .15rem .5rem;
+  border-radius: 99px;
+  &.prova        { background: #dbeafe; color: #1e40af; }
+  &.trabalho     { background: #fef9c3; color: #854d0e; }
+  &.apresentacao { background: #fce7f3; color: #9d174d; }
+}

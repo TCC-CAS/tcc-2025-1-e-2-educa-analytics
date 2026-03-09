@@ -1,0 +1,149 @@
+<div class="pe-page">
+
+  <!-- ── Cabeçalho ── -->
+  <header class="pe-header">
+    <div class="pe-header-info">
+      <div>
+        <h1 class="pe-nome">{{ educando.nome }}</h1>
+        <div class="pe-meta">
+          <span>{{ educando.turma.nome }}</span>
+          <span class="sep">&bull;</span>
+          <span>{{ educando.turma.serie }}</span>
+          <span class="sep">&bull;</span>
+          <span>{{ educando.turma.turno }}</span>
+          <span class="sep">&bull;</span>
+          <span>{{ educando.turma.anoLetivo }}</span>
+        </div>
+      </div>
+    </div>
+    <span class="pe-status-badge"
+      [class.ativa]="educando.status === 'Ativa'"
+      [class.trancada]="educando.status === 'Trancada'"
+      [class.cancelada]="educando.status === 'Cancelada'">
+      {{ educando.status }}
+    </span>
+  </header>
+
+  <!-- ── Lista de disciplinas ── -->
+  <div class="pe-body">
+    <h2 class="pe-section-title">Minhas Disciplinas</h2>
+
+    <div class="pe-disc-list">
+      <div class="pe-disc-card" *ngFor="let disc of educando.disciplinas"
+        [class.expandida]="discExpandida === disc.nome">
+
+        <!-- Cabeçalho da disciplina (clicável) -->
+        <div class="pe-disc-head" (click)="toggleDisc(disc.nome)">
+          <div class="pe-disc-head-left">
+            <div class="pe-disc-nome">{{ disc.nome }}</div>
+            <div class="pe-disc-area">{{ disc.area }} &bull; {{ disc.aulasSemanais }}x / semana</div>
+          </div>
+
+          <div class="pe-disc-head-stats">
+            <!-- Frequência resumo -->
+            <div class="pe-stat-chip" [class]="pctClass(disc.frequencia.pct)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              {{ disc.frequencia.pct }}% freq.
+            </div>
+            <!-- Média resumo -->
+            <div class="pe-stat-chip media">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+              Média {{ mediaDisc(disc) }}
+            </div>
+          </div>
+
+          <!-- Chevron -->
+          <svg class="pe-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+
+        <!-- Detalhe expandido -->
+        <div class="pe-disc-body" *ngIf="discExpandida === disc.nome">
+
+          <!-- Frequência detalhada -->
+          <section class="pe-section">
+            <h3 class="pe-section-label">Frequência</h3>
+            <div class="pe-freq-row">
+              <div class="pe-freq-bar-wrap">
+                <div class="freq-pct-bar pe-freq-bar">
+                  <div class="freq-pct-fill" [class]="pctClass(disc.frequencia.pct)" [style.width.%]="disc.frequencia.pct"></div>
+                </div>
+                <span class="freq-pct-label" [class]="pctClass(disc.frequencia.pct)">{{ disc.frequencia.pct }}%</span>
+              </div>
+              <div class="pe-freq-chips">
+                <span class="freq-pill presente">&#10003; {{ disc.frequencia.presentes }} pres.</span>
+                <span class="freq-pill ausente">&#10007; {{ disc.frequencia.ausentes }} falt.</span>
+                <span class="freq-pill justificado">J {{ disc.frequencia.justificados }} just.</span>
+                <span class="pe-freq-total">{{ disc.frequencia.total }} aulas registradas</span>
+              </div>
+            </div>
+            <p class="pe-freq-aviso" *ngIf="disc.frequencia.pct < 75">
+              &#9888; Aten&#231;&#227;o: sua frequ&#234;ncia est&#225; abaixo do m&#237;nimo exigido (75%).
+            </p>
+          </section>
+
+          <!-- Notas -->
+          <section class="pe-section">
+            <h3 class="pe-section-label">Notas</h3>
+
+            <ng-container *ngIf="disc.atividades.length > 0; else semNotas">
+              <table class="pe-notas-table">
+                <thead>
+                  <tr>
+                    <th>Atividade</th>
+                    <th>Tipo</th>
+                    <th>Data</th>
+                    <th>M&#225;x.</th>
+                    <th>Minha nota</th>
+                    <th>M&#233;dia turma</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let at of disc.atividades">
+                    <td class="pe-at-nome">{{ at.nome }}</td>
+                    <td>
+                      <span class="tipo-badge"
+                        [class.prova]="at.tipo === 'Prova'"
+                        [class.trabalho]="at.tipo === 'Trabalho'"
+                        [class.apresentacao]="at.tipo === 'Apresentação'">
+                        {{ at.tipo }}
+                      </span>
+                    </td>
+                    <td class="pe-td-mono">{{ at.data | date:'dd/MM/yyyy' }}</td>
+                    <td class="pe-td-mono">{{ at.notaMaxima }}</td>
+                    <td class="pe-td-nota" [class.sem-nota]="at.nota === null">
+                      {{ notaFormatada(at.nota) }}
+                    </td>
+                    <td class="pe-td-media pe-td-mono">{{ mediaFormatada(at.mediaTurma) }}</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="4" class="pe-tfoot-label">M&#233;dia geral</td>
+                    <td colspan="2" class="pe-tfoot-media">{{ mediaDisc(disc) }}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </ng-container>
+            <ng-template #semNotas>
+              <p class="pe-empty">Nenhuma atividade lan&#231;ada ainda.</p>
+            </ng-template>
+          </section>
+
+        </div><!-- /.pe-disc-body -->
+      </div><!-- /.pe-disc-card -->
+    </div>
+  </div><!-- /.pe-body -->
+
+</div><!-- /.pe-page -->

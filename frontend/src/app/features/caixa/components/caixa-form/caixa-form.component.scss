@@ -1,0 +1,211 @@
+$primary:      #4f46e5;
+$primary-dark: #4338ca;
+$border:       #e5e7eb;
+$text:         #111827;
+$text-muted:   #6b7280;
+
+:host {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f7fb;
+  text-align: left;
+}
+
+.caixa-form-page {
+  padding: 2.5rem 3rem;
+  text-align: left;
+}
+
+.form-wrapper {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.page-header {
+  margin-bottom: 1.75rem;
+
+  h1 {
+    margin: 0 0 .3rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $text;
+  }
+
+  p {
+    margin: 0;
+    font-size: .875rem;
+    color: $text-muted;
+  }
+}
+
+.form {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem 2rem 1.5rem;
+  box-shadow: 0 10px 24px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.05);
+  text-align: left;
+}
+
+.section-label {
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: $text-muted;
+  padding-bottom: .75rem;
+  border-bottom: 1.5px solid $border;
+  margin-bottom: 1.25rem;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem 1.5rem;
+
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  text-align: left;
+
+  &.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: .8rem;
+    font-weight: 600;
+    color: $text-muted;
+  }
+
+  input, select {
+    height: 40px;
+    padding: 0 .9rem;
+    border: 1.5px solid $border;
+    border-radius: 8px;
+    font-size: .875rem;
+    color: $text;
+    background: #fff;
+    outline: none;
+    transition: border-color .15s;
+    box-sizing: border-box;
+    width: 100%;
+
+    &:focus { border-color: $primary; box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+    &::placeholder { color: #9ca3af; }
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right .7rem center;
+    background-size: 14px;
+    padding-right: 2.2rem;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: .75rem;
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1.5px solid $border;
+}
+
+.primary {
+  background: $primary;
+  color: #fff;
+  border: none;
+  padding: .6rem 1.75rem;
+  border-radius: 8px;
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+  &:hover { background: $primary-dark; }
+}
+
+.ghost {
+  background: #fff;
+  color: $text-muted;
+  border: 1.5px solid $border;
+  padding: .6rem 1.25rem;
+  border-radius: 8px;
+  font-size: .875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  &:hover { background: #f3f4f6; color: $text; }
+}
+
+@media (max-width: 768px) {
+  .caixa-form-page { padding: 1.5rem 1rem; }
+}
+
+// ── Modal de Confirmação ──────────────────────────────────────────────
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(.95) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1)  translateY(0); }
+}
+
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 2rem;
+  width: min(420px, 90vw);
+  box-shadow: 0 20px 60px rgba(0,0,0,.18);
+  animation: modal-in .18s ease;
+  display: flex; flex-direction: column; align-items: center; gap: .75rem;
+}
+
+.modal-icon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: #ede9fe;
+  display: flex; align-items: center; justify-content: center;
+  svg { width: 26px; height: 26px; stroke: $primary; }
+  &.danger { background: #fee2e2; svg { stroke: #ef4444; } }
+}
+
+.modal-title   { font-size: 1.05rem; font-weight: 700; color: $text; text-align: center; }
+.modal-message { font-size: .875rem; color: $text-muted; text-align: center; line-height: 1.5; }
+
+.modal-actions {
+  display: flex; gap: .75rem; margin-top: .5rem;
+}
+
+.modal-btn {
+  padding: .55rem 1.4rem;
+  border-radius: 8px;
+  font-size: .875rem; font-weight: 600;
+  cursor: pointer; border: none;
+  transition: background .15s, box-shadow .15s;
+}
+
+.modal-cancel {
+  background: #f3f4f6; color: $text-muted;
+  &:hover { background: #e5e7eb; }
+}
+
+.modal-confirm {
+  background: $primary; color: #fff;
+  &:hover { background: $primary-dark; }
+}
+
+.modal-confirm-danger {
+  background: #ef4444; color: #fff;
+  &:hover { background: #dc2626; }
+}
+
