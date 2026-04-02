@@ -73,6 +73,32 @@ export class DisciplinasListComponent implements AfterViewInit {
 
   selectedIds = new Set<number>();
   bulkAction = '';
+
+  // Lote
+  modalLoteVisible = false;
+  statusLote: StatusDisciplina = 'ativa';
+
+  get totalSelecionados(): number { return this.selectedIds.size; }
+
+  abrirModalLote(): void {
+    if (this.selectedIds.size === 0) return;
+    this.statusLote = 'ativa';
+    this.modalLoteVisible = true;
+  }
+
+  confirmarLote(): void {
+    this.modalLoteVisible = false;
+    this.disciplinas = this.disciplinas.map(d =>
+      this.selectedIds.has(d.id) ? { ...d, status: this.statusLote } : d
+    );
+    this.selectedIds.clear();
+    this.applyFilters();
+  }
+
+  cancelarLote(): void {
+    this.modalLoteVisible = false;
+  }
+
   message = '';
   messageType: 'success' | 'error' = 'success';
 

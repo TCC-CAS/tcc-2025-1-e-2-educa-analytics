@@ -176,50 +176,62 @@ a.primary {
 }
 
 
-// Ações em Lote
+// Barra de ações em lote
 
-.bulk-actions {
+.lote-bar {
   display: flex;
-  align-items: center !important;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  background: #eef2ff;
+  border: 1.5px solid #c7d2fe;
+  border-radius: $radius;
+  padding: .75rem 1.25rem;
   margin-bottom: 1rem;
-  flex-wrap: wrap;
-  text-align: left !important;
-}
 
-.bulk-select {
-  display: flex;
-  align-items: center !important;
-  gap: .5rem;
-  font-size: .875rem;
-  color: $text-muted;
-  text-align: left !important;
-}
-
-.bulk-controls {
-  display: flex;
-  align-items: center !important;
-  gap: .75rem;
-  text-align: left !important;
-
-  select {
-    height: 36px;
-    padding: 0 2rem 0 .75rem;
-    border: 1.5px solid $border;
-    border-radius: 8px;
+  .lote-info {
     font-size: .875rem;
-    background: $surface;
-    color: $text;
-    outline: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right .6rem center;
-    background-size: 14px;
-    transition: border-color .15s;
-    &:focus { border-color: $primary; }
+    font-weight: 600;
+    color: $primary;
   }
+
+  .lote-acoes {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+}
+
+.lote-select {
+  height: 34px;
+  padding: 0 2rem 0 .75rem;
+  border: 1.5px solid $border;
+  border-radius: 7px;
+  font-size: .875rem;
+  background: $surface;
+  color: $text;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .6rem center;
+  background-size: 14px;
+  outline: none;
+  &:focus { border-color: $primary; }
+}
+
+.lote-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 .85rem;
+  border-radius: 7px;
+  font-size: .8rem;
+  font-weight: 600;
+  background: $primary;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background .15s;
+  &:hover { background: $primary-dark; }
 }
 
 
@@ -262,6 +274,7 @@ a.primary {
   transition: background .12s;
   &:last-child { border-bottom: none; }
   &:hover { background: #f9fafb; }
+  &.selecionada { background: #eef2ff; }
 }
 
 
@@ -377,6 +390,39 @@ a.primary {
 .modal-cancel         { background: $bg; border: 1.5px solid $border; color: $text-muted; &:hover { background: darken(#f8f9fc, 3%); } }
 .modal-confirm        { background: $primary; color: #fff; &:hover { background: $primary-dark; } }
 .modal-confirm-danger { background: #dc2626; color: #fff; &:hover { background: #b91c1c; } }
+
+.modal-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  width: 100%;
+  text-align: left;
+
+  label {
+    font-size: .78rem;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  select {
+    height: 40px;
+    padding: 0 2rem 0 .85rem;
+    border: 1.5px solid $border;
+    border-radius: 8px;
+    font-size: .9rem;
+    background: $surface;
+    color: $text;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right .6rem center;
+    background-size: 14px;
+    outline: none;
+    &:focus { border-color: $primary; }
+  }
+}
 
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

@@ -13,6 +13,48 @@
   </div>
 </div>
 
+<!-- Modal de Alteração de Status -->
+<div class="modal-overlay" *ngIf="modalStatusVisible" (click)="cancelarModalStatus()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <h3 class="modal-title">Alterar status da matrícula</h3>
+    <p class="modal-message">Matrícula #{{ matriculaStatusEdit?.id }} &mdash; {{ matriculaStatusEdit?.alunoNome }}</p>
+    <div class="modal-select-group">
+      <label>Novo status</label>
+      <select [(ngModel)]="novoStatus">
+        <option *ngFor="let s of statusList" [value]="s">{{ s }}</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="modal-btn modal-cancel" (click)="cancelarModalStatus()">Cancelar</button>
+      <button type="button" class="modal-btn modal-confirm" (click)="confirmarAlteracaoStatus()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Alteração em Lote -->
+<div class="modal-overlay" *ngIf="modalLoteVisible" (click)="cancelarLote()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    </div>
+    <h3 class="modal-title">Alterar status em lote</h3>
+    <p class="modal-message">{{ totalSelecionados }} matrícula{{ totalSelecionados !== 1 ? 's' : '' }} selecionada{{ totalSelecionados !== 1 ? 's' : '' }}. Selecione o novo status:</p>
+    <div class="modal-select-group">
+      <label>Novo status</label>
+      <select [(ngModel)]="statusLote">
+        <option *ngFor="let s of statusList" [value]="s">{{ s }}</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="modal-btn modal-cancel" (click)="cancelarLote()">Cancelar</button>
+      <button type="button" class="modal-btn modal-confirm" (click)="confirmarLote()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Lista de matrículas -->
 <div class="lista-page" *ngIf="view === 'lista'">
 
@@ -89,12 +131,27 @@
     </div>
   </div>
 
+  <!-- Barra de ações em lote -->
+  <div class="lote-bar" *ngIf="totalSelecionados > 0">
+    <span class="lote-info">{{ totalSelecionados }} matrícula{{ totalSelecionados !== 1 ? 's' : '' }} selecionada{{ totalSelecionados !== 1 ? 's' : '' }}</span>
+    <div class="lote-acoes">
+      <select [(ngModel)]="statusLote" class="lote-select">
+        <option *ngFor="let s of statusList; trackBy: trackByNome" [value]="s">{{ s }}</option>
+      </select>
+      <button class="btn btn-primary btn-sm" (click)="abrirModalLote()">Alterar status</button>
+      <button class="btn btn-ghost btn-sm" (click)="selecionarTodos(false)">Desmarcar tudo</button>
+    </div>
+  </div>
+
   <!-- Tabela -->
   <div class="tabela-card">
     <div class="tabela-wrapper">
       <table class="tabela">
         <thead>
           <tr>
+            <th class="th-check">
+              <input type="checkbox" [checked]="todosSelecionados" (change)="selecionarTodos($any($event.target).checked)">
+            </th>
             <th>Educando(a)</th>
             <th>Série / Turma</th>
             <th>Ano letivo</th>
@@ -105,7 +162,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let m of matriculasPaginadas; trackBy: trackById" (click)="abrirDetalhe(m)" class="tabela-row">
+          <tr *ngFor="let m of matriculasPaginadas; trackBy: trackById" (click)="abrirDetalhe(m)" class="tabela-row" [class.selecionada]="isSelecionado(m.id)">
+            <td class="td-check" (click)="$event.stopPropagation()">
+              <input type="checkbox" [checked]="isSelecionado(m.id)" (change)="toggleSelecao(m.id)">
+            </td>
             <td>
               <div class="aluno-cell">
                 <div class="aluno-info">
@@ -127,6 +187,9 @@
                 <button class="btn-icone" title="Ver detalhes" (click)="abrirDetalhe(m)">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
+                <button class="btn-icone btn-icone-status" title="Alterar status" (click)="abrirModalStatus(m, $event)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </button>
                 <button class="btn-icone btn-icone-rematr" title="Rematricular" (click)="rematricular(m)">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
                 </button>
@@ -134,7 +197,7 @@
             </td>
           </tr>
           <tr *ngIf="matriculasFiltradas.length === 0">
-            <td colspan="7" class="empty-row">
+            <td colspan="8" class="empty-row">
               <div class="empty-state">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M9 11H1M15 11h8M9 17H1M15 17h8M9 5H1M15 5h8"/></svg>
                 <p>Nenhuma matrícula encontrada com os filtros aplicados.</p>

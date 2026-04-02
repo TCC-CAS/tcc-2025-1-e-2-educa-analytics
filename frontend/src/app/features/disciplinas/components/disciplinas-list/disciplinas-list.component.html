@@ -16,9 +16,31 @@
     </div>
   </div>
 
+  <!-- Modal de alteração em lote -->
+  <div class="modal-overlay" *ngIf="modalLoteVisible" (click)="cancelarLote()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </div>
+      <h3 class="modal-title">Alterar status em lote</h3>
+      <p class="modal-message">{{ totalSelecionados }} disciplina{{ totalSelecionados !== 1 ? 's' : '' }} selecionada{{ totalSelecionados !== 1 ? 's' : '' }}. Selecione o novo status:</p>
+      <div class="modal-select-group">
+        <label>Novo status</label>
+        <select [(ngModel)]="statusLote">
+          <option value="ativa">Ativa</option>
+          <option value="inativa">Inativa</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelarLote()">Cancelar</button>
+        <button type="button" class="modal-btn modal-confirm" (click)="confirmarLote()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <header class="page-header">
     <div>
-      <h1>Disciplinas</h1>
+      <h1>Lista de Disciplinas</h1>
       <p>Consulte, filtre e gerencie disciplinas cadastradas.</p>
     </div>
   </header>
@@ -74,25 +96,22 @@
     <button type="button" class="ghost" (click)="resetFilters()">Limpar filtros</button>
   </section>
 
-  <section class="bulk-actions">
-    <label class="bulk-select">
-      <input type="checkbox" [checked]="allSelected()" (change)="toggleAll($any($event.target).checked)" />
-      Selecionar todas
-    </label>
-    <div class="bulk-controls">
-      <select [(ngModel)]="bulkAction">
-        <option value="">Ações em lote</option>
-        <option value="ativar">Ativar</option>
-        <option value="desativar">Desativar</option>
-        <option value="excluir">Excluir</option>
+  <!-- Barra de ações em lote -->
+  <div class="lote-bar" *ngIf="totalSelecionados > 0">
+    <span class="lote-info">{{ totalSelecionados }} disciplina{{ totalSelecionados !== 1 ? 's' : '' }} selecionada{{ totalSelecionados !== 1 ? 's' : '' }}</span>
+    <div class="lote-acoes">
+      <select [(ngModel)]="statusLote" class="lote-select">
+        <option value="ativa">Ativa</option>
+        <option value="inativa">Inativa</option>
       </select>
-      <button type="button" class="ghost" (click)="performBulkAction()">Aplicar</button>
+      <button type="button" class="lote-btn-primary" (click)="abrirModalLote()">Alterar status</button>
+      <button type="button" class="ghost" (click)="toggleAll(false)">Desmarcar tudo</button>
     </div>
-  </section>
+  </div>
 
   <section class="table">
     <div class="table-head">
-      <span></span>
+      <span><input type="checkbox" [checked]="allSelected()" (change)="toggleAll($any($event.target).checked)" title="Selecionar todos"></span>
       <span>Código</span>
       <span>Nome</span>
       <span>Série</span>
@@ -102,7 +121,7 @@
       <span>Ações</span>
     </div>
 
-    <div class="table-row" *ngFor="let disciplina of filteredDisciplinas">
+    <div class="table-row" *ngFor="let disciplina of filteredDisciplinas" [class.selecionada]="isSelected(disciplina.id)">
       <span>
         <input type="checkbox" [checked]="isSelected(disciplina.id)" (change)="toggleSelection(disciplina.id, $any($event.target).checked)" />
       </span>

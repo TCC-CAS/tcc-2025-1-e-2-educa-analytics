@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit, AfterVie
 import { Router } from '@angular/router';
 
 export type DetalheTab = 'educando' | 'responsavel' | 'escolar' | 'historico';
-export type StatusMatricula = 'Ativa' | 'Trancada' | 'Cancelada' | 'Concluída';
+export type StatusMatricula = 'Ativa' | 'Inativa' | 'Cancelada' | 'Abandono Escolar';
 
 export interface HistoricoItem {
   anoLetivo: string;
@@ -193,7 +193,7 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
     '6º Ano', '7º Ano', '8º Ano', '9º Ano'
   ];
 
-  readonly statusList: StatusMatricula[] = ['Ativa', 'Trancada', 'Cancelada', 'Concluída'];
+  readonly statusList: StatusMatricula[] = ['Ativa', 'Inativa', 'Cancelada', 'Abandono Escolar'];
 
   // Dados mock
   matriculas: MatriculaRegistro[] = [
@@ -305,7 +305,7 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
     },
     {
       id: 3,
-      status: 'Trancada',
+      status: 'Inativa',
       dataMatricula: '2025-01-20',
       alunoNome: 'Layla Pereira Costa',
       alunoNascimento: '2016-07-28',
@@ -559,11 +559,94 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
   statusClass(status: StatusMatricula): string {
     const map: Record<StatusMatricula, string> = {
       'Ativa': 'status-ativa',
-      'Trancada': 'status-trancada',
+      'Inativa': 'status-inativa',
       'Cancelada': 'status-cancelada',
-      'Concluída': 'status-concluida',
+      'Abandono Escolar': 'status-abandono',
     };
     return map[status] ?? '';
+  }
+
+  // Seleção em lote
+  selecionados = new Set<number>();
+  statusLote: StatusMatricula = 'Ativa';
+  modalLoteVisible = false;
+
+  get totalSelecionados(): number { return this.selecionados.size; }
+
+  get todosSelecionados(): boolean {
+    return this.matriculasPaginadas.length > 0 &&
+      this.matriculasPaginadas.every(m => this.selecionados.has(m.id));
+  }
+
+  isSelecionado(id: number): boolean { return this.selecionados.has(id); }
+
+  toggleSelecao(id: number): void {
+    if (this.selecionados.has(id)) {
+      this.selecionados.delete(id);
+    } else {
+      this.selecionados.add(id);
+    }
+    this.cdr.markForCheck();
+  }
+
+  selecionarTodos(checked: boolean): void {
+    if (checked) {
+      this.matriculasPaginadas.forEach(m => this.selecionados.add(m.id));
+    } else {
+      this.matriculasPaginadas.forEach(m => this.selecionados.delete(m.id));
+    }
+    this.cdr.markForCheck();
+  }
+
+  abrirModalLote(): void {
+    if (this.selecionados.size === 0) return;
+    this.statusLote = 'Ativa';
+    this.modalLoteVisible = true;
+  }
+
+  confirmarLote(): void {
+    this.modalLoteVisible = false;
+    this.matriculas.forEach(m => {
+      if (this.selecionados.has(m.id)) {
+        m.status = this.statusLote;
+      }
+    });
+    this.selecionados.clear();
+    this.recalcularTudo();
+    this.cdr.markForCheck();
+  }
+
+  cancelarLote(): void {
+    this.modalLoteVisible = false;
+  }
+
+  // Alteração individual de status
+  modalStatusVisible = false;
+  matriculaStatusEdit: MatriculaRegistro | null = null;
+  novoStatus: StatusMatricula = 'Ativa';
+
+  abrirModalStatus(m: MatriculaRegistro, event: Event): void {
+    event.stopPropagation();
+    this.matriculaStatusEdit = m;
+    this.novoStatus = m.status;
+    this.modalStatusVisible = true;
+  }
+
+  confirmarAlteracaoStatus(): void {
+    this.modalStatusVisible = false;
+    if (!this.matriculaStatusEdit) return;
+    const idx = this.matriculas.findIndex(m => m.id === this.matriculaStatusEdit!.id);
+    if (idx !== -1) {
+      this.matriculas[idx].status = this.novoStatus;
+    }
+    this.matriculaStatusEdit = null;
+    this.recalcularTudo();
+    this.cdr.markForCheck();
+  }
+
+  cancelarModalStatus(): void {
+    this.modalStatusVisible = false;
+    this.matriculaStatusEdit = null;
   }
 
   situacaoClass(s: string): string {

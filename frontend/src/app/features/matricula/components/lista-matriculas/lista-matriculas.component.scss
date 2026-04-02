@@ -72,6 +72,7 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
   transition: background .15s;
   svg { width: 15px; height: 15px; stroke: $text-muted; }
   &:hover { background: #eef2ff; svg { stroke: $primary; } }
+  &.btn-icone-status:hover { background: #ede9fe; svg { stroke: #7c3aed; } }
 }
 
 
@@ -86,9 +87,9 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
   white-space: nowrap;
 
   &.status-ativa     { background: #dcfce7; color: #166534; }
-  &.status-trancada  { background: #fef9c3; color: #854d0e; }
+  &.status-inativa   { background: #fef9c3; color: #854d0e; }
   &.status-cancelada { background: #fee2e2; color: #991b1b; }
-  &.status-concluida { background: #dbeafe; color: #1e40af; }
+  &.status-abandono  { background: #f3e8ff; color: #6b21a8; }
 }
 
 .situacao-badge {
@@ -154,11 +155,11 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
 
 .filtros-grid {
   display: grid;
-  grid-template-columns: 2fr repeat(4, 1fr) auto;
+  grid-template-columns: 2fr repeat(4, 1fr) 1fr auto;
   gap: .85rem;
   align-items: end;
 
-  @media (max-width: 1100px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 1200px) { grid-template-columns: repeat(3, 1fr); }
   @media (max-width: 640px)  { grid-template-columns: 1fr; }
 }
 
@@ -219,7 +220,7 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
 
 .filtro-clear {
   justify-content: flex-end;
-  @media (max-width: 1100px) { grid-column: 1 / -1; justify-content: flex-start; }
+  @media (max-width: 1200px) { grid-column: 1 / -1; justify-content: flex-start; }
 }
 
 .filtros-info {
@@ -278,6 +279,7 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
   transition: background .12s;
   &:hover { background: #f9fafb; }
   &:last-child td { border-bottom: none; }
+  &.selecionada { background: #eef2ff; }
 }
 
 .aluno-cell {
@@ -361,7 +363,7 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
 .detalhe-page {
   padding: 1.75rem 2.5rem;
   max-width: 1200px;
-  margin: 0;
+  margin: 0 auto;
 
   @media (max-width: 768px) { padding: 1rem; }
 }
@@ -761,3 +763,94 @@ $shadow-md:    0 4px 16px rgba(0,0,0,.10);
 
 .modal-cancel  { background: #f8f9fc; border: 1px solid #e5e7eb; color: #111827; }
 .modal-confirm { background: #1a73e8; color: #fff; }
+
+.modal-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  margin-bottom: 1.25rem;
+  text-align: left;
+
+  label {
+    font-size: .8rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  select {
+    height: 40px;
+    padding: 0 2rem 0 .85rem;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: .9rem;
+    background: #fff;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right .6rem center;
+    background-size: 14px;
+    outline: none;
+    &:focus { border-color: #4f46e5; }
+  }
+}
+
+// Barra de ações em lote
+.lote-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #eef2ff;
+  border: 1.5px solid #c7d2fe;
+  border-radius: $radius;
+  padding: .75rem 1.25rem;
+  margin-bottom: 1rem;
+
+  .lote-info {
+    font-size: .875rem;
+    font-weight: 600;
+    color: $primary;
+  }
+
+  .lote-acoes {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+}
+
+.lote-select {
+  height: 34px;
+  padding: 0 2rem 0 .75rem;
+  border: 1.5px solid $border;
+  border-radius: 7px;
+  font-size: .875rem;
+  background: $surface;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .6rem center;
+  background-size: 14px;
+  outline: none;
+  &:focus { border-color: $primary; }
+}
+
+.btn-sm {
+  padding: .35rem .85rem !important;
+  font-size: .8rem !important;
+}
+
+// Coluna de checkbox
+.th-check, .td-check {
+  width: 44px;
+  padding-left: 1rem;
+  padding-right: .25rem;
+
+  input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    accent-color: $primary;
+  }
+}
