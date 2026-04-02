@@ -1,0 +1,104 @@
+<div class="eventos-list-container">
+  <div class="header">
+    <h1>Eventos Escolares</h1>
+    <button class="btn-primary" (click)="novo()">+ Agendar Evento</button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <h3>Filtros</h3>
+    <div class="filters-grid">
+      <div class="filter-field">
+        <label>Nome do Evento</label>
+        <input 
+          type="text" 
+          [(ngModel)]="filtroNome" 
+          (ngModelChange)="aplicarFiltros()"
+          placeholder="Digite o nome do evento">
+      </div>
+
+      <div class="filter-field">
+        <label>Data</label>
+        <input 
+          type="date" 
+          [(ngModel)]="filtroData" 
+          (ngModelChange)="aplicarFiltros()">
+      </div>
+
+      <div class="filter-field">
+        <label>Horário</label>
+        <input 
+          type="time" 
+          [(ngModel)]="filtroHorario" 
+          (ngModelChange)="aplicarFiltros()">
+      </div>
+
+      <div class="filter-field">
+        <label>Série</label>
+        <input 
+          type="text" 
+          [(ngModel)]="filtroSerie" 
+          (ngModelChange)="aplicarFiltros()"
+          placeholder="Digite a série">
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-secondary" (click)="limparFiltros()">Limpar Filtros</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ações em Lote -->
+  <div class="bulk-actions" *ngIf="algumSelecionado">
+    <div class="bulk-controls">
+      <span>{{ quantidadeSelecionados }} selecionado(s)</span>
+      <button class="btn-danger" (click)="excluirSelecionados()">Excluir Selecionados</button>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th class="checkbox-col">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="todosSelecionados" 
+              (change)="toggleTodos()">
+          </th>
+          <th>Nome do Evento</th>
+          <th>Data</th>
+          <th>Horário</th>
+          <th>Série Escolar</th>
+          <th class="actions-col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let evento of eventosFiltrados">
+          <td class="checkbox-col">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="evento.selected" 
+              (change)="toggleEvento()">
+          </td>
+          <td><strong>{{ evento.nomeEvento }}</strong></td>
+          <td>{{ evento.dataEvento | date: 'dd/MM/yyyy' }}</td>
+          <td>{{ evento.horarioEvento }}</td>
+          <td>{{ evento.serieEscolar }}</td>
+          <td class="actions-col">
+            <button class="btn-icon" (click)="editar(evento.id)" title="Editar">
+              ✏️
+            </button>
+            <button class="btn-icon btn-delete" (click)="excluir(evento)" title="Excluir">
+              🗑️
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="eventosFiltrados.length === 0">
+          <td colspan="6" class="empty-message">Nenhum evento encontrado</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

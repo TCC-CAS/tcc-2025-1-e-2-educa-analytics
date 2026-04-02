@@ -1,0 +1,238 @@
+:host {
+  display: block;
+  width: 100%;
+  background: #f5f7fb;
+}
+
+.sala-form-page {
+  padding: 1.25rem 1.75rem;
+  color: #1f2a2e;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+//  Header 
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+
+  h1 {
+    margin: 0 0 0.2rem;
+    color: #202124;
+    font-size: 1.2rem;
+  }
+
+  p {
+    margin: 0;
+    color: #5f6368;
+    font-size: 0.75rem;
+  }
+
+  .required-legend {
+    color: #d93025;
+    font-weight: 700;
+  }
+}
+
+// Mensagens
+.message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+
+  &.success {
+    background: rgba(52, 168, 83, 0.1);
+    color: #1e6f3b;
+    border: 1px solid rgba(52, 168, 83, 0.25);
+  }
+
+  &.error {
+    background: rgba(234, 67, 53, 0.1);
+    color: #b3261e;
+    border: 1px solid rgba(234, 67, 53, 0.25);
+  }
+}
+
+// Form
+.form {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 6px 16px rgba(60, 64, 67, 0.1);
+  border: 1px solid #e0e3eb;
+}
+
+// Field Groups
+.field-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.9rem;
+
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+}
+
+.group-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #1a73e8;
+  margin: 0 0 0.45rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #e8eaed;
+}
+
+// Field Grid
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 0.5rem 0.65rem;
+  align-items: start;
+}
+
+.col-2 {
+  grid-column: span 2;
+}
+
+.col-full {
+  grid-column: 1 / -1;
+}
+
+// Field
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  color: #5f6368;
+  font-weight: 500;
+
+  span {
+    display: block;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    border: 1px solid #dadce0;
+    border-radius: 6px;
+    padding: 0.38rem 0.55rem;
+    font-size: 0.8rem;
+    background: #ffffff;
+    color: #202124;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.14);
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 72px;
+  }
+}
+
+.field.required > span::after {
+  content: ' *';
+  color: #d93025;
+  font-weight: 700;
+}
+
+// Checkbox
+.checkbox-field {
+  justify-content: center;
+}
+
+.checkbox-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.55rem;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: #1a73e8;
+  }
+
+  input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    accent-color: #1a73e8;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+.checkbox-label {
+  font-size: 0.8rem;
+  color: #202124;
+  font-weight: 400;
+  cursor: pointer;
+  user-select: none;
+}
+
+// Form Actions
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e8eaed;
+}
+
+.primary {
+  border: none;
+  background: #1a73e8;
+  color: #ffffff;
+  padding: 0.45rem 1.2rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(26, 115, 232, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(26, 115, 232, 0.32);
+  }
+}
+
+.btn-secondary {
+  border: 1px solid #dadce0;
+  background: #ffffff;
+  color: #5f6368;
+  padding: 0.42rem 1rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: #1a73e8;
+    color: #1a73e8;
+  }
+}

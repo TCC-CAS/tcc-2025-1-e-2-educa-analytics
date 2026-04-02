@@ -1,0 +1,104 @@
+<div class="disciplina-form-page">
+
+  <!-- Modal de Confirmação de Edição -->
+  <div class="modal-overlay" *ngIf="confirmVisible" (click)="cancelConfirm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h3 class="modal-title">Confirmar edição</h3>
+      <p class="modal-message">Deseja realmente salvar as alterações desta disciplina?</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
+        <button type="button" class="modal-btn modal-confirm" (click)="confirmEdit()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+  <header class="page-header">
+    <div>
+      <h1>{{ disciplinaId ? 'Editar disciplina' : 'Cadastrar disciplina' }}</h1>
+      <p>Informe os dados da disciplina para salvar as alteracoes.</p>
+    </div>
+  </header>
+
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+
+  <form #form="ngForm" class="form" (ngSubmit)="submit(form.valid === true)">
+    <div class="field-grid">
+      <label class="field">
+        <span>Código</span>
+        <input type="text" name="abreviatura" [(ngModel)]="model.abreviatura" required />
+      </label>
+      <label class="field">
+        <span>Nome da disciplina</span>
+        <input type="text" name="nome" [(ngModel)]="model.nome" required />
+      </label>
+      <label class="field">
+        <span>Série</span>
+        <select name="serie" [(ngModel)]="model.serie" required>
+          <option value="">Selecione</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Ano Letivo</span>
+        <input type="number" name="periodoLetivo" [(ngModel)]="model.periodoLetivo" placeholder="Ex: 2025" required />
+      </label>
+      <label class="field">
+        <span>Período</span>
+        <select name="turno" [(ngModel)]="model.turno" required>
+          <option value="">Selecione</option>
+          <option value="Manha">Manhã</option>
+          <option value="Tarde">Tarde</option>
+          <option value="Noite">Noite</option>
+          <option value="Integral">Integral</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Aulas semanais</span>
+        <input type="number" name="aulasSemanais" [(ngModel)]="model.aulasSemanais" required />
+      </label>
+      <label class="field">
+        <span>Horas semanais</span>
+        <input type="number" name="horasSemanais" [(ngModel)]="model.horasSemanais" required />
+      </label>
+      <label class="field">
+        <span>Horas anuais</span>
+        <input type="number" name="horasAnuais" [(ngModel)]="model.horasAnuais" required />
+      </label>
+      <label class="field">
+        <span>Área de conhecimento</span>
+        <select name="areaConhecimento" [(ngModel)]="model.areaConhecimento" required>
+          <option value="">Selecione</option>
+          <option value="Linguagens">Linguagens</option>
+          <option value="Matematica">Matemática</option>
+          <option value="Ciencias Humanas">Ciências Humanas</option>
+          <option value="Ciencias da Natureza">Ciências da Natureza</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <select name="status" [(ngModel)]="model.status" required>
+          <option value="">Selecione</option>
+          <option value="ativa">Ativa</option>
+          <option value="inativa">Inativa</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="ghost" (click)="cancel()">Voltar</button>
+      <button type="submit" class="primary">{{ disciplinaId ? 'Salvar Alterações' : 'Cadastrar disciplina' }}</button>
+    </div>
+  </form>
+</div>

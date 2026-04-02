@@ -1,0 +1,598 @@
+// ── Variables ────────────────────────────────────────────────
+$primary      : #4f46e5;
+$primary-dark : #4338ca;
+$surface      : #fff;
+$bg           : #f8f9fc;
+$border       : #e5e7eb;
+$text         : #111827;
+$text-muted   : #6b7280;
+$radius       : 10px;
+
+// ── Host ─────────────────────────────────────────────────────
+:host {
+  display       : block         !important;
+  width         : 100%          !important;
+  margin        : 0             !important;
+  text-align    : left          !important;
+}
+
+// ── Page ─────────────────────────────────────────────────────
+.disciplinas-page {
+  padding       : 2.5rem 3rem;
+  color         : $text;
+  text-align    : left          !important;
+  width         : 100%          !important;
+}
+
+// ── Header ───────────────────────────────────────────────────
+.page-header {
+  display        : flex;
+  justify-content: flex-start  !important;
+  align-items    : flex-start  !important;
+  text-align     : left        !important;
+  margin-bottom  : .75rem;
+
+  h1 { margin: 0 0 .4rem; font-size: 1.85rem; }
+  p  { margin: 0; color: $text-muted; }
+}
+
+// ── Toolbar ──────────────────────────────────────────────────
+.toolbar {
+  display         : flex;
+  justify-content : flex-start  !important;
+  text-align      : left        !important;
+  margin-bottom   : 1.5rem;
+
+  a.primary, button.primary {
+    display          : inline-flex;
+    align-items      : center;
+    justify-content  : center;
+    border           : none;
+    background       : $primary;
+    color            : $surface;
+    padding          : .65rem 1.3rem;
+    border-radius    : 8px;
+    font-size        : .95rem;
+    font-weight      : 600;
+    text-decoration  : none;
+    cursor           : pointer;
+    box-shadow       : 0 2px 6px rgba(79,70,229,.25);
+    transition       : background .15s;
+    &:hover { background: $primary-dark; }
+  }
+}
+
+// ── Ghost button ─────────────────────────────────────────────
+.ghost {
+  display       : inline-flex;
+  align-items   : center;
+  justify-content: center;
+  height        : 38px;
+  padding       : 0 1rem;
+  border        : 1.5px solid $border;
+  border-radius : 6px;
+  background    : $surface;
+  color         : $text-muted;
+  font-size     : .875rem;
+  cursor        : pointer;
+  white-space   : nowrap;
+  transition    : background .15s, color .15s;
+  &:hover { background: $bg; color: $text; }
+}
+
+// ── Message ──────────────────────────────────────────────────
+.message {
+  margin-bottom : 1rem;
+  padding       : .75rem 1rem;
+  border-radius : $radius;
+  background    : rgba(52,168,83,.1);
+  color         : #14532d;
+  border        : 1px solid rgba(52,168,83,.25);
+  &.error {
+    background  : rgba(239,68,68,.1);
+    color       : #7f1d1d;
+    border-color: rgba(239,68,68,.25);
+  }
+}
+
+// ── Filters ──────────────────────────────────────────────────
+.filters {
+  display               : grid;
+  grid-template-columns : repeat(auto-fit, minmax(200px,1fr));
+  gap                   : 1rem;
+  margin-bottom         : 1.5rem;
+  background            : $surface;
+  border-radius         : $radius;
+  padding               : 1.25rem;
+  border                : 1px solid $border;
+  box-shadow            : 0 1px 4px rgba(0,0,0,.06);
+  text-align            : left !important;
+
+  .field {
+    display      : flex;
+    flex-direction: column;
+    gap          : .35rem;
+    font-size    : .85rem;
+    color        : $text-muted;
+    text-align   : left !important;
+    align-items  : flex-start !important;
+  }
+}
+
+.filters input,
+.filters select,
+.bulk-actions select {
+  border        : 1px solid $border;
+  border-radius : 6px;
+  padding       : .55rem .7rem;
+  font-size     : .95rem;
+  background    : $surface;
+  color         : $text;
+  width         : 100%;
+  &:focus { outline: none; border-color: $primary; box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+}
+
+// ── Barra de ações em lote ────────────────────────────────────
+.lote-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #eef2ff;
+  border: 1.5px solid #c7d2fe;
+  border-radius: $radius;
+  padding: .75rem 1.25rem;
+  margin-bottom: 1rem;
+
+  .lote-info {
+    font-size: .875rem;
+    font-weight: 600;
+    color: $primary;
+  }
+
+  .lote-acoes {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+}
+
+.lote-select {
+  height: 34px;
+  padding: 0 2rem 0 .75rem;
+  border: 1.5px solid $border;
+  border-radius: 7px;
+  font-size: .875rem;
+  background: $surface;
+  color: $text;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .6rem center;
+  background-size: 14px;
+  outline: none;
+  &:focus { border-color: $primary; }
+}
+
+.lote-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 .85rem;
+  border-radius: 7px;
+  font-size: .8rem;
+  font-weight: 600;
+  background: $primary;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background .15s;
+  &:hover { background: $primary-dark; }
+}
+
+// ── Table ────────────────────────────────────────────────────
+.table {
+  background    : $surface;
+  border-radius : $radius;
+  border        : 1px solid $border;
+  box-shadow    : 0 1px 4px rgba(0,0,0,.06);
+  overflow      : hidden;
+}
+
+.table-head,
+.table-row {
+  display               : grid;
+  grid-template-columns : 44px 100px 1.4fr 0.6fr 0.9fr 0.9fr 0.7fr 1fr;
+  gap                   : .75rem;
+  align-items           : center;
+  padding               : .85rem 1rem;
+}
+
+.table-head {
+  background     : $bg;
+  color          : $text-muted;
+  font-size      : .82rem;
+  text-transform : uppercase;
+  letter-spacing : .04em;
+  font-weight    : 600;
+}
+
+.table-row {
+  border-top : 1px solid $border;
+  font-size  : .95rem;
+  &:hover { background: $bg; }
+  &.selecionada { background: #eef2ff; }
+}
+
+// ── Status badge ─────────────────────────────────────────────
+.status {
+  display         : inline-flex;
+  align-items     : center;
+  justify-content : center;
+  padding         : .2rem .65rem;
+  border-radius   : 999px;
+  font-size       : .8rem;
+  font-weight     : 600;
+  background      : rgba(22,163,74,.12);
+  color           : #15803d;
+  &.inactive { background: rgba(239,68,68,.1); color: #b91c1c; }
+}
+
+// ── Row actions ──────────────────────────────────────────────
+.row-actions {
+  display   : flex;
+  flex-wrap : wrap;
+  gap       : .4rem;
+}
+
+.btn-icone {
+  width           : 32px;
+  height          : 32px;
+  border-radius   : 7px;
+  border          : 1.5px solid $border;
+  background      : $surface;
+  display         : inline-flex;
+  align-items     : center;
+  justify-content : center;
+  cursor          : pointer;
+  transition      : background .15s, border-color .15s;
+
+  svg { width: 15px; height: 15px; stroke: $text-muted; transition: stroke .15s; }
+
+  &:hover                     { background: #eef2ff; border-color: $primary;  svg { stroke: $primary;  } }
+  &.btn-icone-ativar:hover    { background: #dcfce7; border-color: #16a34a;   svg { stroke: #16a34a;   } }
+  &.btn-icone-desativar:hover { background: #fef9c3; border-color: #ca8a04;   svg { stroke: #ca8a04;   } }
+  &.btn-icone-danger:hover    { background: #fee2e2; border-color: #dc2626;   svg { stroke: #dc2626;   } }
+}
+
+// ── Empty ────────────────────────────────────────────────────
+.empty {
+  padding    : 1.5rem;
+  text-align : center;
+  color      : $text-muted;
+}
+
+// ── Modal ────────────────────────────────────────────────────
+.modal-overlay {
+  position        : fixed;
+  inset           : 0;
+  background      : rgba(0,0,0,.45);
+  display         : flex;
+  align-items     : center;
+  justify-content : center;
+  z-index         : 1000;
+  backdrop-filter : blur(2px);
+}
+
+.modal {
+  background    : $surface;
+  border-radius : 16px;
+  padding       : 2rem;
+  max-width     : 420px;
+  width         : 90%;
+  box-shadow    : 0 20px 60px rgba(0,0,0,.18);
+  text-align    : center;
+}
+
+.modal-icon {
+  width           : 52px;
+  height          : 52px;
+  border-radius   : 50%;
+  background      : rgba(79,70,229,.1);
+  display         : flex;
+  align-items     : center;
+  justify-content : center;
+  margin          : 0 auto 1rem;
+  color           : $primary;
+  svg { width: 26px; height: 26px; }
+  &.danger { background: rgba(220,38,38,.1); color: #dc2626; }
+}
+
+.modal-title   { margin: 0 0 .5rem; font-size: 1.15rem; font-weight: 700; color: $text; }
+.modal-message { margin: 0 0 1.5rem; font-size: .95rem; color: $text-muted; line-height: 1.5; }
+
+.modal-actions {
+  display         : flex;
+  gap             : .75rem;
+  justify-content : center;
+}
+
+.modal-btn {
+  padding       : .6rem 1.4rem;
+  border-radius : 8px;
+  font-size     : .95rem;
+  font-weight   : 600;
+  cursor        : pointer;
+  border        : none;
+  transition    : opacity .15s;
+  &:hover { opacity: .85; }
+}
+
+.modal-cancel  { background: $bg; border: 1px solid $border; color: $text; }
+.modal-confirm { background: $primary; color: $surface; }
+.modal-confirm-danger { background: #dc2626; color: $surface; }
+
+.modal-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  width: 100%;
+  text-align: left;
+
+  label {
+    font-size: .78rem;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  select {
+    height: 40px;
+    padding: 0 2rem 0 .85rem;
+    border: 1.5px solid $border;
+    border-radius: 8px;
+    font-size: .9rem;
+    background: $surface;
+    color: $text;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right .6rem center;
+    background-size: 14px;
+    outline: none;
+    &:focus { border-color: $primary; }
+  }
+}
+
+// ── Responsive ───────────────────────────────────────────────
+@media (max-width: 1100px) {
+  .table-head, .table-row { grid-template-columns: 40px 90px 1.2fr .6fr .8fr .8fr .6fr 1fr; }
+}
+
+@media (max-width: 900px) {
+  .disciplinas-page { padding: 2rem; }
+  .table-head { display: none; }
+  .table-row { grid-template-columns: 1fr; gap: .5rem; }
+  .table-row span { display: flex; justify-content: space-between; gap: .5rem; }
+  .row-actions { justify-content: flex-start; }
+}
+
+@media (max-width: 600px) {
+  .disciplinas-page { padding: 1.5rem 1rem; }
+  .page-header { flex-direction: column; align-items: flex-start; }
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0 0 0.4rem;
+    font-size: 1.85rem;
+  }
+
+  p {
+    margin: 0;
+    color: #5f6368;
+  }
+}
+
+.actions .primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #1a73e8;
+  color: #ffffff;
+  padding: 0.7rem 1.4rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(26, 115, 232, 0.28);
+}
+
+.message {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: rgba(52, 168, 83, 0.12);
+  color: #1e6f3b;
+  border: 1px solid rgba(52, 168, 83, 0.25);
+}
+
+.message.error {
+  background: rgba(234, 67, 53, 0.12);
+  color: #b3261e;
+  border-color: rgba(234, 67, 53, 0.25);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.25rem;
+  border: 1px solid #e0e3eb;
+  box-shadow: 0 6px 16px rgba(60, 64, 67, 0.08);
+}
+
+.filters .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #5f6368;
+}
+
+.filters input,
+.filters select,
+.bulk-actions select {
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.95rem;
+  background: #ffffff;
+  color: #202124;
+}
+
+.filters input:focus,
+.filters select:focus,
+.bulk-actions select:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.18);
+}
+
+.ghost {
+  border: 1px solid #dadce0;
+  background: #ffffff;
+  color: #202124;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  height: fit-content;
+}
+
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.bulk-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #5f6368;
+}
+
+.bulk-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.table {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e0e3eb;
+  box-shadow: 0 10px 24px rgba(60, 64, 67, 0.1);
+  overflow: hidden;
+}
+
+.table-head,
+.table-row {
+  display: grid;
+  grid-template-columns: 48px 100px 1.4fr 0.6fr 0.9fr 0.9fr 0.6fr 1.3fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+}
+
+.table-head {
+  background: #f8f9fa;
+  color: #5f6368;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.table-row {
+  border-top: 1px solid #eceff3;
+  font-size: 0.95rem;
+  &.selecionada { background: #eef2ff; }
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: rgba(52, 168, 83, 0.15);
+  color: #1e6f3b;
+}
+
+.status.inactive {
+  background: rgba(234, 67, 53, 0.12);
+  color: #b3261e;
+}
+
+.empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: #5f6368;
+}
+
+@media (max-width: 1100px) {
+  .table-head,
+  .table-row {
+    grid-template-columns: 40px 90px 1.2fr 0.6fr 0.8fr 0.8fr 0.6fr 1.2fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .disciplinas-page {
+    padding: 2rem;
+  }
+
+  .table-head {
+    display: none;
+  }
+
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .table-row span {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .row-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .disciplinas-page {
+    padding: 1.5rem 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

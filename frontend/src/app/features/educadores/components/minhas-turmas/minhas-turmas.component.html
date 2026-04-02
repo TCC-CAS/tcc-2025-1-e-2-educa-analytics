@@ -1,0 +1,474 @@
+<div class="mt-page">
+
+  <!-- ── Cabeçalho ────────────────────────────────────────── -->
+  <header class="page-header">
+    <div>
+      <h1>Minhas Turmas</h1>
+      <p>Selecione uma turma para gerenciar frequência, notas e educandos.</p>
+    </div>
+  </header>
+
+
+  <div class="mt-layout">
+
+    <!-- �"?�"? Sidebar: lista de turmas �"?�"? -->
+    <aside class="turmas-sidebar">
+
+      <div class="sidebar-filters">
+        <input type="text" [(ngModel)]="filtroAno" placeholder="Ano letivo" maxlength="4" />
+        <select [(ngModel)]="filtroTurno">
+          <option value="">Todos os períodos</option>
+          <option value="Manhã">Manhã</option>
+          <option value="Tarde">Tarde</option>
+          <option value="Noite">Noite</option>
+          <option value="Integral">Integral</option>
+        </select>
+        <select [(ngModel)]="filtroSerie">
+          <option value="">Todas as séries</option>
+          <option value="1º Ano">1º Ano</option>
+          <option value="2º Ano">2º Ano</option>
+          <option value="3º Ano">3º Ano</option>
+          <option value="4º Ano">4º Ano</option>
+          <option value="5º Ano">5º Ano</option>
+          <option value="6º Ano">6º Ano</option>
+          <option value="7º Ano">7º Ano</option>
+          <option value="8º Ano">8º Ano</option>
+          <option value="9º Ano">9º Ano</option>
+          <option value="1ª Série EM">1ª Série EM</option>
+          <option value="2ª Série EM">2ª Série EM</option>
+          <option value="3ª Série EM">3ª Série EM</option>
+        </select>
+        <select [(ngModel)]="filtroStatus">
+          <option value="">Todos os status</option>
+          <option value="ativa">Ativa</option>
+          <option value="inativa">Inativa</option>
+          <option value="concluida">Conclu&#237;da</option>
+        </select>
+        <button type="button" class="ghost-small" (click)="resetFiltros()"
+          *ngIf="filtroAno || filtroTurno || filtroSerie || filtroStatus">Limpar filtros</button>
+      </div>
+
+      <div class="turmas-lista">
+        <div class="turma-item"
+          *ngFor="let t of turmasFiltradas"
+          [class.selecionada]="turmaModal?.id === t.id"
+          [class.inativa]="t.status !== 'ativa'"
+          (click)="selecionarTurma(t)">
+          <div class="turma-item-head">
+            <span class="ti-codigo">{{ t.codigo }}</span>
+            <span class="ti-status" [class.inactive]="t.status !== 'ativa'">
+              {{ labelStatus(t.status) }}
+            </span>
+          </div>
+          <div class="ti-nome">{{ t.nome }}</div>
+          <div class="ti-meta">{{ t.serie }} &bull; {{ t.turno }}</div>
+        </div>
+
+        <div class="sidebar-empty" *ngIf="turmasFiltradas.length === 0">
+          Nenhuma turma encontrada para os filtros selecionados.
+        </div>
+      </div>
+    </aside>
+
+    <!-- �"?�"? Painel de detalhes �"?�"? -->
+    <main class="turma-detalhe">
+
+      <!-- Nenhuma turma selecionada -->
+      <div class="detalhe-vazio" *ngIf="!turmaModal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+        <p>Selecione uma turma ao lado para visualizar e gerenciar frequência, notas e educandos.</p>
+      </div>
+
+      <ng-container *ngIf="turmaModal">
+
+        <!-- Cabeçalho da turma selecionada -->
+        <div class="detalhe-cabecalho">
+          <div class="detalhe-cabecalho-top">
+            <div>
+              <h2 class="detalhe-turma-titulo">{{ turmaModal.nome }}</h2>
+              <div class="detalhe-turma-sub">
+                <span>{{ turmaModal.serie }}</span>
+                <span>&bull;</span>
+                <span>{{ turmaModal.turno }}</span>
+                <span>&bull;</span>
+                <span>{{ turmaModal.sala }}</span>
+                <span>&bull;</span>
+                <span>{{ turmaModal.anoLetivo }}</span>
+              </div>
+            </div>
+            <span class="card-status" [class.inactive]="turmaModal.status !== 'ativa'">
+              {{ labelStatus(turmaModal.status) }}
+            </span>
+          </div>
+          <div class="detalhe-vagas">
+            <span class="vagas-label">Vagas: {{ turmaModal.vagasOcupadas }}/{{ turmaModal.vagas }}</span>
+            <div class="vagas-bar detalhe-vagas-bar">
+              <div class="vagas-fill" [style.width.%]="(turmaModal.vagasOcupadas / turmaModal.vagas) * 100"></div>
+            </div>
+            <span class="vagas-livres">{{ vagasLivres(turmaModal) }} livre(s)</span>
+          </div>
+        </div>
+
+        <!-- Disciplinas lecionadas -->
+        <div class="detalhe-disc-section" *ngIf="turmaModal.disciplinas.length > 0">
+          <span class="disc-section-titulo">Selecione uma disciplina</span>
+          <div class="disc-cards-row">
+            <div class="disc-card"
+              *ngFor="let d of turmaModal.disciplinas"
+              [class.disc-card-ativa]="disciplinaSelecionada?.disciplina === d.disciplina"
+              (click)="selecionarDisciplina(d)">
+              <div class="disc-card-nome">{{ d.disciplina }}</div>
+              <div class="disc-card-area">{{ d.area }}</div>
+              <div class="disc-card-aulas">{{ d.aulasSemanais }}x / semana</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nenhuma disciplina selecionada -->
+        <div class="disc-prompt" *ngIf="!disciplinaSelecionada">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          <p>Clique em uma disciplina acima para gerenciar educandos, frequ&#234;ncia e notas.</p>
+        </div>
+
+        <ng-container *ngIf="disciplinaSelecionada">
+
+        <!-- Contexto: disciplina ativa -->
+        <div class="disc-contexto">
+          <span class="disc-contexto-nome">{{ disciplinaSelecionada.disciplina }}</span>
+          <span class="disc-contexto-area">{{ disciplinaSelecionada.area }}</span>
+        </div>
+
+        <!-- Navegação por abas -->
+        <nav class="detalhe-tabs">
+          <button type="button" class="tab-btn" [class.aba-ativa]="abaAtiva === 'educandos'" (click)="mudarAba('educandos')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Educandos
+          </button>
+          <button type="button" class="tab-btn" [class.aba-ativa]="abaAtiva === 'frequencia'" (click)="mudarAba('frequencia')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
+            Frequência
+          </button>
+          <button type="button" class="tab-btn" [class.aba-ativa]="abaAtiva === 'relatorio'" (click)="mudarAba('relatorio')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Rel. Frequência
+          </button>
+          <button type="button" class="tab-btn" [class.aba-ativa]="abaAtiva === 'notas'" (click)="mudarAba('notas')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Notas
+          </button>
+        </nav>
+
+        <!-- Conteúdo das abas -->
+        <div class="detalhe-conteudo">
+
+          <!-- �"?�"? Aba: Educandos �"?�"? -->
+          <ng-container *ngIf="abaAtiva === 'educandos'">
+            <ng-container *ngIf="educandosModal.length > 0; else semEducandos">
+              <div class="alunos-table">
+                <div class="alunos-head">
+                  <span>Nome</span>
+                  <span>Série</span>
+                  <span>Status</span>
+                </div>
+                <div class="alunos-row" *ngFor="let a of educandosModal">
+                  <span>{{ a.nome }}</span>
+                  <span>{{ a.serie }}</span>
+                  <span>{{ a.status }}</span>
+                </div>
+              </div>
+            </ng-container>
+            <ng-template #semEducandos>
+              <p class="modal-vazio">Nenhum educando matriculado nesta turma.</p>
+            </ng-template>
+          </ng-container>
+
+          <!-- ── Aba: Frequência ── -->
+          <ng-container *ngIf="abaAtiva === 'frequencia'">
+
+            <!-- Toolbar: data + pills compactas -->
+            <div class="freq-toolbar">
+              <div class="freq-data-row">
+                <label>Data da aula</label>
+                <input type="date" [(ngModel)]="frequenciaData" (change)="onFrequenciaDataChange()" />
+              </div>
+              <div class="freq-summary">
+                <span class="freq-pill presente">&#10003; {{ contarPresentes() }}</span>
+                <span class="freq-pill ausente">&#10007; {{ contarAusentes() }}</span>
+                <span class="freq-pill justificado">J {{ contarJustificados() }}</span>
+              </div>
+            </div>
+
+            <ng-container *ngIf="frequenciaRegistros.length > 0; else semAlunosFreq">
+              <div class="alunos-table">
+                <div class="freq-head">
+                  <span>Educando</span>
+                  <span>Presen&#231;a</span>
+                </div>
+                <div class="freq-row" *ngFor="let reg of frequenciaRegistros">
+                  <span class="freq-nome">{{ reg.nome }}</span>
+                  <span class="presenca-btns">
+                    <button type="button" class="btn-presenca"
+                      [class.presente]="reg.status === 'presente'"
+                      (click)="setPresenca(reg.alunoId, 'presente')" title="Presente">P</button>
+                    <button type="button" class="btn-presenca"
+                      [class.ausente]="reg.status === 'ausente'"
+                      (click)="setPresenca(reg.alunoId, 'ausente')" title="Ausente">A</button>
+                    <button type="button" class="btn-presenca"
+                      [class.justificado]="reg.status === 'justificado'"
+                      (click)="setPresenca(reg.alunoId, 'justificado')" title="Justificado">J</button>
+                  </span>
+                </div>
+                <div class="freq-table-footer">
+                  <div class="freq-mensagem freq-mensagem-inline" *ngIf="frequenciaMensagem">{{ frequenciaMensagem }}</div>
+                  <button type="button" class="btn-salvar-freq"
+                    (click)="salvarFrequencia()">
+                    Salvar frequ&#234;ncia
+                  </button>
+                </div>
+              </div>
+            </ng-container>
+            <ng-template #semAlunosFreq>
+              <p class="modal-vazio">Nenhum educando matriculado nesta turma.</p>
+            </ng-template>
+          </ng-container>
+
+          <!-- �"?�"? Aba: Relatório de Frequência �"?�"? -->
+          <ng-container *ngIf="abaAtiva === 'relatorio'">
+
+            <!-- Vista: resumo por educando + lista de datas -->
+            <ng-container *ngIf="!relEditData">
+              <ng-container *ngIf="relatorioFrequencia().length > 0; else semDadosFreq">
+                <div class="alunos-table">
+                  <div class="freq-rel-head">
+                    <span>Educando</span>
+                    <span>Aulas</span>
+                    <span>Pres.</span>
+                    <span>Faltas</span>
+                    <span>Just.</span>
+                    <span>% Frequência</span>
+                  </div>
+                  <div class="freq-rel-row" *ngFor="let item of relatorioFrequencia()">
+                    <span class="freq-rel-nome">{{ item.nome }}</span>
+                    <span>{{ item.total }}</span>
+                    <span class="freq-val-ok">{{ item.presentes }}</span>
+                    <span class="freq-val-danger">{{ item.ausentes }}</span>
+                    <span class="freq-val-warn">{{ item.justificados }}</span>
+                    <span class="freq-pct-cell">
+                      <div class="freq-pct-bar">
+                        <div class="freq-pct-fill" [class]="pctClass(item.pct)" [style.width.%]="item.pct"></div>
+                      </div>
+                      <span class="freq-pct-label" [class]="pctClass(item.pct)">{{ item.pct }}%</span>
+                    </span>
+                  </div>
+                </div>
+                <p class="freq-nota">* Mínimo de 75% de frequência exigido. Registre aulas na aba "Frequência".</p>
+
+                <div class="freq-datas-section">
+                  <h4 class="freq-datas-titulo">Aulas registradas ({{ datasRegistradas().length }})</h4>
+                  <div *ngIf="datasRegistradas().length === 0" class="modal-vazio">Nenhuma aula registrada ainda.</div>
+                  <div class="freq-datas-lista" *ngIf="datasRegistradas().length > 0">
+                    <div class="freq-data-head">
+                      <span>Data</span>
+                      <span>Presentes</span>
+                      <span>Faltas</span>
+                      <span>Justif.</span>
+                      <span></span>
+                    </div>
+                    <div class="freq-data-item" *ngFor="let dt of datasRegistradas()">
+                      <span class="freq-data-label">{{ dt | date:'dd/MM/yyyy' }}</span>
+                      <span class="freq-val-ok">{{ contarPresentesData(dt) }}</span>
+                      <span class="freq-val-danger">{{ contarAusentesData(dt) }}</span>
+                      <span class="freq-val-warn">{{ contarJustificadosData(dt) }}</span>
+                      <button type="button" class="btn-editar-data" (click)="abrirEdicaoData(dt)">Editar lista</button>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+              <ng-template #semDadosFreq>
+                <p class="modal-vazio">Nenhuma aula registrada para esta turma. Registre frequências na aba "Frequência".</p>
+              </ng-template>
+            </ng-container>
+
+            <!-- Vista: edição de uma data -->
+            <ng-container *ngIf="relEditData">
+              <div class="rel-edit-header">
+                <button type="button" class="btn-back" (click)="voltarRelatorio()" title="Voltar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <div>
+                  <span class="rel-edit-titulo">Editando lista de presença</span>
+                  <span class="rel-edit-data-label">{{ relEditData | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+              <div class="freq-edit-lista">
+                <div class="aluno-freq-row" *ngFor="let reg of relEditRegistros">
+                  <span class="aluno-freq-nome">{{ reg.nome }}</span>
+                  <div class="presenca-btns">
+                    <button type="button" class="btn-presenca"
+                      [class.ativo-p]="reg.status === 'presente'"
+                      (click)="setPresencaEdit(reg.alunoId, 'presente')">P</button>
+                    <button type="button" class="btn-presenca"
+                      [class.ativo-a]="reg.status === 'ausente'"
+                      (click)="setPresencaEdit(reg.alunoId, 'ausente')">A</button>
+                    <button type="button" class="btn-presenca"
+                      [class.ativo-j]="reg.status === 'justificado'"
+                      (click)="setPresencaEdit(reg.alunoId, 'justificado')">J</button>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="relEditMensagem" class="freq-mensagem ok">{{ relEditMensagem }}</div>
+              <div class="freq-actions">
+                <button type="button" class="ghost" (click)="voltarRelatorio()">Cancelar</button>
+                <button type="button" class="btn-salvar-freq" (click)="salvarEdicaoData()">Salvar alterações</button>
+              </div>
+            </ng-container>
+
+          </ng-container>
+
+          <!-- �"?�"? Aba: Notas �"?�"? -->
+          <ng-container *ngIf="abaAtiva === 'notas'">
+
+            <ng-container *ngIf="!atividadeSelecionada">
+
+              <div class="nova-atividade-form" *ngIf="modoNovaAtividade">
+                <div class="nova-at-grid">
+                  <div class="na-field">
+                    <label>Nome da atividade</label>
+                    <input type="text" [(ngModel)]="novaAtividade.nome" placeholder="Ex: Prova 1 &mdash; Capítulo 3" />
+                  </div>
+                  <div class="na-field">
+                    <label>Tipo</label>
+                    <select [(ngModel)]="novaAtividade.tipo">
+                      <option value="Prova">Prova</option>
+                      <option value="Trabalho">Trabalho</option>
+                      <option value="Apresentação">Apresentação</option>
+                    </select>
+                  </div>
+                  <div class="na-field">
+                    <label>Data</label>
+                    <input type="date" [(ngModel)]="novaAtividade.data" />
+                  </div>
+                  <div class="na-field">
+                    <label>Nota máxima</label>
+                    <input type="number" [(ngModel)]="novaAtividade.notaMaxima" min="1" max="100" />
+                  </div>
+                </div>
+                <div class="na-actions">
+                  <button type="button" class="ghost" (click)="cancelarNovaAtividade()">Cancelar</button>
+                  <button type="button" class="btn-salvar-freq" (click)="salvarNovaAtividade()">Salvar atividade</button>
+                </div>
+                <p class="notas-erro" *ngIf="notasErro">{{ notasErro }}</p>
+              </div>
+
+              <ng-container *ngIf="!modoNovaAtividade">
+                <div class="notas-toolbar">
+                  <span class="notas-info">{{ atividadesTurma.length }} atividade(s) cadastrada(s)</span>
+                  <button type="button" class="btn-nova-at" (click)="mostrarNovaAtividade()">+ Nova atividade</button>
+                </div>
+
+                <!-- Tabela cruzada: educandos × atividades -->
+                <ng-container *ngIf="atividadesTurma.length > 0 && educandosModal.length > 0; else semAtividades">
+                  <div class="notas-matrix-wrap">
+                    <table class="notas-matrix">
+                      <thead>
+                        <tr>
+                          <th class="nm-th-nome">Educando</th>
+                          <th class="nm-th-at" *ngFor="let at of atividadesTurma">
+                            <div class="nm-at-header">
+                              <span class="tipo-badge nm-tipo"
+                                [class.prova]="at.tipo === 'Prova'"
+                                [class.trabalho]="at.tipo === 'Trabalho'"
+                                [class.apresentacao]="at.tipo === 'Apresentação'">{{ at.tipo }}</span>
+                              <span class="nm-at-nome">{{ at.nome }}</span>
+                              <span class="nm-at-data">{{ at.data | date:'dd/MM' }} &bull; máx.&nbsp;{{ at.notaMaxima }}</span>
+                              <button type="button" class="nm-btn-editar" (click)="selecionarAtividade(at)" title="Lançar/editar notas">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                              </button>
+                            </div>
+                          </th>
+                          <th class="nm-th-media">Média</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let a of educandosModal">
+                          <td class="nm-td-nome">
+                            <span class="nm-aluno-nome">{{ a.nome }}</span>
+                          </td>
+                          <td class="nm-td-nota" *ngFor="let at of atividadesTurma">{{ notaAluno(at, a.id) }}</td>
+                          <td class="nm-td-media">{{ mediaGeralAluno(a.id) }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </ng-container>
+                <ng-template #semAtividades>
+                  <p class="modal-vazio">Nenhuma atividade cadastrada. Clique em "+ Nova atividade" para começar.</p>
+                </ng-template>
+              </ng-container>
+
+            </ng-container>
+
+            <ng-container *ngIf="atividadeSelecionada">
+              <div class="rel-edit-header">
+                <button type="button" class="btn-back" (click)="voltarAtividades()" title="Voltar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <div>
+                  <span class="rel-edit-titulo">{{ atividadeSelecionada.nome }}</span>
+                  <span class="rel-edit-data-label">
+                    {{ atividadeSelecionada.tipo }} &bull;
+                    {{ atividadeSelecionada.data | date:'dd/MM/yyyy' }} &bull;
+                    Máx. {{ atividadeSelecionada.notaMaxima }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="alunos-table">
+                <div class="notas-head">
+                  <span>Educando</span>
+                  <span>Nota (máx. {{ atividadeSelecionada.notaMaxima }})</span>
+                </div>
+                <div class="notas-row" *ngFor="let lan of notasLancamento">
+                  <span class="freq-rel-nome">{{ lan.nome }}</span>
+                  <span>
+                    <input type="number"
+                      class="nota-input"
+                      [value]="lan.nota ?? ''"
+                      (change)="setNota(lan.alunoId, $any($event.target).value)"
+                      min="0"
+                      [max]="atividadeSelecionada.notaMaxima"
+                      step="0.5"
+                      placeholder="&mdash;" />
+                  </span>
+                </div>
+              </div>
+
+              <p class="notas-erro" *ngIf="notasErro">{{ notasErro }}</p>
+              <div class="freq-mensagem" *ngIf="notasMensagem">{{ notasMensagem }}</div>
+
+              <div class="freq-actions">
+                <button type="button" class="ghost" (click)="voltarAtividades()">Cancelar</button>
+                <button type="button" class="btn-salvar-freq" (click)="salvarNotas()">Salvar notas</button>
+              </div>
+            </ng-container>
+
+          </ng-container>
+
+        </div><!-- /.detalhe-conteudo -->
+
+        </ng-container><!-- *ngIf disciplinaSelecionada -->
+
+      </ng-container><!-- *ngIf turmaModal -->
+
+    </main><!-- /.turma-detalhe -->
+
+  </div><!-- /.mt-layout -->
+
+</div><!-- /.mt-page -->
+

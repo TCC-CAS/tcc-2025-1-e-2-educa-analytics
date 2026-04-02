@@ -1,0 +1,134 @@
+<div class="container">
+  <h1>Educa Analytics - Integração com Lambda</h1>
+
+  <!-- Mensagem de erro -->
+  <div *ngIf="error" class="alert alert-error">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Carregando -->
+  <div *ngIf="loading" class="spinner">
+    <p>Carregando dados...</p>
+  </div>
+
+  <!-- Conteúdo -->
+  <div *ngIf="!loading">
+    <!-- Botões de ação -->
+    <div class="actions">
+      <button (click)="buscarDados()" class="btn btn-primary">
+        Atualizar Dados
+      </button>
+    </div>
+
+    <!-- Tabela de dados -->
+    <div class="table-container">
+      <table *ngIf="dados.length > 0" class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Coluna 1</th>
+            <th>Coluna 2</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of dados">
+            <td>{{ item.id }}</td>
+            <td>{{ item.coluna1 }}</td>
+            <td>{{ item.coluna2 }}</td>
+            <td>
+              <button (click)="deletarDados(item.id)" class="btn btn-danger">
+                Deletar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Mensagem quando não há dados -->
+      <div *ngIf="dados.length === 0" class="empty-message">
+        <p>Nenhum dado disponível</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .alert-error {
+    background-color: #fee;
+    border: 1px solid #fcc;
+    color: #c33;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+
+  .spinner {
+    text-align: center;
+    padding: 20px;
+  }
+
+  .actions {
+    margin-bottom: 20px;
+  }
+
+  .btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+
+  .btn-danger {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background-color: #c82333;
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+
+  .table th,
+  .table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+  }
+
+  .table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
+
+  .table tbody tr:hover {
+    background-color: #f9f9f9;
+  }
+
+  .empty-message {
+    text-align: center;
+    padding: 30px;
+    color: #999;
+  }
+</style>
