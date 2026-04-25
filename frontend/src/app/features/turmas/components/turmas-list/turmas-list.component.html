@@ -76,76 +76,100 @@
     </div>
   </div>
 
+  <div class="page-content">
+
   <header class="page-header">
     <div>
       <h1>Lista de Turmas</h1>
       <p>Consulte, filtre e gerencie turmas cadastradas.</p>
     </div>
+    <a class="btn btn-primary" routerLink="/turmas/nova">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Cadastrar turma
+    </a>
   </header>
-
-  <div class="toolbar">
-    <a class="primary" routerLink="/turmas/nova">+ Cadastrar turma</a>
-  </div>
 
   <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
     {{ message }}
   </div>
 
-  <section class="filters">
-    <div class="field">
-      <label for="filtroCodigo">Código</label>
-      <input id="filtroCodigo" type="text" [(ngModel)]="filtro.codigo" (input)="applyFilters()" />
+  <!-- Filtros -->
+  <div class="filters-card">
+    <div class="filters-header">
+      <span class="filters-titulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filtros
+      </span>
+      <span class="filters-ativos-badge" *ngIf="filtrosAtivos > 0">{{ filtrosAtivos }}</span>
+      <span class="resultado-count"><strong>{{ filteredTurmas.length }}</strong> turma(s) encontrada(s)</span>
+      <button type="button" class="btn-limpar" *ngIf="filtrosAtivos > 0" (click)="resetFilters()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Limpar
+      </button>
     </div>
-    <div class="field">
-      <label for="filtroNome">Turma</label>
-      <input id="filtroNome" type="text" [(ngModel)]="filtro.nome" (input)="applyFilters()" />
+    <div class="filters-grid">
+      <div class="filter-field">
+        <label for="filtroCodigo">Código</label>
+        <input id="filtroCodigo" type="text" placeholder=" " [(ngModel)]="filtro.codigo" (input)="applyFilters()" />
+      </div>
+      <div class="filter-field">
+        <label for="filtroNome">Turma</label>
+        <input id="filtroNome" type="text" placeholder=" " [(ngModel)]="filtro.nome" (input)="applyFilters()" />
+      </div>
+      <div class="filter-field">
+        <label for="filtroTurno">Período</label>
+        <div class="select-wrapper">
+          <select id="filtroTurno" [(ngModel)]="filtro.turno" (change)="applyFilters()">
+            <option value="">Todos</option>
+            <option value="Manhã">Manhã</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noite">Noite</option>
+            <option value="Integral">Integral</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-field">
+        <label for="filtroAnoLetivo">Ano Letivo</label>
+        <div class="select-wrapper">
+          <select id="filtroAnoLetivo" [(ngModel)]="filtro.anoLetivo" (change)="applyFilters()">
+            <option value="">Todos</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-field">
+        <label for="filtroSerie">Série</label>
+        <div class="select-wrapper">
+          <select id="filtroSerie" [(ngModel)]="filtro.serie" (change)="applyFilters()">
+            <option value="">Todas</option>
+            <option value="1º Ano">1º Ano</option>
+            <option value="2º Ano">2º Ano</option>
+            <option value="3º Ano">3º Ano</option>
+            <option value="4º Ano">4º Ano</option>
+            <option value="5º Ano">5º Ano</option>
+            <option value="6º Ano">6º Ano</option>
+            <option value="7º Ano">7º Ano</option>
+            <option value="8º Ano">8º Ano</option>
+            <option value="9º Ano">9º Ano</option>
+            <option value="1ª Série EM">1ª Série EM</option>
+            <option value="2ª Série EM">2ª Série EM</option>
+            <option value="3ª Série EM">3ª Série EM</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-field">
+        <label for="filtroStatus">Status</label>
+        <div class="select-wrapper">
+          <select id="filtroStatus" [(ngModel)]="filtro.status" (change)="applyFilters()">
+            <option value="">Todos</option>
+            <option value="ativa">Ativa</option>
+            <option value="inativa">Inativa</option>
+          </select>
+        </div>
+      </div>
     </div>
-    <div class="field">
-      <label for="filtroTurno">Período</label>
-      <select id="filtroTurno" [(ngModel)]="filtro.turno" (change)="applyFilters()">
-        <option value="">Todos</option>
-        <option value="Manhã">Manhã</option>
-        <option value="Tarde">Tarde</option>
-        <option value="Noite">Noite</option>
-        <option value="Integral">Integral</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="filtroAnoLetivo">Ano Letivo</label>
-      <select id="filtroAnoLetivo" [(ngModel)]="filtro.anoLetivo" (change)="applyFilters()">
-        <option value="">Todos</option>
-        <option value="2025">2025</option>
-        <option value="2026">2026</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="filtroSerie">Série</label>
-      <select id="filtroSerie" [(ngModel)]="filtro.serie" (change)="applyFilters()">
-        <option value="">Todas</option>
-        <option value="1º Ano">1º Ano</option>
-        <option value="2º Ano">2º Ano</option>
-        <option value="3º Ano">3º Ano</option>
-        <option value="4º Ano">4º Ano</option>
-        <option value="5º Ano">5º Ano</option>
-        <option value="6º Ano">6º Ano</option>
-        <option value="7º Ano">7º Ano</option>
-        <option value="8º Ano">8º Ano</option>
-        <option value="9º Ano">9º Ano</option>
-        <option value="1ª Série EM">1ª Série EM</option>
-        <option value="2ª Série EM">2ª Série EM</option>
-        <option value="3ª Série EM">3ª Série EM</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="filtroStatus">Status</label>
-      <select id="filtroStatus" [(ngModel)]="filtro.status" (change)="applyFilters()">
-        <option value="">Todos</option>
-        <option value="ativa">Ativa</option>
-        <option value="inativa">Inativa</option>
-      </select>
-    </div>
-    <button type="button" class="ghost" (click)="resetFilters()">Limpar filtros</button>
-  </section>
+  </div>
 
   <!-- Barra de ações em lote -->
   <div class="lote-bar" *ngIf="totalSelecionados > 0">
@@ -155,8 +179,8 @@
         <option value="ativa">Ativa</option>
         <option value="inativa">Inativa</option>
       </select>
-      <button type="button" class="lote-btn-primary" (click)="abrirModalLote()">Alterar status</button>
-      <button type="button" class="ghost" (click)="toggleAll(false)">Desmarcar tudo</button>
+      <button type="button" class="btn btn-primary" style="height:36px;font-size:.85rem" (click)="abrirModalLote()">Alterar status</button>
+      <button type="button" class="btn btn-ghost" style="height:36px;font-size:.85rem" (click)="toggleAll(false)">Desmarcar tudo</button>
     </div>
   </div>
 
@@ -213,4 +237,6 @@
       Nenhuma turma encontrada.
     </div>
   </section>
+
+  </div><!-- /page-content -->
 </div>

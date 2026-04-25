@@ -1,4 +1,4 @@
-<div class="turma-form-page">
+﻿<div class="turma-form-page">
 
   <!-- Modal de Confirmação de Edição -->
   <div class="modal-overlay" *ngIf="confirmVisible" (click)="cancelConfirm()">
@@ -14,6 +14,12 @@
       </div>
     </div>
   </div>
+
+  <button type="button" class="btn-voltar" (click)="cancel()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Voltar para lista de turmas
+  </button>
+
   <header class="page-header">
     <div>
       <h1>{{ turmaId ? 'Editar turma' : 'Cadastrar turma' }}</h1>
@@ -94,7 +100,7 @@
     </div>
 
     <div class="form-actions">
-      <button type="button" class="ghost" (click)="cancel()">Voltar</button>
+      <button type="button" class="ghost" (click)="cancel()">Cancelar</button>
       <button type="submit" class="primary">{{ turmaId ? 'Salvar alterações' : 'Cadastrar turma' }}</button>
     </div>
   </form>

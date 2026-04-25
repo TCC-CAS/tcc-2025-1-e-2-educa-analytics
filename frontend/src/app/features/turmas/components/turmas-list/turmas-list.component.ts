@@ -318,6 +318,11 @@ export class TurmasListComponent implements AfterViewInit {
     this.applyFilters();
   }
 
+  get filtrosAtivos(): number {
+    return [this.filtro.codigo, this.filtro.nome, this.filtro.turno, this.filtro.anoLetivo, this.filtro.serie, this.filtro.status]
+      .filter(v => v !== '').length;
+  }
+
   isSelected(id: number): boolean {
     return this.selectedIds.has(id);
   }
