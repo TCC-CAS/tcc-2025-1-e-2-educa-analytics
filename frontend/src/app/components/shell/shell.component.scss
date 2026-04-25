@@ -127,6 +127,18 @@ $transition: 0.25s ease;
   padding: 0;
 }
 
+.nav-group-label {
+  padding: 16px 20px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  white-space: nowrap;
+  overflow: hidden;
+  list-style: none;
+}
+
 .nav-item {
   margin: 2px 8px;
 }

@@ -71,6 +71,10 @@ const routes: Routes = [
   {
     path: 'responsaveis',
     loadChildren: () => import('./features/responsaveis/responsaveis.module').then(m => m.ResponsaveisModule)
+  },
+  {
+    path: 'cronograma',
+    loadChildren: () => import('./features/cronograma/cronograma.module').then(m => m.CronogramaModule)
   }
 ];
 

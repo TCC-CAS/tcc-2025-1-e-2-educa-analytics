@@ -111,7 +111,11 @@ app-dashboard {
 /* Propriedades visuais pre-aplicadas para evitar reflow/jump ao carregar estilos encapsulados */
 app-turmas-list,
 app-turma-form {
-  background: #f8f9fc !important;
+  background-color: #ffffff !important;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.07) 1px, transparent 1px) !important;
+  background-size: 40px 40px !important;
   min-height: 100vh !important;
   box-sizing: border-box !important;
   align-self: stretch !important;
@@ -135,5 +139,146 @@ app-turma-form {
 
   &:hover {
     background: #555;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Gmail-style form field — floating label
+   Use: <label class="gf-field"> <span>Label</span> <input> </label>
+   ══════════════════════════════════════════════════════════════════ */
+.gf-field {
+  position: relative;
+  display: block;
+  width: 100%;
+
+  /* The floating label */
+  > span,
+  > label > span {
+    position: absolute;
+    top: 50%;
+    left: 13px;
+    transform: translateY(-50%);
+    font-size: 0.875rem;
+    color: #5f6368;
+    font-weight: 400;
+    pointer-events: none;
+    background: transparent;
+    padding: 0 3px;
+    transition: top 0.18s ease, font-size 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    line-height: 1;
+    white-space: nowrap;
+    z-index: 1;
+  }
+
+  /* Required asterisk */
+  &.required > span::after {
+    content: ' *';
+    color: #d93025;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    height: 52px;
+    padding: 18px 13px 6px;
+    border: 1.5px solid #dadce0;
+    border-radius: 4px;
+    font-size: 0.9375rem;
+    font-family: inherit;
+    color: #202124;
+    background: #f8f9fa;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.15s ease;
+    appearance: none;
+    -webkit-appearance: none;
+
+    &:focus {
+      border-color: #1a73e8;
+      background: #fff;
+      box-shadow: 0 0 0 1px #1a73e8;
+    }
+
+    &[readonly] {
+      background: #f1f3f4;
+      color: #5f6368;
+      cursor: default;
+      &:focus { border-color: #dadce0; box-shadow: none; }
+    }
+
+    &::placeholder { color: transparent; }
+  }
+
+  textarea {
+    height: auto;
+    min-height: 88px;
+    padding-top: 22px;
+    resize: vertical;
+  }
+
+  /* select arrow */
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235f6368' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+
+  /* Label floats up when input has content or is focused */
+  input:focus ~ span,
+  input:not(:placeholder-shown) ~ span,
+  select:focus ~ span,
+  select:not([value=""]) ~ span,
+  textarea:focus ~ span,
+  textarea:not(:placeholder-shown) ~ span {
+    top: 10px;
+    transform: translateY(0);
+    font-size: 0.6875rem;
+    color: #5f6368;
+    font-weight: 500;
+  }
+
+  input:focus ~ span,
+  select:focus ~ span,
+  textarea:focus ~ span {
+    color: #1a73e8;
+  }
+
+  /* Error state */
+  &.gf-error {
+    input, select, textarea {
+      border-color: #d93025;
+      &:focus { border-color: #d93025; box-shadow: 0 0 0 1px #d93025; }
+    }
+    > span { color: #d93025; }
+  }
+}
+
+/* Also make selects with a non-empty value show the label floated */
+.gf-field select ~ span {
+  top: 10px;
+  transform: translateY(0);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+/* Compact variant used in dense forms (matricula, etc.) */
+.gf-field.gf-sm {
+  input, select {
+    height: 40px;
+    padding: 14px 10px 4px;
+    font-size: 0.82rem;
+  }
+  > span {
+    font-size: 0.8rem;
+    left: 10px;
+  }
+  input:focus ~ span,
+  input:not(:placeholder-shown) ~ span,
+  select ~ span {
+    top: 6px;
+    font-size: 0.62rem;
   }
 }

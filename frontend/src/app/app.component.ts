@@ -10,6 +10,7 @@ import { AuthService } from './core/services/auth.service';
 export class AppComponent {
   title = 'EducaAnalytics';
   menuAberto: boolean = false;
+  menuExpandido: boolean = false;
 
   constructor(
     private authService: AuthService,
