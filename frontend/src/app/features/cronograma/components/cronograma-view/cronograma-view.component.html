@@ -1,0 +1,249 @@
+<div class="cronograma-page">
+
+  <!-- ── Modal Adicionar / Editar Aula ─────────────────────── -->
+  <div class="modal-overlay" *ngIf="modalVisible" (click)="fecharModal()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-header-info">
+          <h3>{{ editingSlot ? 'Editar aula' : 'Adicionar aula' }}</h3>
+          <p class="modal-subtitle">
+            <span class="dia-chip">{{ getDiaLabel(modalDia!) }}</span>
+            <span class="hora-chip">{{ modalHora }}</span>
+            <span class="turma-chip" *ngIf="turmaSelecionada">{{ turmaSelecionada.serie }} — {{ turmaSelecionada.nome }}</span>
+          </p>
+        </div>
+        <button class="btn-fechar" (click)="fecharModal()" title="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-field">
+          <label>Disciplina <span class="req">*</span></label>
+          <select [(ngModel)]="novoSlot.disciplinaId">
+            <option value="">Selecione a disciplina</option>
+            <option *ngFor="let d of disciplinas" [value]="d.id">{{ d.nome }}</option>
+          </select>
+        </div>
+
+        <div class="modal-field">
+          <label>Educador</label>
+          <select [(ngModel)]="novoSlot.educadorId">
+            <option value="">Sem educador definido</option>
+            <option *ngFor="let e of educadores" [value]="e.id">{{ e.nome }}</option>
+          </select>
+        </div>
+
+        <div class="modal-field">
+          <label>Sala</label>
+          <select [(ngModel)]="novoSlot.salaId">
+            <option value="">Sem sala definida</option>
+            <option *ngFor="let s of salas" [value]="s.id">{{ s.nome }}</option>
+          </select>
+        </div>
+
+        <div class="modal-row">
+          <div class="modal-field">
+            <label>Início</label>
+            <input type="time" [(ngModel)]="novoSlot.horaInicio" />
+          </div>
+          <div class="modal-field">
+            <label>Fim</label>
+            <input type="time" [(ngModel)]="novoSlot.horaFim" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirm delete inline -->
+      <div class="confirm-delete" *ngIf="confirmDeleteVisible">
+        <p>Deseja realmente remover esta aula?</p>
+        <div class="confirm-delete-actions">
+          <button class="btn-ghost-sm" (click)="confirmDeleteVisible = false">Cancelar</button>
+          <button class="btn-danger-sm" (click)="excluirSlot()">Remover</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-danger-outline" *ngIf="editingSlot && !confirmDeleteVisible"
+                (click)="confirmDeleteVisible = true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+          </svg>
+          Remover aula
+        </button>
+        <div class="modal-footer-right">
+          <button class="btn-ghost" (click)="fecharModal()">Cancelar</button>
+          <button class="btn-primary" (click)="salvarSlot()" [disabled]="!novoSlot.disciplinaId">
+            {{ editingSlot ? 'Salvar alterações' : 'Adicionar aula' }}
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Modal Confirmar Limpar ────────────────────────────── -->
+  <div class="modal-overlay" *ngIf="confirmLimpar" (click)="confirmLimpar = false">
+    <div class="modal-panel modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-icon-wrap danger">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="10.29 3.86 1.82 18 2 18 22 18 21.73 18 13.71 3.86 12 1 10.29 3.86"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h3 class="modal-sm-title">Limpar cronograma?</h3>
+      <p class="modal-sm-msg">Todas as aulas da turma <strong>{{ turmaSelecionada?.serie }} — {{ turmaSelecionada?.nome }}</strong> serão removidas.</p>
+      <div class="modal-sm-actions">
+        <button class="btn-ghost" (click)="confirmLimpar = false">Cancelar</button>
+        <button class="btn-danger" (click)="limparCronograma()">Limpar tudo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Page Header ───────────────────────────────────────── -->
+  <header class="page-header">
+    <div class="page-header-info">
+      <h1>Cronograma de Aulas</h1>
+      <p>Monte e visualize o cronograma semanal por turma.</p>
+    </div>
+    <div class="page-header-stats" *ngIf="turmaSelecionada">
+      <span class="stat-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        {{ totalAulas }} aula{{ totalAulas !== 1 ? 's' : '' }} cadastrada{{ totalAulas !== 1 ? 's' : '' }}
+      </span>
+    </div>
+  </header>
+
+  <!-- ── Feedback message ──────────────────────────────────── -->
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">{{ message }}</div>
+
+  <!-- ── Toolbar ───────────────────────────────────────────── -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="select-group">
+        <label>Turma</label>
+        <div class="select-wrapper">
+          <select [(ngModel)]="turmaSelecionadaId">
+            <option *ngFor="let t of turmas" [value]="t.id">
+              {{ t.serie }} — {{ t.nome }} &bull; {{ t.turno }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="select-group">
+        <label>Ano letivo</label>
+        <div class="select-wrapper">
+          <select [(ngModel)]="anoLetivo">
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <button class="btn-ghost" (click)="confirmLimpar = true" [disabled]="totalAulas === 0"
+              title="Limpar cronograma da turma">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+        </svg>
+        Limpar cronograma
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Legenda de disciplinas ────────────────────────────── -->
+  <div class="legenda-bar" *ngIf="legenda.length > 0">
+    <span class="legenda-titulo">Disciplinas:</span>
+    <span class="legenda-item" *ngFor="let item of legenda">
+      <span class="legenda-dot" [style.background]="item.cor.bg" [style.border-color]="item.cor.border"></span>
+      {{ item.disciplina }}
+    </span>
+  </div>
+
+  <!-- ── Grade semanal ─────────────────────────────────────── -->
+  <div class="grade-container">
+
+    <!-- Dica quando vazia -->
+    <div class="grade-hint" *ngIf="totalAulas === 0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        <line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/>
+      </svg>
+      <p>Clique em qualquer célula da grade para adicionar uma aula.</p>
+    </div>
+
+    <div class="grade">
+
+      <!-- Header com dias da semana -->
+      <div class="grade-header">
+        <div class="hora-col-header"></div>
+        <div class="dia-header" *ngFor="let dia of dias; trackBy: trackByDia">
+          <span class="dia-nome">{{ dia.label }}</span>
+          <span class="dia-abrev">{{ dia.abrev }}</span>
+        </div>
+      </div>
+
+      <!-- Linhas de horário -->
+      <div class="grade-row" *ngFor="let hora of horasFiltradas; trackBy: trackByHora">
+
+        <div class="hora-label">
+          <span class="hora-text">{{ hora }}</span>
+        </div>
+
+        <div class="celula"
+             *ngFor="let dia of dias; trackBy: trackByDia"
+             (click)="abrirModalNovo(dia.key, hora)"
+             [class.ocupada]="!!getSlot(dia.key, hora)">
+
+          <div class="slot"
+               *ngIf="getSlot(dia.key, hora) as slot"
+               [style.background]="slot.corBg"
+               [style.border-left-color]="slot.corBorder"
+               [style.color]="slot.corText"
+               (click)="editarSlot($event, slot)"
+               title="Clique para editar">
+            <span class="slot-disciplina">{{ slot.disciplina }}</span>
+            <span class="slot-educador" *ngIf="slot.educador">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              {{ slot.educador }}
+            </span>
+            <span class="slot-sala" *ngIf="slot.sala">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+              </svg>
+              {{ slot.sala }}
+            </span>
+            <span class="slot-hora">{{ slot.horaInicio }} – {{ slot.horaFim }}</span>
+          </div>
+
+          <!-- Célula vazia: botão de add ao hover -->
+          <div class="celula-add" *ngIf="!getSlot(dia.key, hora)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
