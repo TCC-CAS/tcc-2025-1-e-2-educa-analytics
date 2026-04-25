@@ -1,8 +1,10 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit, AfterViewInit } from '@angular/core';
-import { Router } from '@angular/router';
+﻿import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit, AfterViewInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 
 export type DetalheTab = 'educando' | 'responsavel' | 'escolar' | 'historico';
-export type StatusMatricula = 'Ativa' | 'Inativa' | 'Cancelada' | 'Abandono Escolar';
+export type StatusMatricula = 'Ativa' | 'Concluída' | 'Abandonada';
 
 export interface HistoricoItem {
   anoLetivo: string;
@@ -27,6 +29,7 @@ export interface HistoricoItem {
 
 export interface MatriculaRegistro {
   id: number;
+  idMatricula: string;
   status: StatusMatricula;
   dataMatricula: string;
 
@@ -46,7 +49,7 @@ export interface MatriculaRegistro {
     complemento: string; bairro: string; cidade: string; uf: string;
   };
 
-  // Responsável
+  // ResponsÃ¡vel
   respNome: string;
   respNascimento: string;
   respIdade: number;
@@ -73,7 +76,7 @@ export interface MatriculaRegistro {
   periodo: string;
   sala: string;
 
-  // Histórico
+  // HistÃ³rico
   historico: HistoricoItem[];
 }
 
@@ -86,7 +89,12 @@ export interface MatriculaRegistro {
 })
 export class ListaMatriculasComponent implements OnInit, AfterViewInit {
 
-  constructor(private router: Router, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef,
+    private http: HttpClient,
+  ) {}
 
   ngAfterViewInit(): void {
     this.forceLeftAlignmentStyles();
@@ -164,7 +172,7 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
   activeTab: DetalheTab = 'educando';
   historicoExpandido: number | null = null;
 
-  // Filtros───
+  // Filtrosâ”€â”€â”€
   filtroNome = '';
   filtroSerie = '';
   filtroTurma = '';
@@ -172,11 +180,16 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
   filtroStatus = '';
   filtroPeriodo = '';
 
-  // Paginação─
+  get filtrosAtivos(): number {
+    return [this.filtroNome, this.filtroSerie, this.filtroTurma, this.filtroAno, this.filtroStatus, this.filtroPeriodo]
+      .filter(v => v !== '').length;
+  }
+
+  // PaginaÃ§Ã£oâ”€
   itensPorPagina = 10;
   paginaAtual = 1;
 
-  // Listas cacheadas (atualizadas apenas quando necessário)
+  // Listas cacheadas (atualizadas apenas quando necessÃ¡rio)
   matriculasFiltradas: MatriculaRegistro[] = [];
   matriculasPaginadas: MatriculaRegistro[] = [];
   paginas: number[] = [];
@@ -184,262 +197,63 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
   turmasUnicas: string[] = [];
   anosUnicos: string[] = [];
 
-  // Registro selecionado ─
+  // Registro selecionado â”€
   selecionado: MatriculaRegistro | null = null;
   edicao: MatriculaRegistro | null = null;
 
   readonly series = [
-    '1º Ano', '2º Ano', '3º Ano', '4º Ano', '5º Ano',
-    '6º Ano', '7º Ano', '8º Ano', '9º Ano'
+    '1Âº Ano', '2Âº Ano', '3Âº Ano', '4Âº Ano', '5Âº Ano',
+    '6Âº Ano', '7Âº Ano', '8Âº Ano', '9Âº Ano'
   ];
 
-  readonly statusList: StatusMatricula[] = ['Ativa', 'Inativa', 'Cancelada', 'Abandono Escolar'];
+  readonly statusList: StatusMatricula[] = ['Ativa', 'Concluída', 'Abandonada'];
 
-  // Dados mock
-  matriculas: MatriculaRegistro[] = [
-    {
-      id: 1,
-      status: 'Ativa',
-      dataMatricula: '2025-02-10',
-      alunoNome: 'Ana Clara Oliveira',
-      alunoNascimento: '2015-04-12',
-      alunoIdade: 9,
-      alunoGenero: 'Feminino (ela/dela)',
-      alunoCorRaca: 'Parda',
-      alunoCpf: '123.456.789-00',
-      alunoRg: '1234567',
-      alunoEmail: '',
-      alunoCelular: '',
-      alunoTelefone: '',
-      alunoEndereco: { cep: '01310-100', logradouro: 'Av. Paulista', numero: '1000', complemento: 'Apto 12', bairro: 'Bela Vista', cidade: 'São Paulo', uf: 'SP' },
-      respNome: 'Maria Oliveira',
-      respNascimento: '1985-08-20',
-      respIdade: 40,
-      respGenero: 'Feminino (ela/dela)',
-      respCorRaca: 'Parda',
-      respCpf: '987.654.321-00',
-      respRg: '7654321',
-      respEmail: 'maria.oliveira@email.com',
-      respCelular: '(11) 98765-4321',
-      respTelefone: '',
-      respParentesco: 'Mãe',
-      respEndereco: { cep: '01310-100', logradouro: 'Av. Paulista', numero: '1000', complemento: 'Apto 12', bairro: 'Bela Vista', cidade: 'São Paulo', uf: 'SP' },
-      serie: '4º Ano',
-      turma: '4A - Quarto Ano A',
-      codigoTurma: '4A',
-      anoLetivo: '2025',
-      dataInicio: '2025-02-03',
-      dataTermino: '2025-12-19',
-      periodo: 'Manhã',
-      sala: 'Sala 101',
-      historico: [
-        {
-          anoLetivo: '2024', serie: '3º Ano', turma: '3A', sala: 'Sala 101', periodo: 'Manhã', situacao: 'Aprovado',
-          mediaGeral: 8.2, frequencia: 94,
-          disciplinas: [
-            { nome: 'Português',    n1: 8.0, n2: 7.5, n3: 9.0, n4: 8.5, media: 8.25, frequencia: 96, situacao: 'Aprovado' },
-            { nome: 'Matemática',   n1: 7.0, n2: 8.0, n3: 8.5, n4: 9.0, media: 8.13, frequencia: 93, situacao: 'Aprovado' },
-            { nome: 'Ciências',     n1: 9.0, n2: 8.5, n3: 8.0, n4: 8.5, media: 8.5,  frequencia: 95, situacao: 'Aprovado' },
-            { nome: 'História',     n1: 7.5, n2: 8.0, n3: 7.0, n4: 8.0, media: 7.63, frequencia: 90, situacao: 'Aprovado' },
-            { nome: 'Geografia',    n1: 8.0, n2: 8.5, n3: 9.0, n4: 8.0, media: 8.38, frequencia: 94, situacao: 'Aprovado' },
-            { nome: 'Ed. Física',   n1: 10,  n2: 10,  n3: 9.5, n4: 10,  media: 9.88, frequencia: 98, situacao: 'Aprovado' },
-          ]
-        },
-        {
-          anoLetivo: '2023', serie: '2º Ano', turma: '2B', sala: 'Sala 205', periodo: 'Manhã', situacao: 'Aprovado',
-          mediaGeral: 7.8, frequencia: 91,
-          disciplinas: [
-            { nome: 'Português',  n1: 7.0, n2: 7.5, n3: 8.0, n4: 8.5, media: 7.75, frequencia: 92, situacao: 'Aprovado' },
-            { nome: 'Matemática', n1: 6.5, n2: 7.0, n3: 8.0, n4: 8.5, media: 7.5,  frequencia: 90, situacao: 'Aprovado' },
-            { nome: 'Ciências',   n1: 8.0, n2: 8.0, n3: 8.5, n4: 8.0, media: 8.13, frequencia: 93, situacao: 'Aprovado' },
-          ]
-        }
-      ]
-    },
-    {
-      id: 2,
-      status: 'Ativa',
-      dataMatricula: '2025-02-12',
-      alunoNome: 'Bruno Henrique Santos',
-      alunoNascimento: '2014-11-03',
-      alunoIdade: 10,
-      alunoGenero: 'Masculino (ele/dele)',
-      alunoCorRaca: 'Preta',
-      alunoCpf: '234.567.890-11',
-      alunoRg: '2345678',
-      alunoEmail: '',
-      alunoCelular: '',
-      alunoTelefone: '',
-      alunoEndereco: { cep: '04547-000', logradouro: 'Rua Funchal', numero: '200', complemento: '', bairro: 'Vila Olímpia', cidade: 'São Paulo', uf: 'SP' },
-      respNome: 'Carlos Santos',
-      respNascimento: '1980-03-15',
-      respIdade: 44,
-      respGenero: 'Masculino (ele/dele)',
-      respCorRaca: 'Preta',
-      respCpf: '111.222.333-44',
-      respRg: '1112223',
-      respEmail: 'carlos.santos@email.com',
-      respCelular: '(11) 91234-5678',
-      respTelefone: '(11) 3456-7890',
-      respParentesco: 'Pai',
-      respEndereco: { cep: '04547-000', logradouro: 'Rua Funchal', numero: '200', complemento: '', bairro: 'Vila Olímpia', cidade: 'São Paulo', uf: 'SP' },
-      serie: '5º Ano',
-      turma: '5A - Quinto Ano A',
-      codigoTurma: '5A',
-      anoLetivo: '2025',
-      dataInicio: '2025-02-03',
-      dataTermino: '2025-12-19',
-      periodo: 'Tarde',
-      sala: 'Sala 203',
-      historico: [
-        {
-          anoLetivo: '2024', serie: '4º Ano', turma: '4B', sala: 'Sala 203', periodo: 'Tarde', situacao: 'Aprovado',
-          mediaGeral: 7.1, frequencia: 88,
-          disciplinas: [
-            { nome: 'Português',    n1: 6.5, n2: 7.0, n3: 7.5, n4: 7.0, media: 7.0,  frequencia: 89, situacao: 'Aprovado' },
-            { nome: 'Matemática',   n1: 5.0, n2: 6.0, n3: 7.0, n4: 7.5, media: 6.38, frequencia: 85, situacao: 'Aprovado' },
-            { nome: 'Ciências',     n1: 7.0, n2: 7.5, n3: 8.0, n4: 7.5, media: 7.5,  frequencia: 90, situacao: 'Aprovado' },
-          ]
-        }
-      ]
-    },
-    {
-      id: 3,
-      status: 'Inativa',
-      dataMatricula: '2025-01-20',
-      alunoNome: 'Layla Pereira Costa',
-      alunoNascimento: '2016-07-28',
-      alunoIdade: 8,
-      alunoGenero: 'Feminino (ela/dela)',
-      alunoCorRaca: 'Branca',
-      alunoCpf: '345.678.901-22',
-      alunoRg: '3456789',
-      alunoEmail: '',
-      alunoCelular: '',
-      alunoTelefone: '',
-      alunoEndereco: { cep: '20040-020', logradouro: 'Av. Rio Branco', numero: '45', complemento: 'Casa', bairro: 'Centro', cidade: 'Rio de Janeiro', uf: 'RJ' },
-      respNome: 'Fernanda Costa',
-      respNascimento: '1990-12-05',
-      respIdade: 35,
-      respGenero: 'Feminino (ela/dela)',
-      respCorRaca: 'Branca',
-      respCpf: '555.666.777-88',
-      respRg: '5556667',
-      respEmail: 'fernanda.costa@email.com',
-      respCelular: '(21) 99876-5432',
-      respTelefone: '',
-      respParentesco: 'Mãe',
-      respEndereco: { cep: '20040-020', logradouro: 'Av. Rio Branco', numero: '45', complemento: 'Casa', bairro: 'Centro', cidade: 'Rio de Janeiro', uf: 'RJ' },
-      serie: '3º Ano',
-      turma: '3B - Terceiro Ano B',
-      codigoTurma: '3B',
-      anoLetivo: '2025',
-      dataInicio: '2025-02-03',
-      dataTermino: '2025-12-19',
-      periodo: 'Manhã',
-      sala: 'Sala 105',
-      historico: [
-        {
-          anoLetivo: '2024', serie: '2º Ano', turma: '2A', sala: 'Sala 102', periodo: 'Manhã', situacao: 'Aprovado',
-          mediaGeral: 8.9, frequencia: 97,
-          disciplinas: [
-            { nome: 'Português',  n1: 9.0, n2: 9.0, n3: 8.5, n4: 9.5, media: 9.0, frequencia: 98, situacao: 'Aprovado' },
-            { nome: 'Matemática', n1: 8.5, n2: 9.0, n3: 8.5, n4: 9.0, media: 8.75, frequencia: 96, situacao: 'Aprovado' },
-          ]
-        }
-      ]
-    },
-    {
-      id: 4,
-      status: 'Ativa',
-      dataMatricula: '2025-02-14',
-      alunoNome: 'Miguel Ribeiro Alves',
-      alunoNascimento: '2013-09-18',
-      alunoIdade: 11,
-      alunoGenero: 'Masculino (ele/dele)',
-      alunoCorRaca: 'Parda',
-      alunoCpf: '456.789.012-33',
-      alunoRg: '4567890',
-      alunoEmail: '',
-      alunoCelular: '',
-      alunoTelefone: '',
-      alunoEndereco: { cep: '30130-110', logradouro: 'Av. Afonso Pena', numero: '3000', complemento: '', bairro: 'Centro', cidade: 'Belo Horizonte', uf: 'MG' },
-      respNome: 'Roberto Alves',
-      respNascimento: '1975-01-30',
-      respIdade: 49,
-      respGenero: 'Masculino (ele/dele)',
-      respCorRaca: 'Parda',
-      respCpf: '222.333.444-55',
-      respRg: '2223334',
-      respEmail: 'roberto.alves@email.com',
-      respCelular: '(31) 98888-7777',
-      respTelefone: '(31) 3222-3333',
-      respParentesco: 'Pai',
-      respEndereco: { cep: '30130-110', logradouro: 'Av. Afonso Pena', numero: '3000', complemento: '', bairro: 'Centro', cidade: 'Belo Horizonte', uf: 'MG' },
-      serie: '6º Ano',
-      turma: '6A - Sexto Ano A',
-      codigoTurma: '6A',
-      anoLetivo: '2025',
-      dataInicio: '2025-02-03',
-      dataTermino: '2025-12-19',
-      periodo: 'Manhã',
-      sala: 'Sala 302',
-      historico: []
-    },
-    {
-      id: 5,
-      status: 'Cancelada',
-      dataMatricula: '2025-01-15',
-      alunoNome: 'Sofia Lins Teixeira',
-      alunoNascimento: '2012-03-22',
-      alunoIdade: 12,
-      alunoGenero: 'Feminino (ela/dela)',
-      alunoCorRaca: 'Branca',
-      alunoCpf: '567.890.123-44',
-      alunoRg: '5678901',
-      alunoEmail: '',
-      alunoCelular: '',
-      alunoTelefone: '',
-      alunoEndereco: { cep: '40020-010', logradouro: 'Rua Chile', numero: '10', complemento: 'Bl A', bairro: 'Centro', cidade: 'Salvador', uf: 'BA' },
-      respNome: 'Patricia Teixeira',
-      respNascimento: '1982-06-14',
-      respIdade: 43,
-      respGenero: 'Feminino (ela/dela)',
-      respCorRaca: 'Branca',
-      respCpf: '333.444.555-66',
-      respRg: '3334445',
-      respEmail: 'patricia.teixeira@email.com',
-      respCelular: '(71) 97777-6666',
-      respTelefone: '',
-      respParentesco: 'Mãe',
-      respEndereco: { cep: '40020-010', logradouro: 'Rua Chile', numero: '10', complemento: 'Bl A', bairro: 'Centro', cidade: 'Salvador', uf: 'BA' },
-      serie: '7º Ano',
-      turma: '7A - Sétimo Ano A',
-      codigoTurma: '7A',
-      anoLetivo: '2025',
-      dataInicio: '2025-01-15',
-      dataTermino: '2025-12-19',
-      periodo: 'Manhã',
-      sala: 'Sala 401',
-      historico: [
-        {
-          anoLetivo: '2024', serie: '6º Ano', turma: '6B', sala: 'Sala 304', periodo: 'Manhã', situacao: 'Aprovado',
-          mediaGeral: 6.5, frequencia: 85,
-          disciplinas: [
-            { nome: 'Português',  n1: 6.0, n2: 6.5, n3: 7.0, n4: 6.5, media: 6.5, frequencia: 84, situacao: 'Aprovado' },
-            { nome: 'Matemática', n1: 5.0, n2: 5.5, n3: 6.5, n4: 7.0, media: 6.0, frequencia: 82, situacao: 'Aprovado' },
-          ]
-        }
-      ]
-    },
-  ];
+  // Dados e estado de carregamento
+  matriculas: MatriculaRegistro[] = [];
+  carregando = false;
+  erroCarregamento = false;
 
-  // Inicialização 
+  // Inicialização
   ngOnInit(): void {
-    this.recalcularTudo();
+    this.carregarMatriculas();
+    // Se a rota for /matricula/editar/:id, abre o detalhe em modo edição
+    const idParam = this.route.snapshot.paramMap.get('id');
+    if (idParam) {
+      this._idParaEditar = idParam;
+    }
   }
 
-  // Recálculo centralizado 
+  private _idParaEditar: string | null = null;
+
+  carregarMatriculas(): void {
+    this.carregando = true;
+    this.erroCarregamento = false;
+    this.http.get<MatriculaRegistro[]>(`${environment.apiUrl}/matricula`).subscribe({
+      next: (data) => {
+        this.matriculas = data;
+        this.carregando = false;
+        this.recalcularTudo();
+        // Abre edição se veio de /matricula/editar/:id
+        if (this._idParaEditar) {
+          const alvo = this.matriculas.find(m => m.idMatricula === this._idParaEditar);
+          if (alvo) { this.abrirDetalhe(alvo); this.iniciarEdicao(); }
+          this._idParaEditar = null;
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.carregando = false;
+        this.erroCarregamento = true;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  // InicializaÃ§Ã£o (ngOnInit definido acima)
+
+  // InicializaÃ§Ã£o (ngOnInit definido acima)
+
+  // RecÃ¡lculo centralizado 
   private recalcularTudo(): void {
     const nomeLower = this.filtroNome.toLowerCase();
     this.matriculasFiltradas = this.matriculas.filter(m => {
@@ -465,7 +279,7 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
   trackByIndex(i: number): number { return i; }
   trackByNome(_: number, s: string): string { return s; }
 
-  // Ações de lista
+  // AÃ§Ãµes de lista
   abrirDetalhe(m: MatriculaRegistro): void {
     this.selecionado = m;
     this.edicao = JSON.parse(JSON.stringify(m)); // deep copy
@@ -485,14 +299,14 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
   }
 
   novaMatricula(): void {
-    this.router.navigate(['/matricula']);
+    this.router.navigate(['/matricula/nova']);
   }
 
   rematricular(m: MatriculaRegistro): void {
-    this.router.navigate(['/matricula'], { state: { rematricula: m } });
+    this.router.navigate(['/matricula/nova'], { state: { rematricula: m } });
   }
 
-  // Ações de detalhe
+  // AÃ§Ãµes de detalhe
   iniciarEdicao(): void {
     this.modoEdicao = true;
   }
@@ -520,14 +334,46 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
 
   salvarEdicao(): void {
     if (!this.edicao) return;
-    const idx = this.matriculas.findIndex(m => m.id === this.edicao!.id);
-    if (idx !== -1) {
-      this.matriculas[idx] = JSON.parse(JSON.stringify(this.edicao));
-      this.selecionado = this.matriculas[idx];
-    }
-    this.modoEdicao = false;
-    this.recalcularTudo();
-    this.cdr.markForCheck();
+    const id = this.edicao.idMatricula;
+    const payload = {
+      educando: {
+        nomeCompleto:   this.edicao.alunoNome,
+        dataNascimento: this.edicao.alunoNascimento,
+        idade:          this.edicao.alunoIdade,
+        genero:         this.edicao.alunoGenero,
+        cor:            this.edicao.alunoCorRaca,
+        cpf:            this.edicao.alunoCpf,
+        rg:             this.edicao.alunoRg,
+        email:          this.edicao.alunoEmail,
+        telefone:       this.edicao.alunoTelefone,
+        endereco:       this.edicao.alunoEndereco,
+      },
+      responsavel: this.edicao.respNome ? {
+        idMatricula:    this.edicao.id,   // idResponsavel nÃ£o exposto diretamente
+        nomeCompleto:   this.edicao.respNome,
+        dataNascimento: this.edicao.respNascimento,
+        cpf:            this.edicao.respCpf,
+        rg:             this.edicao.respRg,
+        email:          this.edicao.respEmail,
+        telefone:       this.edicao.respTelefone,
+        endereco:       this.edicao.respEndereco,
+      } : undefined,
+    };
+    this.http.put<MatriculaRegistro>(`${environment.apiUrl}/matricula/${id}`, payload).subscribe({
+      next: (updated) => {
+        const idx = this.matriculas.findIndex(m => m.idMatricula === id);
+        if (idx !== -1) this.matriculas[idx] = updated;
+        this.selecionado = updated;
+        this.edicao = JSON.parse(JSON.stringify(updated));
+        this.modoEdicao = false;
+        this.recalcularTudo();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.modoEdicao = false;
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   toggleHistorico(index: number): void {
@@ -559,14 +405,13 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
   statusClass(status: StatusMatricula): string {
     const map: Record<StatusMatricula, string> = {
       'Ativa': 'status-ativa',
-      'Inativa': 'status-inativa',
-      'Cancelada': 'status-cancelada',
-      'Abandono Escolar': 'status-abandono',
+      'Concluída': 'status-concluida',
+      'Abandonada': 'status-abandonada',
     };
     return map[status] ?? '';
   }
 
-  // Seleção em lote
+  // SeleÃ§Ã£o em lote
   selecionados = new Set<number>();
   statusLote: StatusMatricula = 'Ativa';
   modalLoteVisible = false;
@@ -606,21 +451,28 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
 
   confirmarLote(): void {
     this.modalLoteVisible = false;
-    this.matriculas.forEach(m => {
-      if (this.selecionados.has(m.id)) {
-        m.status = this.statusLote;
-      }
+    const ids = [...this.selecionados].map(id => {
+      const m = this.matriculas.find(m => m.id === id);
+      return m?.idMatricula ?? '';
+    }).filter(Boolean);
+    const novoStatus = this.statusLote;
+    this.http.patch(`${environment.apiUrl}/matricula/lote/status`, { ids, status: novoStatus }).subscribe({
+      next: () => {
+        this.matriculas.forEach(m => {
+          if (this.selecionados.has(m.id)) m.status = novoStatus;
+        });
+        this.selecionados.clear();
+        this.recalcularTudo();
+        this.cdr.markForCheck();
+      },
     });
-    this.selecionados.clear();
-    this.recalcularTudo();
-    this.cdr.markForCheck();
   }
 
   cancelarLote(): void {
     this.modalLoteVisible = false;
   }
 
-  // Alteração individual de status
+  // AlteraÃ§Ã£o individual de status
   modalStatusVisible = false;
   matriculaStatusEdit: MatriculaRegistro | null = null;
   novoStatus: StatusMatricula = 'Ativa';
@@ -635,13 +487,18 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
   confirmarAlteracaoStatus(): void {
     this.modalStatusVisible = false;
     if (!this.matriculaStatusEdit) return;
-    const idx = this.matriculas.findIndex(m => m.id === this.matriculaStatusEdit!.id);
-    if (idx !== -1) {
-      this.matriculas[idx].status = this.novoStatus;
-    }
-    this.matriculaStatusEdit = null;
-    this.recalcularTudo();
-    this.cdr.markForCheck();
+    const id = this.matriculaStatusEdit.idMatricula;
+    const novoStatus = this.novoStatus;
+    this.http.patch(`${environment.apiUrl}/matricula/${id}/status`, { status: novoStatus }).subscribe({
+      next: () => {
+        const idx = this.matriculas.findIndex(m => m.idMatricula === id);
+        if (idx !== -1) this.matriculas[idx].status = novoStatus;
+        this.matriculaStatusEdit = null;
+        this.recalcularTudo();
+        this.cdr.markForCheck();
+      },
+      error: () => { this.matriculaStatusEdit = null; },
+    });
   }
 
   cancelarModalStatus(): void {

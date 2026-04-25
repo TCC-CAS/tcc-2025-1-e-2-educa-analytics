@@ -56,7 +56,20 @@
 </div>
 
 <!-- Lista de matrículas -->
-<div class="lista-page" *ngIf="view === 'lista'">
+<!-- Carregando -->
+<div class="lista-loading" *ngIf="carregando">
+  <div class="loading-spinner"></div>
+  <span>Carregando matrículas...</span>
+</div>
+
+<!-- Erro de carregamento -->
+<div class="lista-erro" *ngIf="erroCarregamento && !carregando">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <span>Não foi possível carregar as matrículas.</span>
+  <button class="btn btn-secondary" (click)="carregarMatriculas()">Tentar novamente</button>
+</div>
+
+<div class="lista-page" *ngIf="view === 'lista' && !carregando && !erroCarregamento">
 
   <!-- Cabeçalho -->
   <div class="page-header">
@@ -72,62 +85,88 @@
 
   <!-- Filtros -->
   <div class="filtros-card">
-    <div class="filtros-grid">
-      <div class="filtro-field">
-        <label>Buscar por nome</label>
-        <div class="search-input">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Nome do educando..." [(ngModel)]="filtroNome" (ngModelChange)="onFiltroChange()">
-        </div>
+    <div class="filtros-header">
+      <div class="filtros-titulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        <span>Filtros</span>
+        <span class="filtros-ativos-badge" *ngIf="filtrosAtivos > 0">{{ filtrosAtivos }}</span>
       </div>
-      <div class="filtro-field">
-        <label>Série</label>
-        <select [(ngModel)]="filtroSerie" (ngModelChange)="onFiltroChange()">
-          <option value="">Todas</option>
-          <option *ngFor="let s of series; trackBy: trackByNome" [value]="s">{{ s }}</option>
-        </select>
-      </div>
-      <div class="filtro-field">
-        <label>Turma</label>
-        <select [(ngModel)]="filtroTurma" (ngModelChange)="onFiltroChange()">
-          <option value="">Todas</option>
-          <option *ngFor="let t of turmasUnicas; trackBy: trackByNome" [value]="t">{{ t }}</option>
-        </select>
-      </div>
-      <div class="filtro-field">
-        <label>Ano letivo</label>
-        <select [(ngModel)]="filtroAno" (ngModelChange)="onFiltroChange()">
-          <option value="">Todos</option>
-          <option *ngFor="let a of anosUnicos; trackBy: trackByNome" [value]="a">{{ a }}</option>
-        </select>
-      </div>
-      <div class="filtro-field">
-        <label>Status</label>
-        <select [(ngModel)]="filtroStatus" (ngModelChange)="onFiltroChange()">
-          <option value="">Todos</option>
-          <option *ngFor="let s of statusList; trackBy: trackByNome" [value]="s">{{ s }}</option>
-        </select>
-      </div>
-      <div class="filtro-field">
-        <label>Período</label>
-        <select [(ngModel)]="filtroPeriodo" (ngModelChange)="onFiltroChange()">
-          <option value="">Todos</option>
-          <option value="Manhã">Manhã</option>
-          <option value="Tarde">Tarde</option>
-          <option value="Noite">Noite</option>
-          <option value="Integral">Integral</option>
-        </select>
-      </div>
-      <div class="filtro-field filtro-clear">
-        <button class="btn btn-ghost" (click)="limparFiltros()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+      <div class="filtros-resultado">
+        <span class="resultado-count">
+          <strong>{{ matriculasFiltradas.length }}</strong>
+          resultado{{ matriculasFiltradas.length !== 1 ? 's' : '' }}
+        </span>
+        <button class="btn-limpar" (click)="limparFiltros()" *ngIf="filtrosAtivos > 0" title="Limpar todos os filtros">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           Limpar filtros
         </button>
       </div>
     </div>
 
-    <div class="filtros-info">
-      <span class="resultado-count">{{ matriculasFiltradas.length }} resultado{{ matriculasFiltradas.length !== 1 ? 's' : '' }} encontrado{{ matriculasFiltradas.length !== 1 ? 's' : '' }}</span>
+    <div class="filtros-grid">
+      <div class="filtro-field filtro-busca">
+        <label>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Buscar educando
+        </label>
+        <div class="search-input">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Digite o nome..." [(ngModel)]="filtroNome" (ngModelChange)="onFiltroChange()" [class.active]="filtroNome">
+        </div>
+      </div>
+
+      <div class="filtro-field">
+        <label>Série</label>
+        <div class="select-wrapper">
+          <select [(ngModel)]="filtroSerie" (ngModelChange)="onFiltroChange()" [class.active]="filtroSerie">
+            <option value="">Todas as séries</option>
+            <option *ngFor="let s of series; trackBy: trackByNome" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filtro-field">
+        <label>Turma</label>
+        <div class="select-wrapper">
+          <select [(ngModel)]="filtroTurma" (ngModelChange)="onFiltroChange()" [class.active]="filtroTurma">
+            <option value="">Todas as turmas</option>
+            <option *ngFor="let t of turmasUnicas; trackBy: trackByNome" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filtro-field">
+        <label>Ano letivo</label>
+        <div class="select-wrapper">
+          <select [(ngModel)]="filtroAno" (ngModelChange)="onFiltroChange()" [class.active]="filtroAno">
+            <option value="">Todos os anos</option>
+            <option *ngFor="let a of anosUnicos; trackBy: trackByNome" [value]="a">{{ a }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filtro-field">
+        <label>Status</label>
+        <div class="select-wrapper">
+          <select [(ngModel)]="filtroStatus" (ngModelChange)="onFiltroChange()" [class.active]="filtroStatus">
+            <option value="">Todos os status</option>
+            <option *ngFor="let s of statusList; trackBy: trackByNome" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filtro-field">
+        <label>Período</label>
+        <div class="select-wrapper">
+          <select [(ngModel)]="filtroPeriodo" (ngModelChange)="onFiltroChange()" [class.active]="filtroPeriodo">
+            <option value="">Todos os períodos</option>
+            <option value="Manhã">Manhã</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noite">Noite</option>
+            <option value="Integral">Integral</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -230,39 +269,54 @@
 <!-- TELA DE DETALHE / EDIÇÃO -->
 <div class="detalhe-page" *ngIf="view === 'detalhe' && edicao">
 
-  <!-- Barra superior -->
-  <div class="detalhe-header">
-    <button class="btn-voltar" (click)="voltarLista()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-      Voltar para a lista
-    </button>
+  <!-- Hero card -->
+  <button class="btn-voltar" (click)="voltarLista()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    Voltar para a lista
+  </button>
 
-    <div class="detalhe-titulo">
-      <div>
-        <h1>{{ edicao.alunoNome }}</h1>
-        <span class="detalhe-sub">Matrícula #{{ edicao.id }} · {{ edicao.anoLetivo }}</span>
+  <div class="detalhe-hero">
+    <div class="detalhe-hero-left">
+      <div class="detalhe-avatar">{{ edicao.alunoNome | slice:0:1 | uppercase }}</div>
+      <div class="detalhe-info">
+        <h1 class="detalhe-nome">{{ edicao.alunoNome }}</h1>
+        <div class="detalhe-meta">
+          <span class="meta-chip meta-chip-id">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Matrícula #{{ edicao.id }}
+          </span>
+          <span class="meta-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            {{ edicao.anoLetivo }}
+          </span>
+          <span class="meta-chip">{{ edicao.serie }}</span>
+          <span class="meta-chip">Turma {{ edicao.turma }}</span>
+          <span class="meta-chip">{{ edicao.periodo }}</span>
+        </div>
       </div>
-      <span class="status-badge" [ngClass]="statusClass(edicao.status)">{{ edicao.status }}</span>
     </div>
 
-    <div class="detalhe-acoes">
-      <ng-container *ngIf="!modoEdicao">
-        <button class="btn btn-ghost" (click)="rematricular(selecionado!)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
-          Rematricular
-        </button>
-        <button class="btn btn-secondary" (click)="iniciarEdicao()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Editar
-        </button>
-      </ng-container>
-      <ng-container *ngIf="modoEdicao">
-        <button class="btn btn-ghost" (click)="cancelarEdicao()">Cancelar</button>
-        <button class="btn btn-primary" (click)="abrirConfirmEdicao()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          Salvar alterações
-        </button>
-      </ng-container>
+    <div class="detalhe-hero-right">
+      <span class="status-badge" [ngClass]="statusClass(edicao.status)">{{ edicao.status }}</span>
+      <div class="detalhe-acoes">
+        <ng-container *ngIf="!modoEdicao">
+          <button class="btn btn-ghost" (click)="rematricular(selecionado!)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+            Rematricular
+          </button>
+          <button class="btn btn-secondary" (click)="iniciarEdicao()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Editar
+          </button>
+        </ng-container>
+        <ng-container *ngIf="modoEdicao">
+          <button class="btn btn-ghost" (click)="cancelarEdicao()">Cancelar</button>
+          <button class="btn btn-primary" (click)="abrirConfirmEdicao()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Salvar alterações
+          </button>
+        </ng-container>
+      </div>
     </div>
   </div>
 

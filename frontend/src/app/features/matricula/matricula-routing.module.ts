@@ -6,10 +6,19 @@ import { ListaMatriculasComponent } from './components/lista-matriculas/lista-ma
 const routes: Routes = [
   {
     path: '',
-    component: MatriculaComponent
+    redirectTo: 'lista',
+    pathMatch: 'full'
   },
   {
     path: 'lista',
+    component: ListaMatriculasComponent
+  },
+  {
+    path: 'nova',
+    component: MatriculaComponent
+  },
+  {
+    path: 'editar/:id',
     component: ListaMatriculasComponent
   }
 ];

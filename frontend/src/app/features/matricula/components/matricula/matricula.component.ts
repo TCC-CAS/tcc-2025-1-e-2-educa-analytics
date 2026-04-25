@@ -1,6 +1,7 @@
 import { Component, AfterViewInit, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
 import { MatriculaRegistro } from '../lista-matriculas/lista-matriculas.component';
 
 type MatriculaTab = 'dados' | 'responsaveis' | 'escolar';
@@ -32,6 +33,23 @@ interface TurmaDetalhe {
   dataInicio: string;
   dataTermino: string;
   vagasOcupadas: number[];
+}
+
+interface TurmaBackend {
+  idTurma: number;
+  codTurma: string;
+  nomeTurma: string;
+  periodo: string;
+  anoLetivo: string;
+  serie: string;
+  qldVagas: number;
+  dataInicio: string;
+  dataFim: string;
+  status: string;
+  idSala: number | null;
+  nomeSala: string | null;
+  vagasOcupadas: number[];
+  vagasDisponiveis: number;
 }
 
 @Component({
@@ -90,6 +108,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
   emailEnviando = false;
   matriculaRealizada = false;
   emailErro = false;
+  emailErrMsg = '';
 
   private validarFormulario(): { tab: MatriculaTab; tabLabel: string; campos: string[] }[] {
     const erros: { tab: MatriculaTab; tabLabel: string; campos: string[] }[] = [];
@@ -174,22 +193,64 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     this.emailEnviando = true;
     this.emailErro = false;
 
-    // Simula envio de e-mail (substituir por chamada HTTP real ao backend)
-    const token = btoa(`${this.matriculaId}:${Date.now()}`).replace(/=/g, '');
-    const linkAluno = `https://educa-analytics.com/criar-senha?token=${token}&tipo=aluno`;
-    const linkResp  = `https://educa-analytics.com/criar-senha?token=${token}&tipo=responsavel`;
+    const enderecoResp = this.useSameAddress
+      ? { ...this.alunoEndereco }
+      : { ...this.respEndereco };
 
-    console.log('[Educa Analytics] E-mail enviado para o educando:');
-    console.log(`  Para: ${this.alunoEmail}`);
-    console.log(`  Link: ${linkAluno}`);
-    console.log('[Educa Analytics] E-mail enviado para o responsável:');
-    console.log(`  Para: ${this.respEmail}`);
-    console.log(`  Link: ${linkResp}`);
+    const payload = {
+      educando: {
+        idMatricula:   this.matriculaId,
+        nomeCompleto:  this.alunoNome,
+        email:         this.alunoEmail,
+        cpf:           this.alunoCpf,
+        tipoUsuario:   'educando',
+        nacionalidade: this.alunoNacionalidade,
+        genero:        this.alunoGeneroOutro ? this.alunoGeneroCustom : this.alunoGeneroSelecionado,
+        cor:           this.alunoCorRaca,
+        dataNascimento: this.alunoNascimento,
+        telefone:      this.alunoTelefone,
+        rg:            this.alunoRg,
+        orgaoEmissor:  this.alunoOrgaoEmissor,
+        estadoEmissor: this.alunoEstadoEmissor,
+        endereco: { ...this.alunoEndereco },
+      },
+      responsavel: {
+        idMatricula:   this.respMatriculaId,
+        nomeCompleto:  this.respNome,
+        email:         this.respEmail,
+        cpf:           this.respCpf,
+        tipoUsuario:   'responsavel',
+        nacionalidade: this.respNacionalidade,
+        genero:        this.respGeneroOutro ? this.respGeneroCustom : this.respGeneroSelecionado,
+        cor:           this.respCorRaca,
+        dataNascimento: this.respNascimento,
+        telefone:      this.respTelefone,
+        rg:            this.respRg,
+        orgaoEmissor:  this.respOrgaoEmissor,
+        estadoEmissor: this.respEstadoEmissor,
+        endereco: enderecoResp,
+      },
+      dadosEscolares: {
+        anoLetivo: this.anoLetivo,
+        serie:     this.serie,
+        periodo:   this.periodo,
+        codTurma:  this.codigoTurma,
+      },
+    };
 
-    setTimeout(() => {
-      this.emailEnviando = false;
-      this.matriculaRealizada = true;
-    }, 1500);
+    this.http.post(`${environment.apiUrl}/matricula`, payload).subscribe({
+      next: () => {
+        this.emailEnviando = false;
+        this.matriculaRealizada = true;
+      },
+      error: (err) => {
+        this.emailEnviando = false;
+        this.emailErro = true;
+        const body = err?.error;
+        this.emailErrMsg = body?.error || 'Verifique se o servidor está rodando e tente novamente.';
+        console.error('[Educa Analytics] Erro ao realizar matrícula:', err);
+      },
+    });
   }
 
   novaMatriculaAposConclusao(): void {
@@ -201,6 +262,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     this.rematriculaOriginalId = '';
     this.matriculaId = this.gerarMatriculaId();
     this.respMatriculaId = this.gerarMatriculaId();
+    this.emailErrMsg = '';
     this.setTab('dados');
   }
 
@@ -229,41 +291,8 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
   readonly COLUNAS = 6;
   readonly LINHAS = ['A', 'B', 'C', 'D', 'E'];
 
-  turmas: TurmaDetalhe[] = [
-    // 2026 – 1º Ano
-    { codigo: '1A', nome: '1A - Primeiro Ano A', anoLetivo: '2026', serie: '1º Ano', periodo: 'matutino',   sala: 'Sala 101', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [1,3,5,8,12,15,18,21,24,27] },
-    { codigo: '1B', nome: '1B - Primeiro Ano B', anoLetivo: '2026', serie: '1º Ano', periodo: 'vespertino', sala: 'Sala 101', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [2,4,6,9,11,14,17,20,23,26,29,30] },
-    // 2026 – 2º Ano
-    { codigo: '2A', nome: '2A - Segundo Ano A',  anoLetivo: '2026', serie: '2º Ano', periodo: 'matutino',   sala: 'Sala 201', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [1,2,3,7,13,19,25,28] },
-    { codigo: '2B', nome: '2B - Segundo Ano B',  anoLetivo: '2026', serie: '2º Ano', periodo: 'vespertino', sala: 'Sala 202', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30] },
-    // 2026 – 3º Ano
-    { codigo: '3A', nome: '3A - Terceiro Ano A', anoLetivo: '2026', serie: '3º Ano', periodo: 'matutino',   sala: 'Sala 301', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [4,8,16,22] },
-    { codigo: '3B', nome: '3B - Terceiro Ano B', anoLetivo: '2026', serie: '3º Ano', periodo: 'vespertino', sala: 'Sala 302', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [] },
-    // 2026 – 4º Ano
-    { codigo: '4A', nome: '4A - Quarto Ano A',   anoLetivo: '2026', serie: '4º Ano', periodo: 'matutino',   sala: 'Sala 401', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [5,10,15,20] },
-    // 2026 – 5º Ano
-    { codigo: '5A', nome: '5A - Quinto Ano A',   anoLetivo: '2026', serie: '5º Ano', periodo: 'vespertino', sala: 'Sala 501', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [3,6,9,12] },
-    // 2026 – 6º Ano
-    { codigo: '6A', nome: '6A - Sexto Ano A',    anoLetivo: '2026', serie: '6º Ano', periodo: 'matutino',   sala: 'Sala 601', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [1,7,14,21] },
-    // 2026 – 7º Ano
-    { codigo: '7A', nome: '7A - Sétimo Ano A',   anoLetivo: '2026', serie: '7º Ano', periodo: 'vespertino', sala: 'Sala 701', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [2,8,16,24] },
-    // 2026 – 8º Ano
-    { codigo: '8A', nome: '8A - Oitavo Ano A',   anoLetivo: '2026', serie: '8º Ano', periodo: 'matutino',   sala: 'Sala 801', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [4,11,18,25] },
-    // 2026 – 9º Ano
-    { codigo: '9A', nome: '9A - Nono Ano A',     anoLetivo: '2026', serie: '9º Ano', periodo: 'vespertino', sala: 'Sala 901', dataInicio: '2026-02-02', dataTermino: '2026-12-18', vagasOcupadas: [6,12,18,24,30] },
-    // 2025 – 1º Ano
-    { codigo: '1A', nome: '1A - Primeiro Ano A', anoLetivo: '2025', serie: '1º Ano', periodo: 'matutino',   sala: 'Sala 101', dataInicio: '2025-02-03', dataTermino: '2025-12-19', vagasOcupadas: [1,3,5,8,12,15,18,21,24,27,28,29,30] },
-    { codigo: '1B', nome: '1B - Primeiro Ano B', anoLetivo: '2025', serie: '1º Ano', periodo: 'vespertino', sala: 'Sala 101', dataInicio: '2025-02-03', dataTermino: '2025-12-19', vagasOcupadas: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30] },
-    // 2025 – 2º Ano
-    { codigo: '2A', nome: '2A - Segundo Ano A',  anoLetivo: '2025', serie: '2º Ano', periodo: 'matutino',   sala: 'Sala 201', dataInicio: '2025-02-03', dataTermino: '2025-12-19', vagasOcupadas: [1,2,3,7,13,19,25,28] },
-    { codigo: '2B', nome: '2B - Segundo Ano B',  anoLetivo: '2025', serie: '2º Ano', periodo: 'vespertino', sala: 'Sala 202', dataInicio: '2025-02-03', dataTermino: '2025-12-19', vagasOcupadas: [] },
-  ];
-
-  private readonly ordemSeries = [
-    '1º Ano', '2º Ano', '3º Ano', '4º Ano', '5º Ano',
-    '6º Ano', '7º Ano', '8º Ano', '9º Ano',
-    '1ª Série EM', '2ª Série EM', '3ª Série EM',
-  ];
+  turmas: TurmaDetalhe[] = [];
+  turmasCarregando = false;
 
   private readonly periodosLabel: Record<string, string> = {
     matutino: 'Manhã', vespertino: 'Tarde', noturno: 'Noite', integral: 'Integral'
@@ -277,30 +306,48 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
   periodosDisponiveis: { value: string; label: string }[] = [];
 
   private computarSeries(): void {
-    const found = new Set(this.turmas
-      .filter(t => !this.anoLetivo || t.anoLetivo === this.anoLetivo)
-      .map(t => t.serie));
-    this.seriesDisponiveis = this.ordemSeries.filter(s => found.has(s));
+    if (!this.anoLetivo) { this.seriesDisponiveis = []; return; }
+    this.http.get<string[]>(`${environment.apiUrl}/matricula/series?anoLetivo=${this.anoLetivo}`)
+      .subscribe({ next: (series) => { this.seriesDisponiveis = series; } });
   }
 
   private computarPeriodos(): void {
-    const found = new Set(this.turmas
-      .filter(t =>
-        (!this.anoLetivo || t.anoLetivo === this.anoLetivo) &&
-        (!this.serie     || t.serie     === this.serie)
-      )
-      .map(t => t.periodo));
-    this.periodosDisponiveis = ['matutino', 'vespertino', 'noturno', 'integral']
-      .filter(p => found.has(p))
-      .map(p => ({ value: p, label: this.periodosLabel[p] }));
+    if (!this.anoLetivo || !this.serie) { this.periodosDisponiveis = []; return; }
+    const params = `anoLetivo=${encodeURIComponent(this.anoLetivo)}&serie=${encodeURIComponent(this.serie)}`;
+    this.http.get<string[]>(`${environment.apiUrl}/matricula/periodos?${params}`)
+      .subscribe({
+        next: (periodos) => {
+          this.periodosDisponiveis = periodos.map(p => ({ value: p, label: this.periodosLabel[p] ?? p }));
+        },
+      });
+  }
+
+  private carregarTurmas(): void {
+    if (!this.anoLetivo || !this.serie || !this.periodo) { this.turmas = []; return; }
+    this.turmasCarregando = true;
+    const params = `anoLetivo=${encodeURIComponent(this.anoLetivo)}&serie=${encodeURIComponent(this.serie)}&periodo=${encodeURIComponent(this.periodo)}`;
+    this.http.get<TurmaBackend[]>(`${environment.apiUrl}/matricula/turmas?${params}`)
+      .subscribe({
+        next: (turmasBackend) => {
+          this.turmas = turmasBackend.map(t => ({
+            codigo:       t.codTurma,
+            nome:         t.nomeTurma,
+            anoLetivo:    String(t.anoLetivo),
+            serie:        t.serie,
+            periodo:      t.periodo,
+            sala:         t.nomeSala ?? '',
+            dataInicio:   t.dataInicio ?? '',
+            dataTermino:  t.dataFim ?? '',
+            vagasOcupadas: t.vagasOcupadas ?? [],
+          }));
+          this.turmasCarregando = false;
+        },
+        error: () => { this.turmasCarregando = false; },
+      });
   }
 
   get turmasFiltradas(): TurmaDetalhe[] {
-    return this.turmas.filter(t =>
-      (!this.anoLetivo || t.anoLetivo === this.anoLetivo) &&
-      (!this.serie     || t.serie     === this.serie) &&
-      (!this.periodo   || t.periodo   === this.periodo)
-    );
+    return this.turmas;
   }
 
   vagasLivres(turma: TurmaDetalhe): number {
@@ -331,20 +378,23 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     this.serie = ''; this.periodo = '';
     this.turmaSelecionada = ''; this.turmaModalTemp = '';
     this.codigoTurma = ''; this.dataInicio = ''; this.dataTermino = ''; this.sala = '';
+    this.turmas = [];
     this.computarSeries();
-    this.computarPeriodos();
+    this.periodosDisponiveis = [];
   }
 
   onSerieChange(_: string): void {
     this.periodo = '';
     this.turmaSelecionada = ''; this.turmaModalTemp = '';
     this.codigoTurma = ''; this.dataInicio = ''; this.dataTermino = ''; this.sala = '';
+    this.turmas = [];
     this.computarPeriodos();
   }
 
   onPeriodoChange(_: string): void {
     this.turmaSelecionada = ''; this.turmaModalTemp = '';
     this.codigoTurma = ''; this.dataInicio = ''; this.dataTermino = ''; this.sala = '';
+    this.carregarTurmas();
   }
 
   abrirModal(): void {
@@ -418,6 +468,10 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     cep: '', logradouro: '', numero: '', complemento: '', bairro: '', uf: '', cidade: ''
   };
 
+  voltarParaLista(): void {
+    this.router.navigate(['/matricula/lista']);  // voltarParaLista
+  }
+
   constructor(private http: HttpClient, private router: Router) {
     // Lê o estado da navegação no construtor (getCurrentNavigation só está disponível aqui)
     const nav = this.router.getCurrentNavigation();
@@ -429,7 +483,6 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.computarSeries();
-    this.computarPeriodos();
   }
 
   private preencherDadosRematricula(m: MatriculaRegistro): void {
