@@ -1,6 +1,7 @@
 """
 Modelo base com métodos auxiliares para busca e escrita no MySQL.
 """
+from __future__ import annotations
 
 from app.src.adapters.db_adapter import execute_query, execute_write
 

@@ -1,6 +1,7 @@
 """
 Serviço de alunos — CRUD completo.
 """
+from __future__ import annotations
 
 import json
 from app.src.models.models import AlunoModel, NotaModel, FrequenciaModel

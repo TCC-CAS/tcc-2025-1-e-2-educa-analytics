@@ -2,6 +2,7 @@
 Serviço de autenticação com JWT simples (HMAC-SHA256).
 Não requer bibliotecas externas além do Python padrão.
 """
+from __future__ import annotations
 
 import hashlib
 import hmac
@@ -32,13 +33,13 @@ def _gerar_token(usuario: dict) -> str:
                 "email": usuario["email"],
                 "perfil": usuario["perfil"],
                 "iat": agora,
-                "exp": agora + Config.JWT_EXPIRATION_HOURS * 3600,
+                "exp": agora + Config.JWT_EXPIRATION_HOURS() * 3600,
             }
         ).encode()
     )
     assinatura = _b64url(
         hmac.new(
-            Config.JWT_SECRET.encode(),
+            Config.JWT_SECRET().encode(),
             f"{header}.{payload}".encode(),
             hashlib.sha256,
         ).digest()
@@ -55,7 +56,7 @@ def validar_token(token: str) -> dict | None:
         header, payload, assinatura = partes
         assinatura_esperada = _b64url(
             hmac.new(
-                Config.JWT_SECRET.encode(),
+                Config.JWT_SECRET().encode(),
                 f"{header}.{payload}".encode(),
                 hashlib.sha256,
             ).digest()

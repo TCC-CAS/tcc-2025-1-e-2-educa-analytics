@@ -12,6 +12,7 @@ Uso:
     def lambda_handler(event, context):
         return router.dispatch(event)
 """
+from __future__ import annotations
 
 import re
 from app.src.utils.response import not_found, server_error
