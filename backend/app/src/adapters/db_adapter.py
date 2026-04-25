@@ -7,6 +7,8 @@ funciona no AWS Lambda sem nenhuma configuração extra de Layer.
 Instalar: pip install PyMySQL
 """
 
+from __future__ import annotations
+
 import pymysql
 import pymysql.cursors
 from app.src.core.config import Config
@@ -31,11 +33,11 @@ def get_connection() -> pymysql.Connection:
         _connection = None
 
     _connection = pymysql.connect(
-        host=Config.DB_HOST,
-        port=Config.DB_PORT,
-        user=Config.DB_USER,
-        password=Config.DB_PASSWORD,
-        database=Config.DB_NAME,
+        host=Config.DB_HOST(),
+        port=Config.DB_PORT(),
+        user=Config.DB_USER(),
+        password=Config.DB_PASSWORD(),
+        database=Config.DB_NAME(),
         charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,
         connect_timeout=5,
@@ -64,6 +66,26 @@ def execute_write(sql: str, params: tuple = ()) -> int:
             cursor.execute(sql, params)
         conn.commit()
         return cursor.lastrowid or cursor.rowcount
+    except Exception:
+        conn.rollback()
+        raise
+
+
+def execute_transaction(steps: list[tuple[str, tuple]]) -> list[int]:
+    """
+    Executa uma lista de (sql, params) dentro de uma única transação atômica.
+    Retorna lista com o lastrowid/rowcount de cada step.
+    Faz rollback completo se qualquer step falhar.
+    """
+    conn = get_connection()
+    results: list[int] = []
+    try:
+        with conn.cursor() as cursor:
+            for sql, params in steps:
+                cursor.execute(sql, params)
+                results.append(cursor.lastrowid or cursor.rowcount)
+        conn.commit()
+        return results
     except Exception:
         conn.rollback()
         raise
