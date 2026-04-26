@@ -8,7 +8,8 @@ load_dotenv(override=True)
 
 from app.src.utils.router import Router
 from app.src.utils.response import ok, created, error, not_found, unauthorized, server_error
-from app.src.services import auth_service, alunos_service, matricula_service
+from app.src.services import auth_service, alunos_service, matricula_service, colaborador_service, educador_service
+from app.src.models.models import DisciplinaModel
 
 router = Router()
 
@@ -135,9 +136,118 @@ def buscar_matricula(event):
     return ok(resultado)
 
 
-# ── Alunos (legado) ───────────────────────────────────────────────────────────
+# ── Colaboradores ────────────────────────────────────────────────────────────
 
-@router.route("GET", "/alunos")
+@router.route("GET", "/colaboradores")
+def listar_colaboradores(_event):
+    try:
+        return ok(colaborador_service.listar_colaboradores())
+    except Exception as exc:
+        return server_error(str(exc))
+
+
+@router.route("POST", "/colaboradores")
+def criar_colaborador(event):
+    try:
+        resultado = colaborador_service.criar_colaborador(event.get("body") or "{}")
+        return created(resultado)
+    except ValueError as exc:
+        return error(str(exc))
+    except Exception as exc:
+        args = getattr(exc, "args", ())
+        msg = args[1] if len(args) >= 2 else str(exc)
+        return server_error(msg)
+
+
+@router.route("PATCH", "/colaboradores/{idMatricula}/status")
+def atualizar_status_colaborador(event):
+    try:
+        id_matricula = event["pathParameters"]["idMatricula"]
+        body = json.loads(event.get("body") or "{}")
+        novo_status = body.get("status", "")
+        resultado = colaborador_service.atualizar_status_colaborador(id_matricula, novo_status)
+        return ok(resultado)
+    except ValueError as exc:
+        return error(str(exc))
+
+
+@router.route("GET", "/colaboradores/{idMatricula}")
+def buscar_colaborador(event):
+    id_matricula = event["pathParameters"]["idMatricula"]
+    resultado = colaborador_service.buscar_colaborador(id_matricula)
+    if not resultado:
+        return not_found(f"Colaborador {id_matricula} não encontrado")
+    return ok(resultado)
+
+
+@router.route("PUT", "/colaboradores/{idMatricula}")
+def atualizar_colaborador(event):
+    try:
+        id_matricula = event["pathParameters"]["idMatricula"]
+        resultado = colaborador_service.atualizar_colaborador(id_matricula, event.get("body") or "{}")
+        return ok(resultado)
+    except ValueError as exc:
+        return error(str(exc))
+    except Exception as exc:
+        args = getattr(exc, "args", ())
+        msg = args[1] if len(args) >= 2 else str(exc)
+        return server_error(msg)
+
+
+@router.route("DELETE", "/colaboradores/{idMatricula}")
+def excluir_colaborador(event):
+    try:
+        id_matricula = event["pathParameters"]["idMatricula"]
+        return ok(colaborador_service.excluir_colaborador(id_matricula))
+    except ValueError as exc:
+        return error(str(exc))
+
+
+# ── Educadores ────────────────────────────────────────────────────────────────
+
+@router.route("POST", "/educadores")
+def criar_educador(event):
+    try:
+        resultado = educador_service.criar_educador(event.get("body") or "{}")
+        return created(resultado)
+    except ValueError as exc:
+        return error(str(exc))
+    except Exception as exc:
+        args = getattr(exc, "args", ())
+        msg = args[1] if len(args) >= 2 else str(exc)
+        return server_error(msg)
+
+
+@router.route("GET", "/educadores/{idMatricula}")
+def buscar_educador(event):
+    id_matricula = event["pathParameters"]["idMatricula"]
+    resultado = educador_service.buscar_educador(id_matricula)
+    if not resultado:
+        return not_found(f"Educador {id_matricula} não encontrado")
+    return ok(resultado)
+
+
+@router.route("PUT", "/educadores/{idMatricula}")
+def atualizar_educador(event):
+    try:
+        id_matricula = event["pathParameters"]["idMatricula"]
+        resultado = educador_service.atualizar_educador(id_matricula, event.get("body") or "{}")
+        return ok(resultado)
+    except ValueError as exc:
+        return error(str(exc))
+    except Exception as exc:
+        args = getattr(exc, "args", ())
+        msg = args[1] if len(args) >= 2 else str(exc)
+        return server_error(msg)
+
+
+@router.route("GET", "/disciplinas")
+def listar_disciplinas(event):
+    rows = DisciplinaModel.find_all()
+    return ok(list(rows))
+
+
+# ── Alunos (legado) ───────────────────────────────────────────────────────────@router.route("GET", "/alunos")
 def listar_alunos(event):
     qs = event.get("queryStringParameters") or {}
     turma_id = qs.get("turma_id")

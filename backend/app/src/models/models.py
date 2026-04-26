@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from app.src.models.base import BaseModel
 from app.src.adapters.db_adapter import execute_query, execute_write
@@ -25,7 +25,7 @@ class UsuarioModel(BaseModel):
         )
 
 
-# ── Educando / Responsável ────────────────────────────────────────────────────
+# â”€â”€ Educando / ResponsÃ¡vel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class EducandoResponsavelModel(BaseModel):
     TABLE = "EducandoResponsavel"
@@ -116,15 +116,15 @@ class EducandoResponsavelModel(BaseModel):
 
     @classmethod
     def find_lista(cls) -> list[dict]:
-        """Retorna todos os educandos com dados do último histórico.
+        """Retorna todos os educandos com dados do Ãºltimo histÃ³rico.
 
         Usa try/except para suportar bancos onde createdAt ou idResponsavel
-        ainda não existem (migração pendente).
+        ainda nÃ£o existem (migraÃ§Ã£o pendente).
         """
         try:
             return execute_query(cls._LIST_SQL)
         except Exception:
-            # Fallback: substitui colunas que podem não existir antes da migração
+            # Fallback: substitui colunas que podem nÃ£o existir antes da migraÃ§Ã£o
             sql = (
                 cls._LIST_SQL
                 .replace(
@@ -174,7 +174,7 @@ class EducandoResponsavelModel(BaseModel):
         )
 
 
-# ── Endereço ──────────────────────────────────────────────────────────────────
+# â”€â”€ EndereÃ§o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class EnderecoModel(BaseModel):
     TABLE = "Endereco"
@@ -206,7 +206,7 @@ class EnderecoModel(BaseModel):
         )
 
 
-# ── Login ─────────────────────────────────────────────────────────────────────
+# â”€â”€ Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class LoginModel(BaseModel):
     TABLE = "Login"
@@ -223,7 +223,7 @@ class LoginModel(BaseModel):
 
     @classmethod
     def save_token(cls, id_matricula: str, token: str, expiracao: str) -> None:
-        """Persiste o token de criação de senha e sua expiração."""
+        """Persiste o token de criaÃ§Ã£o de senha e sua expiraÃ§Ã£o."""
         execute_write(
             """
             UPDATE Login
@@ -244,7 +244,7 @@ class LoginModel(BaseModel):
         return rows[0] if rows else None
 
 
-# ── Turmas ────────────────────────────────────────────────────────────────────
+# â”€â”€ Turmas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class TurmaModel(BaseModel):
     TABLE = "Turmas"
@@ -336,7 +336,7 @@ class TurmaModel(BaseModel):
         )
 
 
-# ── Histórico Escolar ─────────────────────────────────────────────────────────
+# â”€â”€ HistÃ³rico Escolar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class HistoricoEscolarModel(BaseModel):
     TABLE = "HistoricoEscolar"
@@ -382,7 +382,229 @@ class HistoricoEscolarModel(BaseModel):
         )
 
 
-# ── Models legados (mantidos para compatibilidade) ────────────────────────────
+# â”€â”€ Colaborador â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+class ColaboradorModel(BaseModel):
+    TABLE = "Colaborador"
+
+    @classmethod
+    def find_all(cls) -> list[dict]:
+        return execute_query("SELECT * FROM Colaborador ORDER BY nomeCompleto")
+
+    @classmethod
+    def find_by_id(cls, id_matricula: str) -> dict | None:
+        rows = execute_query(
+            "SELECT * FROM Colaborador WHERE idMatricula = %s LIMIT 1", (id_matricula,)
+        )
+        return rows[0] if rows else None
+
+    @classmethod
+    def find_by_cpf(cls, cpf: str) -> dict | None:
+        rows = execute_query(
+            "SELECT * FROM Colaborador WHERE cpf = %s LIMIT 1", (cpf,)
+        )
+        return rows[0] if rows else None
+
+    @classmethod
+    def create(cls, data: dict) -> str:
+        execute_write(
+            """
+            INSERT INTO Colaborador
+                (idMatricula, nomeCompleto, nacionalidade, genero, cor,
+                 dataNascimento, idade, telefone, email, cpf,
+                 rg, orgaoEmissor, estadoEmissor, idStatus, tipoUsuario,
+                 cargo, departamento)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,1,'colaborador',%s,%s)
+            """,
+            (
+                data["idMatricula"], data["nomeCompleto"], data.get("nacionalidade"),
+                data.get("genero"), data.get("cor"), data.get("dataNascimento") or None,
+                data.get("idade"), data.get("telefone"), data["email"],
+                data["cpf"], data.get("rg"), data.get("orgaoEmissor"),
+                data.get("estadoEmissor"), data.get("cargo"), data.get("departamento"),
+            ),
+        )
+        return data["idMatricula"]
+
+    @classmethod
+    def update(cls, id_matricula: str, data: dict) -> int:
+        return execute_write(
+            """
+            UPDATE Colaborador SET
+                nomeCompleto=%s, nacionalidade=%s, genero=%s, cor=%s,
+                dataNascimento=%s, idade=%s, telefone=%s, email=%s,
+                cpf=%s, rg=%s, orgaoEmissor=%s, estadoEmissor=%s,
+                cargo=%s, departamento=%s
+            WHERE idMatricula = %s
+            """,
+            (
+                data.get("nomeCompleto"), data.get("nacionalidade"), data.get("genero"),
+                data.get("cor"), data.get("dataNascimento") or None, data.get("idade"),
+                data.get("telefone"), data.get("email"), data.get("cpf"),
+                data.get("rg"), data.get("orgaoEmissor"), data.get("estadoEmissor"),
+                data.get("cargo"), data.get("departamento"), id_matricula,
+            ),
+        )
+
+    @classmethod
+    def set_status(cls, id_matricula: str, ativo: int) -> int:
+        return execute_write(
+            "UPDATE Colaborador SET idStatus = %s WHERE idMatricula = %s",
+            (ativo, id_matricula),
+        )
+
+    @classmethod
+    def delete_by_matricula(cls, id_matricula: str) -> int:
+        return execute_write(
+            "DELETE FROM Colaborador WHERE idMatricula = %s", (id_matricula,)
+        )
+
+
+# â”€â”€ EducadorDisciplina â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+class EducadorDisciplinaModel(BaseModel):
+    TABLE = "EducadorDisciplina"
+
+    @classmethod
+    def find_by_matricula(cls, id_matricula: str) -> list[int]:
+        rows = execute_query(
+            "SELECT idDisciplina FROM EducadorDisciplina WHERE idMatricula = %s",
+            (id_matricula,),
+        )
+        return [r["idDisciplina"] for r in rows]
+
+    @classmethod
+    def replace_all(cls, id_matricula: str, ids_disciplinas: list[int]) -> None:
+        execute_write(
+            "DELETE FROM EducadorDisciplina WHERE idMatricula = %s", (id_matricula,)
+        )
+        for id_disc in ids_disciplinas:
+            execute_write(
+                "INSERT IGNORE INTO EducadorDisciplina (idMatricula, idDisciplina) VALUES (%s, %s)",
+                (id_matricula, id_disc),
+            )
+
+
+# â”€â”€ Educador â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+class EducadorModel(BaseModel):
+    TABLE = "Educador"
+
+    @classmethod
+    def find_all(cls) -> list[dict]:
+        return execute_query("SELECT * FROM Educador ORDER BY nomeCompleto")
+
+    @classmethod
+    def find_by_id(cls, id_matricula: str) -> dict | None:
+        rows = execute_query(
+            "SELECT * FROM Educador WHERE idMatricula = %s LIMIT 1", (id_matricula,)
+        )
+        return rows[0] if rows else None
+
+    @classmethod
+    def find_by_cpf(cls, cpf: str) -> dict | None:
+        rows = execute_query(
+            "SELECT * FROM Educador WHERE cpf = %s LIMIT 1", (cpf,)
+        )
+        return rows[0] if rows else None
+
+    @classmethod
+    def create(cls, data: dict) -> str:
+        import json as _json
+        periodos_json = _json.dumps(data.get("periodos") or [], ensure_ascii=False)
+        execute_write(
+            """
+            INSERT INTO Educador
+                (idMatricula, nomeCompleto, nacionalidade, genero, cor,
+                 dataNascimento, idade, telefone, email, cpf,
+                 rg, orgaoEmissor, estadoEmissor, idStatus, tipoUsuario,
+                 cargo, departamento, periodos)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'Ativo','educador','educador',%s,%s)
+            """,
+            (
+                data["idMatricula"], data["nomeCompleto"], data.get("nacionalidade"),
+                data.get("genero"), data.get("cor"), data.get("dataNascimento") or None,
+                data.get("idade"), data.get("telefone"), data["email"],
+                data["cpf"], data.get("rg"), data.get("orgaoEmissor"),
+                data.get("estadoEmissor"), u"Educa\u00e7\u00e3o", periodos_json,
+            ),
+        )
+        return data["idMatricula"]
+
+    @classmethod
+    def update(cls, id_matricula: str, data: dict) -> int:
+        import json as _json
+        periodos_json = _json.dumps(data.get("periodos") or [], ensure_ascii=False)
+        return execute_write(
+            """
+            UPDATE Educador SET
+                nomeCompleto=%s, nacionalidade=%s, genero=%s, cor=%s,
+                dataNascimento=%s, idade=%s, telefone=%s, email=%s,
+                cpf=%s, rg=%s, orgaoEmissor=%s, estadoEmissor=%s,
+                periodos=%s
+            WHERE idMatricula = %s
+            """,
+            (
+                data.get("nomeCompleto"), data.get("nacionalidade"), data.get("genero"),
+                data.get("cor"), data.get("dataNascimento") or None, data.get("idade"),
+                data.get("telefone"), data.get("email"), data.get("cpf"),
+                data.get("rg"), data.get("orgaoEmissor"), data.get("estadoEmissor"),
+                periodos_json, id_matricula,
+            ),
+        )
+
+    @classmethod
+    def set_status(cls, id_matricula: str, ativo: int) -> int:
+        return execute_write(
+            "UPDATE Educador SET idStatus = %s WHERE idMatricula = %s",
+            (ativo, id_matricula),
+        )
+
+    @classmethod
+    def delete_by_matricula(cls, id_matricula: str) -> int:
+        return execute_write(
+            "DELETE FROM Educador WHERE idMatricula = %s", (id_matricula,)
+        )
+
+
+# â”€â”€ FormacaoAcademica â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+class FormacaoAcademicaModel(BaseModel):
+    TABLE = "FormacaoAcademica"
+
+    @classmethod
+    def find_by_matricula(cls, id_matricula: str) -> list[dict]:
+        return execute_query(
+            "SELECT * FROM FormacaoAcademica WHERE idMatricula = %s ORDER BY dataInicio DESC",
+            (id_matricula,),
+        )
+
+    @classmethod
+    def replace_all(cls, id_matricula: str, tipo_usuario: str, formacoes: list[dict]) -> None:
+        """Apaga e reinserece todas as formaÃ§Ãµes do registro em uma transaÃ§Ã£o."""
+        steps: list[tuple[str, tuple]] = [
+            ("DELETE FROM FormacaoAcademica WHERE idMatricula = %s", (id_matricula,))
+        ]
+        for f in formacoes:
+            steps.append((
+                """
+                INSERT INTO FormacaoAcademica
+                    (idMatricula, tipoUsuario, grau, instituicao, areaConhecimento,
+                     dataInicio, dataFim, status)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                """,
+                (
+                    id_matricula, tipo_usuario, f.get("grau"),
+                    f.get("instituicao"), f.get("areaEstudo"),
+                    f.get("dataInicio") or None, f.get("dataTermino") or None,
+                    f.get("situacao", "concluido"),
+                ),
+            ))
+        from app.src.adapters.db_adapter import execute_transaction
+        execute_transaction(steps)
+
+
+# â”€â”€ Models legados (mantidos para compatibilidade) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class AlunoModel(BaseModel):
     TABLE = "alunos"
@@ -564,7 +786,14 @@ class FrequenciaModel(BaseModel):
 
 
 class DisciplinaModel(BaseModel):
-    TABLE = "disciplinas"
+    TABLE = "Disciplinas"
+
+    @classmethod
+    def find_all(cls) -> list[dict]:
+        return execute_query(
+            "SELECT idDisciplina, codDisciplina, nomeDisciplina, areaConhecimento "
+            "FROM Disciplinas ORDER BY nomeDisciplina"
+        )
 
     @classmethod
     def create(cls, nome: str, carga_horaria: int) -> int:
