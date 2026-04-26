@@ -3,6 +3,10 @@
 
   <header class="page-header">
     <div>
+      <button type="button" class="btn-voltar" (click)="voltar()">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M12 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Voltar para lista de colaboradores
+      </button>
       <h1>{{ isEdicao ? 'Editar colaborador' : 'Cadastro de colaborador' }}</h1>
       <p>Preencha os dados do colaborador. Campos marcados com <span class="required-legend">*</span> são obrigatórios.</p>
     </div>
@@ -283,8 +287,9 @@
 
       <div class="form-actions-row">
         <button type="button" class="ghost" (click)="voltar()">Cancelar</button>
-        <button type="button" class="primary" (click)="abrirConfirmacao()">
-          {{ isEdicao ? 'Atualizar' : 'Cadastrar colaborador' }}
+        <span class="erro-salvar" *ngIf="erroSalvar" style="color:#dc2626;font-size:.85rem">{{ erroSalvar }}</span>
+        <button type="button" class="primary" (click)="abrirConfirmacao()" [disabled]="salvando">
+          {{ salvando ? 'Salvando...' : (isEdicao ? 'Atualizar' : 'Cadastrar colaborador') }}
         </button>
       </div>
     </div>

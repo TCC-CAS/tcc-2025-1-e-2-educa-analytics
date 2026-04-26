@@ -1,5 +1,8 @@
 ﻿import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 
 type TipoColaborador = 'educador' | 'colaborador' | 'diretor';
 
@@ -22,6 +25,8 @@ interface Colaborador {
 export class ColaboradoresListComponent implements OnInit {
   colaboradores: Colaborador[] = [];
   colaboradoresFiltrados: Colaborador[] = [];
+  loading = false;
+  erro = '';
 
   // Filtros
   filtroMatricula: string = '';
@@ -43,64 +48,26 @@ export class ColaboradoresListComponent implements OnInit {
     diretor: 'Diretor'
   };
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private http: HttpClient) {}
 
   ngOnInit(): void {
     this.carregarColaboradores();
   }
 
   carregarColaboradores(): void {
-    this.colaboradores = [
-      {
-        id: 1,
-        matriculaFuncional: 'EDU-00001',
-        nomeCompleto: 'Carlos Eduardo Ferreira',
-        cargo: 'Professor de Matemática',
-        tipo: 'educador',
-        status: 'ativo'
+    this.loading = true;
+    this.erro = '';
+    this.http.get<Colaborador[]>(`${environment.apiUrl}/colaboradores`).subscribe({
+      next: (dados) => {
+        this.loading = false;
+        this.colaboradores = dados;
+        this.aplicarFiltros();
       },
-      {
-        id: 2,
-        matriculaFuncional: 'EDU-00002',
-        nomeCompleto: 'Fernanda Alves Lima',
-        cargo: 'Professora de Português',
-        tipo: 'educador',
-        status: 'ativo'
-      },
-      {
-        id: 3,
-        matriculaFuncional: 'COL-00001',
-        nomeCompleto: 'Maria Santos Costa',
-        cargo: 'Secretária Escolar',
-        tipo: 'colaborador',
-        status: 'ativo'
-      },
-      {
-        id: 4,
-        matriculaFuncional: 'COL-00002',
-        nomeCompleto: 'João Silva Pereira',
-        cargo: 'Auxiliar Administrativo',
-        tipo: 'colaborador',
-        status: 'ativo'
-      },
-      {
-        id: 5,
-        matriculaFuncional: 'COL-00003',
-        nomeCompleto: 'Ana Oliveira Lima',
-        cargo: 'Bibliotecária',
-        tipo: 'colaborador',
-        status: 'inativo'
-      },
-      {
-        id: 6,
-        matriculaFuncional: 'DIR-00001',
-        nomeCompleto: 'Roberto Mendes Souza',
-        cargo: 'Diretor Geral',
-        tipo: 'diretor',
-        status: 'ativo'
+      error: () => {
+        this.loading = false;
+        this.erro = 'Erro ao carregar colaboradores. Tente novamente.';
       }
-    ];
-    this.aplicarFiltros();
+    });
   }
 
   aplicarFiltros(): void {
@@ -134,24 +101,36 @@ export class ColaboradoresListComponent implements OnInit {
     this.router.navigate(['/educadores/novo']);
   }
 
-  editar(id: number): void {
-    this.router.navigate([`/colaboradores/${id}/editar`]);
+  editar(colaborador: Colaborador): void {
+    const m = colaborador.matriculaFuncional;
+    if (colaborador.tipo === 'educador') {
+      this.router.navigate([`/educadores/${m}/editar`]);
+    } else {
+      this.router.navigate([`/colaboradores/${m}/editar`]);
+    }
   }
 
   excluir(colaborador: Colaborador): void {
     if (confirm(`Tem certeza que deseja excluir ${colaborador.nomeCompleto}?`)) {
-      this.colaboradores = this.colaboradores.filter(c => c.id !== colaborador.id);
-      this.aplicarFiltros();
-      this.verificarSelecao();
+      this.http.delete(`${environment.apiUrl}/colaboradores/${colaborador.matriculaFuncional}`).subscribe({
+        next: () => this.carregarColaboradores(),
+        error: () => alert('Erro ao excluir. Tente novamente.')
+      });
     }
   }
 
   ativar(colaborador: Colaborador): void {
-    colaborador.status = 'ativo';
+    this.http.patch(`${environment.apiUrl}/colaboradores/${colaborador.matriculaFuncional}/status`, { status: 'ativo' }).subscribe({
+      next: () => { colaborador.status = 'ativo'; this.aplicarFiltros(); },
+      error: () => alert('Erro ao ativar. Tente novamente.')
+    });
   }
 
   desativar(colaborador: Colaborador): void {
-    colaborador.status = 'inativo';
+    this.http.patch(`${environment.apiUrl}/colaboradores/${colaborador.matriculaFuncional}/status`, { status: 'inativo' }).subscribe({
+      next: () => { colaborador.status = 'inativo'; this.aplicarFiltros(); },
+      error: () => alert('Erro ao desativar. Tente novamente.')
+    });
   }
 
   toggleTodos(): void {
@@ -181,15 +160,20 @@ export class ColaboradoresListComponent implements OnInit {
       ? `Excluir: ${nomes}?`
       : `${this.acaoLote === 'ativar' ? 'Ativar' : 'Desativar'}: ${nomes}?`;
     if (confirm(msg)) {
-      selecionados.forEach(c => {
-        if (this.acaoLote === 'ativar') c.status = 'ativo';
-        else if (this.acaoLote === 'desativar') c.status = 'inativo';
-        else this.colaboradores = this.colaboradores.filter(x => x.id !== c.id);
+      const requests = selecionados.map(c => {
+        if (this.acaoLote === 'excluir') {
+          return this.http.delete(`${environment.apiUrl}/colaboradores/${c.matriculaFuncional}`);
+        }
+        return this.http.patch(`${environment.apiUrl}/colaboradores/${c.matriculaFuncional}/status`, { status: this.acaoLote });
       });
-      this.aplicarFiltros();
-      this.todosSelecionados = false;
-      this.acaoLote = '';
-      this.verificarSelecao();
+      forkJoin(requests).subscribe({
+        next: () => {
+          this.carregarColaboradores();
+          this.todosSelecionados = false;
+          this.acaoLote = '';
+        },
+        error: () => alert('Erro ao executar ação. Tente novamente.')
+      });
     }
   }
 }

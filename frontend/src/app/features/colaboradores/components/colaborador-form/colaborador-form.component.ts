@@ -1,6 +1,7 @@
 ﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 
 type ColaboradorTab = 'dados' | 'formacao';
 
@@ -78,6 +79,10 @@ export class ColaboradorFormComponent implements OnInit {
   // Modal
   confirm = { visible: false, title: '', message: '', danger: false, callback: () => {} };
 
+  // Estado
+  salvando = false;
+  erroSalvar = '';
+
   constructor(private route: ActivatedRoute, private router: Router, private http: HttpClient) {}
 
   ngOnInit(): void {
@@ -85,9 +90,36 @@ export class ColaboradorFormComponent implements OnInit {
     if (id) {
       this.colaboradorId = parseInt(id);
       this.isEdicao = true;
+      this.carregarColaborador(id);
     } else {
       this.matriculaFuncional = 'COL-' + Math.floor(10000 + Math.random() * 90000);
     }
+  }
+
+  carregarColaborador(id: string): void {
+    this.http.get<any>(`${environment.apiUrl}/colaboradores/${id}`).subscribe({
+      next: (dados) => {
+        this.matriculaFuncional = dados.matriculaFuncional || dados.idMatricula;
+        this.nomeCompleto       = dados.nomeCompleto || '';
+        this.nacionalidade      = dados.nacionalidade || '';
+        this.generoSelecionado  = dados.genero || '';
+        this.generoOutro        = dados.genero === 'outro';
+        this.corRaca            = dados.corRaca || '';
+        this.dataNascimento     = dados.dataNascimento || '';
+        this.idade              = dados.idade ?? null;
+        this.telefone           = dados.telefone || '';
+        this.email              = dados.email || '';
+        this.rg                 = dados.rg || '';
+        this.orgaoEmissor       = dados.orgaoEmissor || '';
+        this.estadoEmissor      = dados.estadoEmissor || '';
+        this.cpf                = dados.cpf || '';
+        this.cargo              = dados.cargo || '';
+        this.departamento       = dados.departamento || '';
+        if (dados.endereco) { this.endereco = { ...dados.endereco }; }
+        if (dados.formacoes) { this.formacoes = dados.formacoes; }
+      },
+      error: () => alert('Erro ao carregar dados do colaborador.')
+    });
   }
 
   setTab(tab: ColaboradorTab): void { this.activeTab = tab; }
@@ -175,8 +207,39 @@ export class ColaboradorFormComponent implements OnInit {
   }
 
   salvar(): void {
-    console.log('Salvar colaborador:', { matriculaFuncional: this.matriculaFuncional, nomeCompleto: this.nomeCompleto });
-    this.router.navigate(['/colaboradores']);
+    const payload = {
+      matriculaFuncional: this.matriculaFuncional,
+      nomeCompleto:   this.nomeCompleto,
+      nacionalidade:  this.nacionalidade,
+      genero:         this.generoOutro ? this.generoCustom : this.generoSelecionado,
+      corRaca:        this.corRaca,
+      dataNascimento: this.dataNascimento || null,
+      telefone:       this.telefone,
+      email:          this.email,
+      rg:             this.rg,
+      orgaoEmissor:   this.orgaoEmissor,
+      estadoEmissor:  this.estadoEmissor,
+      cpf:            this.cpf,
+      cargo:          this.cargo,
+      departamento:   this.departamento,
+      endereco:       this.endereco,
+      formacoes:      this.formacoes,
+    };
+
+    this.salvando = true;
+    this.erroSalvar = '';
+
+    const req$ = this.isEdicao
+      ? this.http.put(`${environment.apiUrl}/colaboradores/${this.matriculaFuncional}`, payload)
+      : this.http.post(`${environment.apiUrl}/colaboradores`, payload);
+
+    req$.subscribe({
+      next: () => { this.salvando = false; this.router.navigate(['/colaboradores']); },
+      error: (err) => {
+        this.salvando = false;
+        this.erroSalvar = err?.error?.error || 'Erro ao salvar. Verifique os dados e tente novamente.';
+      }
+    });
   }
 
   voltar(): void { this.router.navigate(['/colaboradores']); }
