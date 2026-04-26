@@ -1,0 +1,397 @@
+﻿<div class="usuario-form-page">
+  <div class="form-wrapper">
+
+  <header class="page-header">
+    <div>
+      <button type="button" class="btn-voltar" (click)="voltar()">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M12 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Voltar para lista de colaboradores
+      </button>
+      <h1>{{ isEdicao ? 'Editar educador' : 'Cadastro de educador' }}</h1>
+      <p>Preencha os dados do educador. Campos marcados com <span class="required-legend">*</span> são obrigatórios.</p>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button type="button" class="tab" [class.active]="activeTab === 'dados'" (click)="setTab('dados')">
+      <span class="tab-badge">1</span> Dados Pessoais
+    </button>
+    <button type="button" class="tab" [class.active]="activeTab === 'formacao'" (click)="setTab('formacao')">
+      <span class="tab-badge">2</span> Formação Acadêmica
+    </button>
+  </div>
+
+  <form class="form" novalidate>
+
+    <!-- ABA: DADOS PESSOAIS -->
+    <section class="tab-panel" *ngIf="activeTab === 'dados'">
+
+      <div class="field-group">
+        <h3 class="group-title">Identificação</h3>
+        <div class="field-grid">
+          <label class="field">
+            <span>Matrícula Funcional</span>
+            <input type="text" name="matriculaFuncional" [(ngModel)]="matriculaFuncional" readonly />
+          </label>
+          <label class="field required col-2">
+            <span>Nome completo *</span>
+            <input type="text" name="nomeCompleto" [(ngModel)]="nomeCompleto" placeholder="Nome completo" autocomplete="name" required />
+          </label>
+          <label class="field required">
+            <span>Nacionalidade *</span>
+            <input type="text" name="nacionalidade" [(ngModel)]="nacionalidade" placeholder="Ex: Brasileiro(a)" required />
+          </label>
+          <label class="field required">
+            <span>Gênero *</span>
+            <select name="genero" [(ngModel)]="generoSelecionado" (ngModelChange)="onGeneroChange($event)" required>
+              <option value="">Selecione</option>
+              <option value="mulher-cis">Mulher cis</option>
+              <option value="homem-cis">Homem cis</option>
+              <option value="homem-trans">Homem trans</option>
+              <option value="mulher-trans">Mulher trans</option>
+              <option value="agenero">Agênero</option>
+              <option value="genero-fluido">Gênero fluido</option>
+              <option value="bigenero">Bigênero</option>
+              <option value="demigenero">Demigênero</option>
+              <option value="intergenero">Intergênero</option>
+              <option value="nao-informar">Prefiro não informar</option>
+              <option value="outro">Outro</option>
+            </select>
+          </label>
+          <label class="field required" *ngIf="generoOutro">
+            <span>Especifique o gênero *</span>
+            <input type="text" name="generoCustom" [(ngModel)]="generoCustom" placeholder="Descreva seu gênero" required />
+          </label>
+          <label class="field required">
+            <span>Cor / Raça *</span>
+            <select name="corRaca" [(ngModel)]="corRaca" required>
+              <option value="">Selecione</option>
+              <option value="Branca">Branca</option>
+              <option value="Preta">Preta</option>
+              <option value="Parda">Parda</option>
+              <option value="Amarela">Amarela</option>
+              <option value="Indígena">Indígena</option>
+              <option value="Prefiro não informar">Prefiro não informar</option>
+            </select>
+          </label>
+          <label class="field required">
+            <span>Data de nascimento *</span>
+            <input type="date" name="dataNascimento" [(ngModel)]="dataNascimento" (ngModelChange)="onNascimentoChange($event)" required />
+          </label>
+          <label class="field">
+            <span>Idade</span>
+            <input type="text" name="idade" [value]="idade !== null ? idade + ' anos' : ''" placeholder="Calculada automaticamente" readonly />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Endereço</h3>
+        <div class="field-grid" [class.address-loading]="cepLoading">
+          <label class="field required">
+            <span>CEP *</span>
+            <div class="cep-wrapper" [class.searching]="cepLoading">
+              <input type="text" name="cep" [(ngModel)]="endereco.cep" placeholder="00000-000" maxlength="9" inputmode="numeric" (blur)="buscarCep()" required />
+            </div>
+            <span class="cep-erro" *ngIf="cepErro">CEP não encontrado</span>
+          </label>
+          <label class="field required col-2">
+            <span>Logradouro *</span>
+            <input type="text" name="logradouro" [(ngModel)]="endereco.logradouro" placeholder="Rua, Avenida..." autocomplete="street-address" required />
+          </label>
+          <label class="field required">
+            <span>Número *</span>
+            <input type="text" name="numero" [(ngModel)]="endereco.numero" placeholder="Ex: 123" inputmode="numeric" required />
+          </label>
+          <label class="field">
+            <span>Complemento</span>
+            <input type="text" name="complemento" [(ngModel)]="endereco.complemento" placeholder="Apto, Bloco..." />
+          </label>
+          <label class="field required">
+            <span>Bairro *</span>
+            <input type="text" name="bairro" [(ngModel)]="endereco.bairro" placeholder="Nome do bairro" required />
+          </label>
+          <label class="field required">
+            <span>UF *</span>
+            <input type="text" name="uf" [(ngModel)]="endereco.uf" placeholder="SP" maxlength="2" style="text-transform:uppercase" required />
+          </label>
+          <label class="field required">
+            <span>Cidade *</span>
+            <input type="text" name="cidade" [(ngModel)]="endereco.cidade" placeholder="Nome da cidade" autocomplete="address-level2" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Contato</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>Telefone / Celular *</span>
+            <input type="tel" name="telefone" [ngModel]="telefone" (input)="onTelefoneInput($event)" (ngModelChange)="telefone=$event" placeholder="(00) 00000-0000" inputmode="tel" required />
+          </label>
+          <label class="field required">
+            <span>E-mail *</span>
+            <input type="email" name="email" [(ngModel)]="email" placeholder="email@exemplo.com" autocomplete="email" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Documentos</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>RG *</span>
+            <input type="text" name="rg" [ngModel]="rg" (input)="onRgInput($event)" (ngModelChange)="rg=$event" placeholder="00.000.000-0" maxlength="12" required />
+          </label>
+          <label class="field required">
+            <span>Órgão emissor *</span>
+            <input type="text" name="orgaoEmissor" [(ngModel)]="orgaoEmissor" placeholder="Ex: SSP" required />
+          </label>
+          <label class="field required">
+            <span>Estado emissor *</span>
+            <input type="text" name="estadoEmissor" [(ngModel)]="estadoEmissor" placeholder="SP" maxlength="2" required />
+          </label>
+          <label class="field required">
+            <span>CPF *</span>
+            <input type="text" name="cpf" [ngModel]="cpf" (input)="onCpfInput($event)" (ngModelChange)="cpf=$event" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" required />
+          </label>
+        </div>
+      </div>
+
+    </section>
+
+    <div class="form-actions" *ngIf="activeTab === 'dados'">
+      <button type="button" class="primary ml-auto" (click)="nextTab()">
+        Avançar
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 10h10M12 7l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <!-- ABA: FORMACAO ACADEMICA -->
+    <section class="tab-panel" *ngIf="activeTab === 'formacao'">
+
+      <div class="field-group">
+        <h3 class="group-title">Dados Profissionais</h3>
+        <div class="field-grid">
+          <label class="field">
+            <span>Matrícula Funcional</span>
+            <input type="text" name="matFuncional2" [(ngModel)]="matriculaFuncional" readonly />
+          </label>
+        </div>
+
+        <div class="check-group">
+          <span class="check-group-label">Disciplinas lecionadas *</span>
+          <div class="check-list">
+            <label class="check-item" *ngFor="let d of disciplinasDisponiveis">
+              <input type="checkbox"
+                     [checked]="isDisciplinaSelecionada(d.idDisciplina)"
+                     (change)="toggleDisciplina(d.idDisciplina)" />
+              <span class="check-text">{{ d.nomeDisciplina }}</span>
+              <span class="check-area">{{ d.areaConhecimento }}</span>
+            </label>
+          </div>
+          <p class="check-vazio" *ngIf="disciplinasDisponiveis.length === 0">Carregando disciplinas...</p>
+        </div>
+
+        <div class="check-group" style="margin-top:1rem">
+          <span class="check-group-label">Períodos em que leciona *</span>
+          <div class="check-list check-list--inline">
+            <label class="check-item" *ngFor="let p of periodosDisponiveis">
+              <input type="checkbox"
+                     [checked]="isPeriodoSelecionado(p.value)"
+                     (change)="togglePeriodo(p.value)" />
+              <span class="check-text">{{ p.label }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">
+          Formações Acadêmicas
+          <button type="button" class="btn-add-formacao" (click)="abrirFormFormacao()" *ngIf="!mostrarFormFormacao">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><line x1="10" y1="4" x2="10" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="4" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Adicionar
+          </button>
+        </h3>
+
+        <!-- Formulario de nova formacao -->
+        <div class="formacao-form" *ngIf="mostrarFormFormacao">
+          <div class="field-grid">
+            <label class="field required">
+              <span>Grau *</span>
+              <select name="grau" [(ngModel)]="novaFormacao.grau" required>
+                <option value="">Selecione</option>
+                <option value="medio">Ensino Médio</option>
+                <option value="tecnico">Curso Técnico</option>
+                <option value="graduacao">Graduação</option>
+                <option value="pos">Pós-graduação</option>
+                <option value="mestrado">Mestrado</option>
+                <option value="doutorado">Doutorado</option>
+              </select>
+            </label>
+            <label class="field required col-2">
+              <span>Instituição *</span>
+              <input type="text" name="instFormacao" [(ngModel)]="novaFormacao.instituicao" placeholder="Nome da instituição" required />
+            </label>
+            <label class="field required col-2">
+              <span>Área de estudo / Curso *</span>
+              <input type="text" name="areaEstudo" [(ngModel)]="novaFormacao.areaEstudo" placeholder="Ex: Licenciatura em Matemática" required />
+            </label>
+            <label class="field required">
+              <span>Início *</span>
+              <input type="date" name="dataInicioForm" [(ngModel)]="novaFormacao.dataInicio" required />
+            </label>
+            <label class="field">
+              <span>Término</span>
+              <input type="date" name="dataTerminoForm" [(ngModel)]="novaFormacao.dataTermino" />
+            </label>
+            <label class="field required">
+              <span>Situação *</span>
+              <select name="situacao" [(ngModel)]="novaFormacao.situacao" required>
+                <option value="concluido">Concluído</option>
+                <option value="cursando">Cursando</option>
+                <option value="trancado">Trancado</option>
+              </select>
+            </label>
+          </div>
+          <div class="formacao-form-actions">
+            <button type="button" class="btn-formacao-cancelar" (click)="cancelarFormacao()">Cancelar</button>
+            <button type="button" class="btn-formacao-adicionar" (click)="adicionarFormacao()">Adicionar formação</button>
+          </div>
+        </div>
+
+        <!-- Lista de formacoes -->
+        <div class="formacoes-lista" *ngIf="formacoes.length > 0">
+          <div class="formacao-card" *ngFor="let f of formacoes">
+            <div class="formacao-info">
+              <span class="formacao-grau-badge">{{ f.grau }}</span>
+              <strong class="formacao-curso">{{ f.areaEstudo }}</strong>
+              <span class="formacao-inst">{{ f.instituicao }}</span>
+              <span class="formacao-periodo">
+                {{ f.dataInicio }} {{ f.dataTermino ? '— ' + f.dataTermino : '(cursando)' }}
+              </span>
+            </div>
+            <button type="button" class="btn-remover-formacao" (click)="removerFormacao(f.id)" title="Remover">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><line x1="4" y1="4" x2="16" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="4" x2="4" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <p class="formacoes-vazio" *ngIf="formacoes.length === 0 && !mostrarFormFormacao">
+          Nenhuma formação adicionada ainda. Clique em "Adicionar" para incluir.
+        </p>
+      </div>
+
+    </section>
+
+    <div class="form-actions" *ngIf="activeTab === 'formacao'">
+
+      <!-- Painel de erros -->
+      <div class="validacao-erros" *ngIf="mostrarErros && errosValidacao.length > 0">
+        <div class="validacao-header">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#dc2626" stroke-width="1.5"/><path d="M10 6v4M10 14h.01" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <strong>Preencha os campos obrigatórios antes de continuar</strong>
+        </div>
+        <div class="validacao-grupos">
+          <div class="validacao-grupo" *ngFor="let grupo of errosValidacao">
+            <button type="button" class="validacao-tab-link" (click)="setTab(grupo.tab)">
+              {{ grupo.tabLabel }}
+              <svg width="11" height="11" viewBox="0 0 20 20" fill="none"><path d="M5 10h10M12 7l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <ul class="validacao-campos">
+              <li *ngFor="let campo of grupo.campos">{{ campo }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions-row">
+        <button type="button" class="ghost" (click)="voltar()">Cancelar</button>
+        <button type="button" class="primary" (click)="abrirConfirmacao()" [disabled]="emailEnviando">
+          {{ isEdicao ? 'Atualizar' : 'Cadastrar educador' }}
+        </button>
+      </div>
+    </div>
+
+  </form>
+  </div>
+</div>
+
+<!-- MODAL DE CONFIRMAÇÃO -->
+<div class="modal-overlay" *ngIf="modalConfirmacaoAberto" (click)="fecharModal()">
+  <div class="modal-confirmacao" (click)="$event.stopPropagation()">
+
+    <!-- TELA DE SUCESSO -->
+    <ng-container *ngIf="educadorRealizado">
+      <div class="confirmacao-sucesso">
+        <button type="button" class="modal-close sucesso-close" (click)="voltarParaLista()" title="Voltar">&#x2715;</button>
+        <div class="sucesso-icon">
+          <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+            <circle cx="26" cy="26" r="25" stroke="#1e8e3e" stroke-width="2" fill="#e6f4ea"/>
+            <path d="M14 27l8 8 16-16" stroke="#1e8e3e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>{{ isEdicao ? 'Educador atualizado!' : 'Educador cadastrado!' }}</h2>
+        <ng-container *ngIf="!isEdicao">
+          <p>Um e-mail com o ID e o link para definição de senha foi enviado para:</p>
+          <p class="sucesso-email"><strong>{{ email }}</strong></p>
+        </ng-container>
+        <p class="sucesso-id">ID do educador: <strong>{{ educadorCadastradoId }}</strong></p>
+        <div class="sucesso-actions">
+          <button type="button" class="btn-secondary" (click)="voltarParaLista()">Voltar para a lista</button>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- TELA DE CONFIRMAÇÃO -->
+    <ng-container *ngIf="!educadorRealizado">
+      <header class="modal-header">
+        <div class="modal-title-block">
+          <h2>{{ isEdicao ? 'Confirmar atualização' : 'Confirmar cadastro' }}</h2>
+          <p class="modal-subtitle">Revise os dados antes de finalizar</p>
+        </div>
+        <button type="button" class="modal-close" (click)="fecharModal()">&#x2715;</button>
+      </header>
+
+      <div class="confirmacao-body">
+        <div class="conf-secao">
+          <h3>Identificação</h3>
+          <div class="conf-grid">
+            <div class="conf-item"><span>Matrícula</span><strong>{{ matriculaFuncional }}</strong></div>
+            <div class="conf-item"><span>Nome</span><strong>{{ nomeCompleto || '—' }}</strong></div>
+            <div class="conf-item"><span>E-mail</span><strong>{{ email || '—' }}</strong></div>
+            <div class="conf-item"><span>CPF</span><strong>{{ cpf || '—' }}</strong></div>
+          </div>
+        </div>
+        <div class="conf-secao">
+          <h3>Dados Profissionais</h3>
+          <div class="conf-grid">
+            <div class="conf-item"><span>Disciplinas</span><strong>{{ disciplinasSelecionadas.length }} selecionada(s)</strong></div>
+            <div class="conf-item"><span>Períodos</span><strong>{{ periodosSelecionados.join(', ') || '—' }}</strong></div>
+          </div>
+        </div>
+        <p class="conf-aviso" *ngIf="!isEdicao">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#f59e0b" stroke-width="1.5"/><path d="M10 6v4M10 14h.01" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Ao confirmar, um e-mail com o ID e o link de definição de senha será enviado ao educador.
+        </p>
+      </div>
+
+      <div class="conf-erro" *ngIf="emailErro">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#dc2626" stroke-width="1.5"/><path d="M10 6v4M10 14h.01" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round"/></svg>
+        {{ emailErrMsg }}
+      </div>
+
+      <footer class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="fecharModal()" [disabled]="emailEnviando">Cancelar</button>
+        <button type="button" class="btn-confirmar" (click)="confirmarCadastro()" [disabled]="emailEnviando">
+          <span *ngIf="!emailEnviando">{{ isEdicao ? 'Confirmar atualização' : 'Confirmar e enviar e-mail' }}</span>
+          <span *ngIf="emailEnviando" class="loading-text">
+            <span class="spinner"></span> Salvando...
+          </span>
+        </button>
+      </footer>
+    </ng-container>
+
+  </div>
+</div>

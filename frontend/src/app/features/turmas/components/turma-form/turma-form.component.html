@@ -1,0 +1,107 @@
+﻿<div class="turma-form-page">
+
+  <!-- Modal de Confirmação de Edição -->
+  <div class="modal-overlay" *ngIf="confirmVisible" (click)="cancelConfirm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h3 class="modal-title">Confirmar edição</h3>
+      <p class="modal-message">Deseja realmente salvar as alterações desta turma?</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
+        <button type="button" class="modal-btn modal-confirm" (click)="confirmEdit()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="btn-voltar" (click)="cancel()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Voltar para lista de turmas
+  </button>
+
+  <header class="page-header">
+    <div>
+      <h1>{{ turmaId ? 'Editar turma' : 'Cadastrar turma' }}</h1>
+      <p>Informe os dados da turma para salvar as alterações.</p>
+    </div>
+  </header>
+
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+
+  <form #form="ngForm" class="form" (ngSubmit)="submit(form.valid === true)">
+    <div class="field-grid">
+      <label class="field">
+        <span>Código da turma</span>
+        <input type="text" name="codigo" [(ngModel)]="model.codigo" required />
+      </label>
+      <label class="field">
+        <span>Turma</span>
+        <input type="text" name="nome" [(ngModel)]="model.nome" required />
+      </label>
+      <label class="field">
+        <span>Período</span>
+        <select name="turno" [(ngModel)]="model.turno" required>
+          <option value="">Selecione</option>
+          <option value="Manhã">Manhã</option>
+          <option value="Tarde">Tarde</option>
+          <option value="Noite">Noite</option>
+          <option value="Integral">Integral</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Ano Letivo</span>
+        <input type="text" name="anoLetivo" [(ngModel)]="model.anoLetivo" placeholder="Ex: 2026" maxlength="4" required />
+      </label>
+      <label class="field">
+        <span>Série</span>
+        <select name="serie" [(ngModel)]="model.serie" required>
+          <option value="">Selecione</option>
+          <option value="1º Ano">1º Ano</option>
+          <option value="2º Ano">2º Ano</option>
+          <option value="3º Ano">3º Ano</option>
+          <option value="4º Ano">4º Ano</option>
+          <option value="5º Ano">5º Ano</option>
+          <option value="6º Ano">6º Ano</option>
+          <option value="7º Ano">7º Ano</option>
+          <option value="8º Ano">8º Ano</option>
+          <option value="9º Ano">9º Ano</option>
+          <option value="1ª Série EM">1ª Série EM</option>
+          <option value="2ª Série EM">2ª Série EM</option>
+          <option value="3ª Série EM">3ª Série EM</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Sala</span>
+        <input type="text" name="sala" [(ngModel)]="model.sala" placeholder="Ex: Sala 101" />
+      </label>
+      <label class="field">
+        <span>Quantidade de vagas</span>
+        <input type="number" name="vagas" [(ngModel)]="model.vagas" required />
+      </label>
+      <label class="field">
+        <span>Início das aulas</span>
+        <input type="date" name="inicioAulas" [(ngModel)]="model.inicioAulas" required />
+      </label>
+      <label class="field">
+        <span>Término das aulas</span>
+        <input type="date" name="fimAulas" [(ngModel)]="model.fimAulas" required />
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <select name="status" [(ngModel)]="model.status" required>
+          <option value="">Selecione</option>
+          <option value="ativa">Ativa</option>
+          <option value="inativa">Inativa</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="ghost" (click)="cancel()">Cancelar</button>
+      <button type="submit" class="primary">{{ turmaId ? 'Salvar alterações' : 'Cadastrar turma' }}</button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,50 @@
+name: Deploy Lambda - educaAnalytics
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+
+jobs:
+  deploy:
+    name: Package and Deploy to AWS Lambda
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+
+      - name: Empacotar lambda_function.py em ZIP
+        run: |
+          cd backend
+          zip lambda_deploy.zip lambda_function.py
+
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: sa-east-1
+
+      - name: Deploy para Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name educaAnalytics \
+            --zip-file fileb://backend/lambda_deploy.zip \
+            --region sa-east-1
+
+      - name: Aguardar funcao ficar ativa
+        run: |
+          aws lambda wait function-updated \
+            --function-name educaAnalytics \
+            --region sa-east-1
+
+      - name: Confirmar deploy
+        run: |
+          aws lambda get-function-configuration \
+            --function-name educaAnalytics \
+            --region sa-east-1 \
+            --query '{State: State, LastModified: LastModified, Handler: Handler}' \
+            --output table

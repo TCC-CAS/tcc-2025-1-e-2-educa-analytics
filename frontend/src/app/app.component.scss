@@ -1,0 +1,284 @@
+// ─── Variáveis ──────────────────────────────────────────────────────────────
+$sidebar-w-collapsed: 68px;
+$sidebar-w-expanded:  230px;
+$sidebar-bg:          #1a1d2e;
+$active-color:        #f472b6;
+$active-bg:           rgba(244, 114, 182, 0.15);
+$icon-color:          rgba(255, 255, 255, 0.45);
+$icon-hover:          rgba(255, 255, 255, 0.9);
+$divider:             rgba(255, 255, 255, 0.08);
+$section-label-color: rgba(255, 255, 255, 0.55);
+$speed:               0.25s;
+$ease:                cubic-bezier(0.4, 0, 0.2, 1);
+
+// ─── Shell ──────────────────────────────────────────────────────────────────
+.app-shell {
+  display: flex;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+// ─── Sidebar ────────────────────────────────────────────────────────────────
+.sidebar {
+  width: $sidebar-w-collapsed;
+  flex-shrink: 0;
+  background: $sidebar-bg;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+  position: relative;
+  z-index: 200;
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
+  transition: width $speed $ease;
+
+  &.expandido {
+    width: $sidebar-w-expanded;
+  }
+}
+
+// ─── Topo / Logo ────────────────────────────────────────────────────────────
+.sidebar-top {
+  padding: 14px 0 12px;
+  border-bottom: 1px solid $divider;
+  flex-shrink: 0;
+}
+
+.brand-logo {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 13px;
+  white-space: nowrap;
+}
+
+.logo-icon {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 10px;
+  background: $active-color;
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.logo-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity $speed $ease, transform $speed $ease;
+  white-space: nowrap;
+  overflow: hidden;
+
+  .expandido & {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// ─── Navegação ──────────────────────────────────────────────────────────────
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px 0;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+// ─── Seção label ────────────────────────────────────────────────────────────
+.nav-section-label {
+  height: 0;
+  overflow: hidden;
+  padding: 0 16px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $section-label-color;
+  white-space: nowrap;
+  display: flex;
+  align-items: flex-end;
+  opacity: 0;
+  transition: height $speed $ease, padding $speed $ease, opacity $speed $ease;
+  margin-top: 0;
+
+  .expandido & {
+    height: 34px;
+    padding: 0 16px;
+    opacity: 1;
+    margin-top: 6px;
+  }
+}
+
+// ─── Item de navegação ──────────────────────────────────────────────────────
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  height: 44px;
+  padding: 0 13px;
+  margin: 1px 8px;
+  border-radius: 10px;
+  color: $icon-color;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color $speed $ease, background $speed $ease;
+  position: relative;
+  flex-shrink: 0;
+
+  svg {
+    width: 21px;
+    height: 21px;
+    min-width: 21px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    color: $icon-hover;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &.active {
+    color: $active-color;
+    background: $active-bg;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 22px;
+      border-radius: 0 3px 3px 0;
+      background: $active-color;
+    }
+  }
+}
+
+// ─── Label do item ──────────────────────────────────────────────────────────
+.nav-label {
+  font-size: 13.5px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity $speed $ease, transform $speed $ease;
+  overflow: hidden;
+  white-space: nowrap;
+
+  .expandido & {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// ─── Rodapé ─────────────────────────────────────────────────────────────────
+.sidebar-bottom {
+  flex-shrink: 0;
+  border-top: 1px solid $divider;
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  height: 44px;
+  padding: 0 13px;
+  margin: 0 8px;
+  border-radius: 10px;
+  color: $icon-color;
+  white-space: nowrap;
+
+  svg {
+    width: 21px;
+    height: 21px;
+    min-width: 21px;
+    flex-shrink: 0;
+  }
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  height: 44px;
+  padding: 0 13px;
+  margin: 0 8px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: $icon-color;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: left;
+  transition: color $speed $ease, background $speed $ease;
+
+  svg {
+    width: 21px;
+    height: 21px;
+    min-width: 21px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.1);
+  }
+}
+
+// ─── Área principal ─────────────────────────────────────────────────────────
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+// ─── Responsivo ─────────────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .app-shell { flex-direction: column; }
+
+  .sidebar {
+    width: 100% !important;
+    height: 60px;
+    flex-direction: row;
+    align-items: center;
+
+    .sidebar-top { border-bottom: none; border-right: 1px solid $divider; padding: 0 12px; }
+    .sidebar-nav { flex-direction: row; overflow-x: auto; padding: 0 8px; }
+    .sidebar-bottom { flex-direction: row; border-top: none; border-left: 1px solid $divider; padding: 0 8px; }
+    .nav-section-label { display: none; }
+    .nav-label { display: none; }
+    .nav-item { margin: 0 2px; }
+  }
+}

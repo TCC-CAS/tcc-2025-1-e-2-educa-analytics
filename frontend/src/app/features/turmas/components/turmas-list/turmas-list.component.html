@@ -1,0 +1,242 @@
+<div class="turmas-page">
+
+  <!-- Modal: Educandos da turma -->
+  <div class="modal-overlay" *ngIf="turmaVisualizacao" (click)="fecharEducandos()">
+    <div class="modal modal-educandos" (click)="$event.stopPropagation()">
+      <div class="modal-educandos-header">
+        <div>
+          <h3 class="modal-title" style="text-align:left">Educandos — {{ turmaVisualizacao.nome }}</h3>
+          <p class="modal-message" style="text-align:left">{{ turmaVisualizacao.serie }} &bull; {{ turmaVisualizacao.turno }} &bull; {{ turmaVisualizacao.sala }}</p>
+        </div>
+        <button type="button" class="btn-fechar" (click)="fecharEducandos()" title="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="alunos-table" *ngIf="educandosTurma.length > 0; else semAlunos">
+        <div class="alunos-head">
+          <span>Nome</span>
+          <span>Série</span>
+          <span>Status</span>
+        </div>
+        <div class="alunos-row" *ngFor="let aluno of educandosTurma">
+          <span>{{ aluno.nome }}</span>
+          <span>{{ aluno.serie }}</span>
+          <span>
+            <span class="status-badge"
+              [class.ativa]="aluno.status === 'Ativa'"
+              [class.trancada]="aluno.status === 'Trancada'"
+              [class.cancelada]="aluno.status === 'Cancelada'">
+              {{ aluno.status }}
+            </span>
+          </span>
+        </div>
+      </div>
+      <ng-template #semAlunos>
+        <p class="alunos-vazio">Nenhum educando matriculado nesta turma.</p>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação -->
+  <div class="modal-overlay" *ngIf="confirm.visible" (click)="cancelConfirm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon" [class.danger]="confirm.danger">
+        <svg *ngIf="!confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg *ngIf="confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="10.29 3.86 1.82 18 2 18 22 18 21.73 18 13.71 3.86 12 1 10.29 3.86"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h3 class="modal-title">{{ confirm.title }}</h3>
+      <p class="modal-message">{{ confirm.message }}</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
+        <button type="button" class="modal-btn" [class.modal-confirm-danger]="confirm.danger" [class.modal-confirm]="!confirm.danger" (click)="confirmAction()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de alteração em lote -->
+  <div class="modal-overlay" *ngIf="modalLoteVisible" (click)="cancelarLote()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </div>
+      <h3 class="modal-title">Alterar status em lote</h3>
+      <p class="modal-message">{{ totalSelecionados }} turma{{ totalSelecionados !== 1 ? 's' : '' }} selecionada{{ totalSelecionados !== 1 ? 's' : '' }}. Selecione o novo status:</p>
+      <div class="modal-select-group">
+        <label>Novo status</label>
+        <select [(ngModel)]="statusLote">
+          <option value="ativa">Ativa</option>
+          <option value="inativa">Inativa</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelarLote()">Cancelar</button>
+        <button type="button" class="modal-btn modal-confirm" (click)="confirmarLote()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+  <header class="page-header">
+    <div>
+      <h1>Lista de Turmas</h1>
+      <p>Consulte, filtre e gerencie turmas cadastradas.</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/turmas/nova">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Cadastrar turma
+    </a>
+  </header>
+
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-card">
+    <div class="filters-header">
+      <span class="filters-titulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filtros
+      </span>
+      <span class="filters-ativos-badge" *ngIf="filtrosAtivos > 0">{{ filtrosAtivos }}</span>
+      <span class="resultado-count"><strong>{{ filteredTurmas.length }}</strong> turma(s) encontrada(s)</span>
+      <button type="button" class="btn-limpar" *ngIf="filtrosAtivos > 0" (click)="resetFilters()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Limpar
+      </button>
+    </div>
+    <div class="filters-grid">
+      <div class="filter-field">
+        <label for="filtroCodigo">Código</label>
+        <input id="filtroCodigo" type="text" placeholder=" " [(ngModel)]="filtro.codigo" (input)="applyFilters()" />
+      </div>
+      <div class="filter-field">
+        <label for="filtroNome">Turma</label>
+        <input id="filtroNome" type="text" placeholder=" " [(ngModel)]="filtro.nome" (input)="applyFilters()" />
+      </div>
+      <div class="filter-field">
+        <label for="filtroTurno">Período</label>
+        <div class="select-wrapper">
+          <select id="filtroTurno" [(ngModel)]="filtro.turno" (change)="applyFilters()">
+            <option value="">Todos</option>
+            <option value="Manhã">Manhã</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noite">Noite</option>
+            <option value="Integral">Integral</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-field">
+        <label for="filtroAnoLetivo">Ano Letivo</label>
+        <div class="select-wrapper">
+          <select id="filtroAnoLetivo" [(ngModel)]="filtro.anoLetivo" (change)="applyFilters()">
+            <option value="">Todos</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-field">
+        <label for="filtroSerie">Série</label>
+        <div class="select-wrapper">
+          <select id="filtroSerie" [(ngModel)]="filtro.serie" (change)="applyFilters()">
+            <option value="">Todas</option>
+            <option value="1º Ano">1º Ano</option>
+            <option value="2º Ano">2º Ano</option>
+            <option value="3º Ano">3º Ano</option>
+            <option value="4º Ano">4º Ano</option>
+            <option value="5º Ano">5º Ano</option>
+            <option value="6º Ano">6º Ano</option>
+            <option value="7º Ano">7º Ano</option>
+            <option value="8º Ano">8º Ano</option>
+            <option value="9º Ano">9º Ano</option>
+            <option value="1ª Série EM">1ª Série EM</option>
+            <option value="2ª Série EM">2ª Série EM</option>
+            <option value="3ª Série EM">3ª Série EM</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-field">
+        <label for="filtroStatus">Status</label>
+        <div class="select-wrapper">
+          <select id="filtroStatus" [(ngModel)]="filtro.status" (change)="applyFilters()">
+            <option value="">Todos</option>
+            <option value="ativa">Ativa</option>
+            <option value="inativa">Inativa</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de ações em lote -->
+  <div class="lote-bar" *ngIf="totalSelecionados > 0">
+    <span class="lote-info">{{ totalSelecionados }} turma{{ totalSelecionados !== 1 ? 's' : '' }} selecionada{{ totalSelecionados !== 1 ? 's' : '' }}</span>
+    <div class="lote-acoes">
+      <select [(ngModel)]="statusLote" class="lote-select">
+        <option value="ativa">Ativa</option>
+        <option value="inativa">Inativa</option>
+      </select>
+      <button type="button" class="btn btn-primary" style="height:36px;font-size:.85rem" (click)="abrirModalLote()">Alterar status</button>
+      <button type="button" class="btn btn-ghost" style="height:36px;font-size:.85rem" (click)="toggleAll(false)">Desmarcar tudo</button>
+    </div>
+  </div>
+
+  <section class="table">
+    <div class="table-head">
+      <span><input type="checkbox" [checked]="allSelected()" (change)="toggleAll($any($event.target).checked)" title="Selecionar todos"></span>
+      <span>Código</span>
+      <span>Turma</span>
+      <span>Período</span>
+      <span>Ano Letivo</span>
+      <span>Série</span>
+      <span>Sala</span>
+      <span>Status</span>
+      <span>Ações</span>
+    </div>
+
+    <div class="table-row" *ngFor="let turma of filteredTurmas" [class.selecionada]="isSelected(turma.id)">
+      <span>
+        <input type="checkbox" [checked]="isSelected(turma.id)" (change)="toggleSelection(turma.id, $any($event.target).checked)" />
+      </span>
+      <span>{{ turma.codigo }}</span>
+      <span>{{ turma.nome }}</span>
+      <span>{{ turma.turno }}</span>
+      <span>{{ turma.anoLetivo }}</span>
+      <span>{{ turma.serie }}</span>
+      <span>{{ turma.sala }}</span>
+      <span>
+        <span class="status" [class.inactive]="turma.status === 'inativa'">
+          {{ turma.status === 'ativa' ? 'Ativa' : 'Inativa' }}
+        </span>
+      </span>
+      <span class="row-actions">
+        <button type="button" class="btn-icone" title="Ver educandos" (click)="verEducandos(turma)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </button>
+        <button type="button" class="btn-icone" title="Editar" (click)="editTurma(turma)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button type="button" class="btn-icone"
+          [class.btn-icone-ativar]="turma.status === 'inativa'"
+          [class.btn-icone-desativar]="turma.status === 'ativa'"
+          [title]="turma.status === 'ativa' ? 'Desativar' : 'Ativar'"
+          (click)="toggleStatus(turma)">
+          <svg *ngIf="turma.status === 'ativa'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <svg *ngIf="turma.status === 'inativa'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 8 16 12 12 16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </button>
+        <button type="button" class="btn-icone btn-icone-danger" title="Excluir" (click)="deleteTurma(turma)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </span>
+    </div>
+
+    <div class="empty" *ngIf="filteredTurmas.length === 0">
+      Nenhuma turma encontrada.
+    </div>
+  </section>
+
+  </div><!-- /page-content -->
+</div>

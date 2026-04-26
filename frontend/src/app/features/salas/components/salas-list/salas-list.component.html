@@ -1,0 +1,175 @@
+<div class="salas-page">
+
+  <!-- Modal de Confirmação -->
+  <div class="modal-overlay" *ngIf="confirm.visible" (click)="cancelConfirm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon" [class.danger]="confirm.danger">
+        <svg *ngIf="!confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg *ngIf="confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="10.29 3.86 1.82 18 2 18 22 18 21.73 18 13.71 3.86 12 1 10.29 3.86"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h3 class="modal-title">{{ confirm.title }}</h3>
+      <p class="modal-message">{{ confirm.message }}</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
+        <button type="button" class="modal-btn" [class.modal-confirm-danger]="confirm.danger" [class.modal-confirm]="!confirm.danger" (click)="confirmAction()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de alteração em lote -->
+  <div class="modal-overlay" *ngIf="modalLoteVisible" (click)="cancelarLote()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </div>
+      <h3 class="modal-title">Alterar status em lote</h3>
+      <p class="modal-message">{{ totalSelecionados }} sala{{ totalSelecionados !== 1 ? 's' : '' }} selecionada{{ totalSelecionados !== 1 ? 's' : '' }}. Selecione o novo status:</p>
+      <div class="modal-select-group">
+        <label>Novo status</label>
+        <select [(ngModel)]="statusLote">
+          <option value="ativa">Ativa</option>
+          <option value="inativa">Inativa</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelarLote()">Cancelar</button>
+        <button type="button" class="modal-btn modal-confirm" (click)="confirmarLote()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <header class="page-header">
+    <div>
+      <h1>Lista de Salas</h1>
+      <p>Consulte, filtre e gerencie as salas cadastradas.</p>
+    </div>
+  </header>
+
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+
+  <!-- Filtros -->
+  <div class="toolbar">
+    <a class="primary" routerLink="/salas/nova">+ Cadastrar sala</a>
+  </div>
+  <section class="filters">
+    <div class="field">
+      <label for="filtroCodigo">Código</label>
+      <input id="filtroCodigo" type="text" [(ngModel)]="filtro.codigo" (input)="applyFilters()" placeholder="Ex: 101" />
+    </div>
+    <div class="field">
+      <label for="filtroNome">Nome</label>
+      <input id="filtroNome" type="text" [(ngModel)]="filtro.nome" (input)="applyFilters()" placeholder="Ex: Sala 101" />
+    </div>
+    <div class="field">
+      <label for="filtroTipo">Tipo</label>
+      <select id="filtroTipo" [(ngModel)]="filtro.tipo" (change)="applyFilters()">
+        <option value="">Todos</option>
+        <option value="sala-de-aula">Sala de Aula</option>
+        <option value="laboratorio">Laboratório</option>
+        <option value="auditorio">Auditório</option>
+        <option value="biblioteca">Biblioteca</option>
+        <option value="quadra">Quadra</option>
+        <option value="outro">Outro</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="filtroStatus">Status</label>
+      <select id="filtroStatus" [(ngModel)]="filtro.status" (change)="applyFilters()">
+        <option value="">Todos</option>
+        <option value="ativa">Ativa</option>
+        <option value="inativa">Inativa</option>
+      </select>
+    </div>
+    <button type="button" class="ghost" (click)="resetFilters()">Limpar filtros</button>
+  </section>
+
+  <!-- Barra de ações em lote -->
+  <div class="lote-bar" *ngIf="totalSelecionados > 0">
+    <span class="lote-info">{{ totalSelecionados }} sala{{ totalSelecionados !== 1 ? 's' : '' }} selecionada{{ totalSelecionados !== 1 ? 's' : '' }}</span>
+    <div class="lote-acoes">
+      <select [(ngModel)]="statusLote" class="lote-select">
+        <option value="ativa">Ativa</option>
+        <option value="inativa">Inativa</option>
+      </select>
+      <button type="button" class="lote-btn-primary" (click)="abrirModalLote()">Alterar status</button>
+      <button type="button" class="ghost" (click)="toggleAll(false)">Desmarcar tudo</button>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <section class="table">
+    <div class="table-head">
+      <span><input type="checkbox" [checked]="allSelected()" (change)="toggleAll($any($event.target).checked)" title="Selecionar todos"></span>
+      <span>Código</span>
+      <span>Nome</span>
+      <span>Tipo</span>
+      <span>Capacidade</span>
+      <span>Bloco / Andar</span>
+      <span>Recursos</span>
+      <span>Status</span>
+      <span>Ações</span>
+    </div>
+
+    <div class="table-row" *ngFor="let sala of filteredSalas" [class.selecionada]="isSelected(sala.id)">
+      <span>
+        <input type="checkbox" [checked]="isSelected(sala.id)" (change)="toggleSelection(sala.id, $any($event.target).checked)" />
+      </span>
+      <span>{{ sala.codigo }}</span>
+      <span>{{ sala.nome }}</span>
+      <span>{{ tiposLabel[sala.tipo] }}</span>
+      <span>{{ sala.capacidade }} educandos</span>
+      <span>{{ sala.bloco ? 'Bloco ' + sala.bloco : '—' }}{{ sala.andar ? ' · ' + sala.andar : '' }}</span>
+      <span class="recursos">
+        <span class="recurso-tag" *ngIf="sala.projetor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 2l-4 5-4-5"/></svg>
+          Projetor
+        </span>
+        <span class="recurso-tag" *ngIf="sala.arCondicionado">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/></svg>
+          Ar-cond.
+        </span>
+        <span class="recurso-tag" *ngIf="sala.ventilador">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 12c0-2.21 1.79-4 4-4a4 4 0 0 1 0 8c-2.21 0-4-1.79-4-4z"/><path d="M12 12c2.21 0 4-1.79 4-4a4 4 0 0 0-8 0c0 2.21 1.79 4 4 4z"/><path d="M12 12c0 2.21-1.79 4-4 4a4 4 0 0 1 0-8c2.21 0 4 1.79 4 4z"/><path d="M12 12c-2.21 0-4 1.79-4 4a4 4 0 0 0 8 0c0-2.21-1.79-4-4-4z"/><circle cx="12" cy="12" r="2"/></svg>
+          Ventilador
+        </span>
+        <span class="recurso-tag" *ngIf="sala.computadores">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Computadores
+        </span>
+        <span class="recurso-tag acess" *ngIf="sala.acessibilidade">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M15.09 8.26A5 5 0 0 1 17 12v8"/><path d="M9 12H7a2 2 0 0 0-2 2v6"/><path d="M9 8v4l3 3"/></svg>
+          Acessível
+        </span>
+        <span class="sem-recursos" *ngIf="!sala.projetor && !sala.arCondicionado && !sala.ventilador && !sala.computadores && !sala.acessibilidade">—</span>
+      </span>
+      <span>
+        <span class="status" [class.inactive]="sala.status === 'inativa'">
+          {{ sala.status === 'ativa' ? 'Ativa' : 'Inativa' }}
+        </span>
+      </span>
+      <span class="row-actions">
+        <button type="button" class="btn-icone" title="Editar" (click)="editSala(sala)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button type="button" class="btn-icone"
+                [class.btn-icone-ativar]="sala.status === 'inativa'"
+                [class.btn-icone-desativar]="sala.status === 'ativa'"
+                [title]="sala.status === 'ativa' ? 'Desativar' : 'Ativar'"
+                (click)="toggleStatus(sala)">
+          <svg *ngIf="sala.status === 'ativa'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <svg *ngIf="sala.status === 'inativa'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 8 16 12 12 16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </button>
+        <button type="button" class="btn-icone btn-icone-danger" title="Excluir" (click)="deleteSala(sala)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </span>
+    </div>
+
+    <div class="empty" *ngIf="filteredSalas.length === 0">
+      Nenhuma sala encontrada.
+    </div>
+  </section>
+
+</div>

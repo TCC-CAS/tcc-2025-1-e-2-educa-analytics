@@ -1,0 +1,673 @@
+// ═══════════════════════════════════════════════════════════
+// Light Professional Theme
+// ═══════════════════════════════════════════════════════════
+$primary:    #2563eb;
+$danger:     #dc2626;
+$success:    #16a34a;
+$warning:    #d97706;
+$accent:     #7c3aed;
+$surface:    #ffffff;
+$border:     #e2e8f0;
+$text:       #1e293b;
+$text-muted: #64748b;
+$radius:     10px;
+:host {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  flex-shrink: 1;
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.07) 1px, transparent 1px);
+  background-size: 40px 40px;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  color: $text;
+}
+
+.usuario-form-page {
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 2.5rem 2rem 3rem;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  @media (max-width: 768px) { padding: 1.5rem 1rem 2rem; }
+}
+
+// ── Page header ───────────────────────────────────────────────
+.page-header {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(37,99,235,0.15);
+  border-left: 4px solid $primary;
+  border-radius: 12px;
+  padding: 1.1rem 1.5rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+
+  h1 {
+    margin: 0 0 .2rem;
+    font-size: 1.75rem; font-weight: 800; color: $primary;
+    text-transform: uppercase; letter-spacing: -0.01em;
+  }
+  p { margin: 0; font-size: .95rem; color: $text-muted; }
+}
+
+.btn-voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  background: none;
+  border: none;
+  color: $primary;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: .25rem 0;
+  margin-bottom: .5rem;
+  opacity: .75;
+  transition: opacity .15s;
+  &:hover { opacity: 1; }
+}
+
+.required-legend { color: $danger; font-weight: 700; }
+
+// ── Checkbox groups ───────────────────────────────────────────
+.check-group {
+  margin-top: 1rem;
+
+  .check-group-label {
+    display: block;
+    font-size: .8rem;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: .6rem;
+  }
+}
+
+.check-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: .4rem .8rem;
+
+  &--inline {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+}
+
+.check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: .45rem;
+  padding: .45rem .6rem;
+  border: 1px solid $border;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+
+  &:hover { background: rgba(37,99,235,.04); border-color: rgba(37,99,235,.3); }
+
+  input[type="checkbox"] {
+    margin-top: 2px;
+    accent-color: $primary;
+    width: 14px; height: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .check-text {
+    font-size: .875rem;
+    font-weight: 500;
+    color: $text;
+    line-height: 1.3;
+  }
+
+  .check-area {
+    font-size: .75rem;
+    color: $text-muted;
+    display: none;
+  }
+}
+
+.check-vazio {
+  font-size: .85rem;
+  color: $text-muted;
+  font-style: italic;
+  margin: .4rem 0;
+}
+
+// ── Form wrapper ──────────────────────────────────────────────
+.form-wrapper {
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226,232,240,0.9);
+  border-radius: 12px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+.tabs {
+  display: flex;
+  gap: .4rem;
+  border-bottom: 2px solid $border;
+  padding-bottom: 0;
+  margin-bottom: -.25rem;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  height: 42px;
+  padding: 0 1.25rem;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  font-size: .875rem;
+  font-weight: 600;
+  color: $text-muted;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+
+  &:hover { color: $text; }
+
+  &.active {
+    color: $primary;
+    border-bottom-color: $primary;
+    font-weight: 700;
+  }
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  font-size: .72rem; font-weight: 800;
+  background: $border; color: $text-muted;
+  transition: background .15s, color .15s;
+
+  .tab.active & { background: $primary; color: #fff; }
+}
+
+// ── Tab panels ────────────────────────────────────────────────
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: fadeIn .18s ease;
+}
+
+// ── Field groups ──────────────────────────────────────────────
+.field-group {
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(226,232,240,0.9);
+  border-top: 3px solid $primary;
+  border-radius: 12px;
+  padding: 1.4rem 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+
+.group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 1.1rem;
+  font-size: .78rem; font-weight: 800; color: $primary;
+  text-transform: uppercase; letter-spacing: .09em;
+  padding-bottom: .7rem;
+  border-bottom: 2px solid rgba(37,99,235,0.1);
+}
+
+// ── Field grid & fields ───────────────────────────────────────
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 560px) { grid-template-columns: 1fr; }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+
+  &.col-2   { grid-column: span 2; }
+  &.col-full, &.full-width { grid-column: 1 / -1; }
+
+  > span {
+    font-size: .8rem; font-weight: 700; color: $text-muted;
+    text-transform: uppercase; letter-spacing: .07em;
+  }
+
+  input, select, textarea {
+    height: 42px; padding: 0 .9rem;
+    border: 1.5px solid $border; border-radius: 8px;
+    font-size: .9rem; color: $text; background: #fff;
+    outline: none; box-sizing: border-box; width: 100%;
+    font-family: inherit; appearance: none;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+
+    &::placeholder { color: #b0bec5; }
+    &:focus { border-color: $primary; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: rgba(37,99,235,0.01); }
+    &[readonly] { background: #f8fafc; color: $text-muted; cursor: default; }
+  }
+
+  textarea { height: auto; padding: .75rem .9rem; resize: vertical; min-height: 90px; }
+}
+
+// ── CEP ───────────────────────────────────────────────────────
+.cep-wrapper {
+  position: relative;
+
+  &.searching::after {
+    content: '';
+    position: absolute;
+    right: .75rem; top: 50%;
+    transform: translateY(-50%);
+    width: 14px; height: 14px;
+    border: 2px solid $primary;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+  }
+}
+
+.cep-erro { font-size: .78rem; color: $danger; font-weight: 600; }
+
+// ── Buttons ───────────────────────────────────────────────────
+button.primary,
+.btn-primary-form {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  height: 44px; padding: 0 1.75rem; border-radius: 10px;
+  font-size: .95rem; font-weight: 700; cursor: pointer; border: none;
+  background: linear-gradient(135deg, #3b82f6 0%, $primary 100%);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(37,99,235,0.3);
+  transition: background .15s, box-shadow .15s, transform .1s;
+  &:hover { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); box-shadow: 0 6px 20px rgba(37,99,235,0.4); transform: translateY(-1px); }
+  &:active { transform: translateY(1px); box-shadow: none; }
+}
+
+button.ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  height: 44px; padding: 0 1.35rem; border-radius: 10px;
+  font-size: .9rem; font-weight: 600; cursor: pointer;
+  background: transparent; color: $text-muted; border: 1.5px solid $border;
+  transition: background .15s, border-color .15s, color .15s;
+  &:hover { background: #f8fafc; color: $text; border-color: #94a3b8; }
+}
+
+// ── Form actions ──────────────────────────────────────────────
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  padding-top: .5rem;
+}
+
+.form-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .75rem;
+}
+
+.ml-auto { margin-left: auto; }
+
+// ── btn-add-formacao ──────────────────────────────────────────
+.btn-add-formacao {
+  display: inline-flex; align-items: center; gap: .35rem;
+  height: 28px; padding: 0 .75rem; border-radius: 6px;
+  font-size: .78rem; font-weight: 700; cursor: pointer;
+  background: rgba(37,99,235,0.06);
+  border: 1.5px solid rgba(37,99,235,0.22);
+  color: $primary;
+  transition: background .15s, border-color .15s;
+  svg { width: 13px; height: 13px; stroke: $primary; }
+  &:hover { background: rgba(37,99,235,0.12); border-color: $primary; }
+}
+
+// ── Formation mini-form ───────────────────────────────────────
+.formacao-form {
+  background: rgba(37,99,235,0.03);
+  border: 1.5px solid rgba(37,99,235,0.15);
+  border-radius: 10px;
+  padding: 1.1rem;
+  margin-bottom: .75rem;
+}
+
+.formacao-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .6rem;
+  margin-top: .85rem;
+}
+
+.btn-formacao-cancelar {
+  height: 36px; padding: 0 1rem; border-radius: 8px;
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  background: transparent; color: $text-muted; border: 1.5px solid $border;
+  transition: background .15s, color .15s, border-color .15s;
+  &:hover { background: #f8fafc; color: $text; border-color: #94a3b8; }
+}
+
+.btn-formacao-adicionar {
+  height: 36px; padding: 0 1rem; border-radius: 8px;
+  font-size: .85rem; font-weight: 700; cursor: pointer;
+  background: $primary; color: #fff; border: none;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+  transition: background .15s, box-shadow .15s, transform .1s;
+  &:hover { background: #1d4ed8; transform: translateY(-1px); }
+  &:active { transform: translateY(1px); }
+}
+
+// ── Formation cards list ──────────────────────────────────────
+.formacoes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  margin-top: .75rem;
+}
+
+.formacao-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid $border;
+  border-left: 3px solid $primary;
+  border-radius: 8px;
+  padding: .75rem 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.formacao-info {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.formacao-grau-badge {
+  display: inline-block;
+  padding: .15rem .55rem;
+  background: rgba(37,99,235,0.08);
+  color: $primary;
+  border: 1px solid rgba(37,99,235,0.2);
+  border-radius: 4px;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  align-self: flex-start;
+}
+
+.formacao-curso { font-size: .9rem; font-weight: 700; color: $text; }
+.formacao-inst  { font-size: .82rem; color: $text-muted; }
+.formacao-periodo { font-size: .78rem; color: $text-muted; }
+
+.btn-remover-formacao {
+  width: 30px; height: 30px; border-radius: 6px;
+  border: 1.5px solid $border; background: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: background .15s, border-color .15s;
+  svg { width: 14px; height: 14px; stroke: $text-muted; }
+  &:hover { background: #fee2e2; border-color: $danger; svg { stroke: $danger; } }
+}
+
+.formacoes-vazio {
+  font-size: .875rem; color: $text-muted;
+  text-align: center; padding: 1.25rem .5rem;
+  background: rgba(0,0,0,0.02);
+  border-radius: 8px; border: 1.5px dashed $border;
+  margin-top: .5rem;
+}
+
+// ── Validation panel ──────────────────────────────────────────
+.validacao-erros {
+  background: rgba(220,38,38,0.04);
+  border: 1.5px solid rgba(220,38,38,0.25);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.validacao-header {
+  display: flex; align-items: center; gap: .5rem;
+  margin-bottom: .75rem;
+  font-size: .875rem; color: $danger;
+  svg { flex-shrink: 0; stroke: $danger; }
+}
+
+.validacao-grupos { display: flex; flex-direction: column; gap: .5rem; }
+
+.validacao-grupo { display: flex; flex-direction: column; gap: .25rem; }
+
+.validacao-tab-link {
+  display: inline-flex; align-items: center; gap: .3rem;
+  background: none; border: none; cursor: pointer;
+  font-size: .82rem; font-weight: 700; color: $primary;
+  padding: 0; text-decoration: underline; text-underline-offset: 2px;
+  svg { width: 11px; height: 11px; stroke: $primary; }
+  &:hover { color: #1d4ed8; }
+}
+
+.validacao-campos {
+  margin: 0; padding-left: 1.2rem;
+  list-style: disc;
+  li { font-size: .82rem; color: $danger; }
+}
+
+@keyframes spin    { to { transform: translateY(-50%) rotate(360deg); } }
+@keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: translateY(0) } }
+
+// ── Modal overlay ─────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn .15s ease;
+}
+
+// ── Modal de confirmação (matrícula-style) ─────────────────────
+.modal-confirmacao {
+  background: $surface;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.22);
+  display: flex;
+  flex-direction: column;
+  animation: slideUp .2s ease;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid $border;
+
+  h2 { margin: 0; font-size: 1.1rem; font-weight: 700; color: $text; }
+  .modal-subtitle { margin: .2rem 0 0; font-size: .85rem; color: $text-muted; }
+  .modal-title-block { flex: 1; }
+}
+
+.modal-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.1rem; color: $text-muted; padding: .1rem;
+  line-height: 1;
+  transition: color .12s;
+  &:hover { color: $text; }
+  &.sucesso-close { position: absolute; top: 1rem; right: 1rem; }
+}
+
+// ── Corpo de confirmação ──────────────────────────────────────
+.confirmacao-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.conf-secao {
+  h3 {
+    margin: 0 0 .6rem;
+    font-size: .75rem; font-weight: 800; color: $primary;
+    text-transform: uppercase; letter-spacing: .08em;
+    padding-bottom: .4rem;
+    border-bottom: 1px solid rgba(37,99,235,0.12);
+  }
+}
+
+.conf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .5rem .75rem;
+
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+.conf-item {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+
+  span { font-size: .75rem; color: $text-muted; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  strong { font-size: .875rem; color: $text; font-weight: 600; word-break: break-word; }
+}
+
+.conf-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 8px;
+  padding: .7rem .9rem;
+  font-size: .82rem;
+  color: #92400e;
+  line-height: 1.5;
+  margin: 0;
+
+  svg { flex-shrink: 0; margin-top: .1rem; }
+}
+
+.conf-erro {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin: 0 1.5rem;
+  padding: .6rem .9rem;
+  background: rgba(220,38,38,0.06);
+  border: 1px solid rgba(220,38,38,0.25);
+  border-radius: 8px;
+  font-size: .82rem;
+  color: $danger;
+
+  svg { flex-shrink: 0; }
+}
+
+// ── Footer ────────────────────────────────────────────────────
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid $border;
+}
+
+.btn-secondary {
+  height: 40px; padding: 0 1.25rem; border-radius: 8px;
+  font-size: .875rem; font-weight: 600; cursor: pointer;
+  background: #f8fafc; color: $text; border: 1.5px solid $border;
+  transition: background .15s, border-color .15s;
+  &:hover { background: #f1f5f9; border-color: #94a3b8; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+.btn-confirmar {
+  height: 40px; padding: 0 1.5rem; border-radius: 8px;
+  font-size: .875rem; font-weight: 700; cursor: pointer;
+  background: $primary; color: #fff; border: none;
+  box-shadow: 0 2px 10px rgba(37,99,235,0.3);
+  transition: background .15s, box-shadow .15s, transform .1s;
+  &:hover { background: #1d4ed8; transform: translateY(-1px); }
+  &:active { transform: translateY(1px); }
+  &:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+}
+
+.loading-text {
+  display: inline-flex; align-items: center; gap: .5rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spinBtn .7s linear infinite;
+}
+@keyframes spinBtn { to { transform: rotate(360deg); } }
+
+// ── Tela de sucesso ───────────────────────────────────────────
+.confirmacao-sucesso {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.5rem 2rem 2rem;
+  text-align: center;
+  gap: .75rem;
+
+  h2 { margin: 0; font-size: 1.25rem; font-weight: 800; color: #1e8e3e; }
+  p  { margin: 0; font-size: .9rem; color: $text-muted; line-height: 1.5; }
+}
+
+.sucesso-icon { animation: popIn .3s cubic-bezier(.34,1.56,.64,1); }
+@keyframes popIn { from { opacity: 0; transform: scale(.5) } to { opacity: 1; transform: scale(1) } }
+
+.sucesso-email { font-size: .9rem !important; color: $text !important; }
+
+.sucesso-id {
+  background: rgba(37,99,235,0.06);
+  border: 1px solid rgba(37,99,235,0.18);
+  border-radius: 8px;
+  padding: .5rem 1rem;
+  font-size: .875rem !important;
+  color: $text !important;
+}
+
+.sucesso-actions {
+  margin-top: .5rem;
+  display: flex;
+  gap: .75rem;
+}

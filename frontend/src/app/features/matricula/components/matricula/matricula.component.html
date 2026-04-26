@@ -1,0 +1,626 @@
+<div class="matricula-page">
+  <div class="form-wrapper">
+
+  <button type="button" class="btn-voltar" (click)="voltarParaLista()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Voltar para lista de matrículas
+  </button>
+
+  <header class="page-header">
+    <div>
+      <h1>{{ modoRematricula ? 'Rematrícula de educando' : 'Matrícula de educandos' }}</h1>
+      <p>Preencha os dados do educando e do responsável. Campos marcados com <span class="required-legend">*</span> são obrigatórios.</p>
+    </div>
+  </header>
+
+  <!-- Banner de rematrícula -->
+  <div class="banner-rematricula" *ngIf="modoRematricula">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+    <span>Rematrícula referente à matrícula <strong>#{{ rematriculaOriginalId }}</strong>. Os dados do educando e responsável foram preenchidos automaticamente. Selecione a nova turma na aba <strong>Dados Escolares</strong>.</span>
+  </div>
+
+  <div class="tabs">
+    <button
+      type="button"
+      class="tab"
+      [class.active]="activeTab === 'dados'"
+      (click)="setTab('dados')"
+    >
+      <span class="tab-badge">1</span> Educando(a)
+    </button>
+    <button
+      type="button"
+      class="tab"
+      [class.active]="activeTab === 'responsaveis'"
+      (click)="setTab('responsaveis')"
+    >
+      <span class="tab-badge">2</span> Responsável
+    </button>
+    <button
+      type="button"
+      class="tab"
+      [class.active]="activeTab === 'escolar'"
+      (click)="setTab('escolar')"
+    >
+      <span class="tab-badge">3</span> Dados Escolares
+    </button>
+  </div>
+
+  <form class="form" novalidate>
+
+    <!-- ABA: DADOS DO EDUCANDO -->
+    <section class="tab-panel" *ngIf="activeTab === 'dados'">
+
+      <div class="field-group">
+        <h3 class="group-title">Identificação</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>Id Matrícula</span>
+            <input type="text" name="alunoIdMatricula" [(ngModel)]="matriculaId" readonly />
+          </label>
+          <label class="field required col-2">
+            <span>Nome completo</span>
+            <input type="text" name="alunoNome" [(ngModel)]="alunoNome" placeholder="Nome completo" autocomplete="name" required />
+          </label>
+          <label class="field required">
+            <span>Nacionalidade</span>
+            <input type="text" name="alunoNacionalidade" [(ngModel)]="alunoNacionalidade" placeholder="Ex: Brasileiro(a)" required />
+          </label>
+          <label class="field required">
+            <span>Gênero</span>
+            <select name="alunoGenero" [(ngModel)]="alunoGeneroSelecionado" (ngModelChange)="onAlunoGeneroChange($event)" required>
+              <option value="">Selecione</option>
+              <option value="mulher-cis">Mulher cis</option>
+              <option value="homem-cis">Homem cis</option>
+              <option value="homem-trans">Homem trans</option>
+              <option value="mulher-trans">Mulher trans</option>
+              <option value="agenero">Agênero</option>
+              <option value="genero-fluido">Gênero fluido</option>
+              <option value="bigenero">Bigênero</option>
+              <option value="demigenero">Demigênero</option>
+              <option value="intergenero">Intergênero</option>
+              <option value="nao-informar">Prefiro não informar</option>
+              <option value="outro">Outro</option>
+            </select>
+          </label>
+          <label class="field required" *ngIf="alunoGeneroOutro">
+            <span>Especifique o gênero</span>
+            <input type="text" name="alunoGeneroCustom" [(ngModel)]="alunoGeneroCustom" placeholder="Descreva seu gênero" required />
+          </label>
+          <label class="field required">
+            <span>Cor / Raça</span>
+            <select name="alunoCorRaca" [(ngModel)]="alunoCorRaca" required>
+              <option value="">Selecione</option>
+              <option value="Branca">Branca</option>
+              <option value="Preta">Preta</option>
+              <option value="Parda">Parda</option>
+              <option value="Amarela">Amarela</option>
+              <option value="Indígena">Indígena</option>
+              <option value="Prefiro não informar">Prefiro não informar</option>
+            </select>
+          </label>
+          <label class="field required">
+            <span>Data de nascimento</span>
+            <input type="date" name="alunoNascimento" [(ngModel)]="alunoNascimento" [min]="minDataNasc" [max]="maxDataNasc" (ngModelChange)="onAlunoNascimentoChange($event)" required />
+          </label>
+          <label class="field">
+            <span>Idade</span>
+            <input type="text" name="alunoIdade" [value]="alunoIdade !== null ? alunoIdade + ' anos' : ''" placeholder="Calculada automaticamente" readonly />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Endereço</h3>
+        <div class="field-grid" [class.address-loading]="cepLoadingAluno">
+          <label class="field required">
+            <span>CEP</span>
+            <div class="cep-wrapper" [class.searching]="cepLoadingAluno">
+              <input type="text" name="alunoCep" [(ngModel)]="alunoEndereco.cep" placeholder="00000-000" maxlength="9" inputmode="numeric" (blur)="buscarCepAluno()" required />
+            </div>
+            <span class="cep-erro" *ngIf="cepErroAluno">CEP não encontrado</span>
+          </label>
+          <label class="field required col-2">
+            <span>Endereço</span>
+            <input type="text" name="alunoEndereco" [(ngModel)]="alunoEndereco.logradouro" placeholder="Rua, Avenida..." autocomplete="street-address" required />
+          </label>
+          <label class="field required">
+            <span>Número</span>
+            <input type="text" name="alunoNumero" [(ngModel)]="alunoEndereco.numero" placeholder="Ex: 123" inputmode="numeric" required />
+          </label>
+          <label class="field">
+            <span>Complemento</span>
+            <input type="text" name="alunoComplemento" [(ngModel)]="alunoEndereco.complemento" placeholder="Apto, Bloco..." />
+          </label>
+          <label class="field required">
+            <span>Bairro</span>
+            <input type="text" name="alunoBairro" [(ngModel)]="alunoEndereco.bairro" placeholder="Nome do bairro" required />
+          </label>
+          <label class="field required">
+            <span>UF</span>
+            <input type="text" name="alunoUf" [(ngModel)]="alunoEndereco.uf" placeholder="SP" maxlength="2" style="text-transform:uppercase" required />
+          </label>
+          <label class="field required">
+            <span>Cidade</span>
+            <input type="text" name="alunoCidade" [(ngModel)]="alunoEndereco.cidade" placeholder="Nome da cidade" autocomplete="address-level2" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Contato</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>Telefone</span>
+            <input type="tel" name="alunoTelefone" [(ngModel)]="alunoTelefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="tel" (input)="mascaraTelefone($event)" required />
+          </label>
+          <label class="field required">
+            <span>Email</span>
+            <input type="email" name="alunoEmail" [(ngModel)]="alunoEmail" placeholder="email@exemplo.com" autocomplete="email" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Documentos</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>RG</span>
+            <input type="text" name="alunoRg" [(ngModel)]="alunoRg" placeholder="00.000.000-0" maxlength="12" (input)="mascaraRg($event)" required />
+          </label>
+          <label class="field required">
+            <span>Órgão emissor</span>
+            <input type="text" name="alunoOrgaoEmissor" [(ngModel)]="alunoOrgaoEmissor" placeholder="Ex: SSP" required />
+          </label>
+          <label class="field required">
+            <span>Estado emissor</span>
+            <input type="text" name="alunoEstadoEmissor" [(ngModel)]="alunoEstadoEmissor" placeholder="SP" maxlength="2" required />
+          </label>
+          <label class="field required">
+            <span>CPF</span>
+            <input type="text" name="alunoCpf" [(ngModel)]="alunoCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" (input)="mascaraCpf($event)" required />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <div class="form-actions" *ngIf="activeTab === 'dados'">
+      <button type="button" class="primary ml-auto" (click)="nextTab()">
+        Avançar
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 10h10M12 7l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <!-- ABA: DADOS DO RESPONSÁVEL -->
+    <section class="tab-panel" *ngIf="activeTab === 'responsaveis'">
+
+      <div class="field-group">
+        <h3 class="group-title">Identificação</h3>
+        <div class="field-grid">
+          <label class="field">
+            <span>Id Matrícula do responsável</span>
+            <input type="text" name="respMatricula" [(ngModel)]="respMatriculaId" readonly />
+          </label>
+          <label class="field required col-2">
+            <span>Nome completo</span>
+            <input type="text" name="respNome" [(ngModel)]="respNome" placeholder="Nome completo" autocomplete="name" required />
+          </label>
+          <label class="field required">
+            <span>Nacionalidade</span>
+            <input type="text" name="respNacionalidade" [(ngModel)]="respNacionalidade" placeholder="Ex: Brasileiro(a)" required />
+          </label>
+          <label class="field required">
+            <span>Gênero</span>
+            <select name="respGenero" [(ngModel)]="respGeneroSelecionado" (ngModelChange)="onRespGeneroChange($event)" required>
+              <option value="">Selecione</option>
+              <option value="mulher-cis">Mulher cis</option>
+              <option value="homem-cis">Homem cis</option>
+              <option value="homem-trans">Homem trans</option>
+              <option value="mulher-trans">Mulher trans</option>
+              <option value="agenero">Agênero</option>
+              <option value="genero-fluido">Gênero fluido</option>
+              <option value="bigenero">Bigênero</option>
+              <option value="demigenero">Demigênero</option>
+              <option value="intergenero">Intergênero</option>
+              <option value="nao-informar">Prefiro não informar</option>
+              <option value="outro">Outro</option>
+            </select>
+          </label>
+          <label class="field required" *ngIf="respGeneroOutro">
+            <span>Especifique o gênero</span>
+            <input type="text" name="respGeneroCustom" [(ngModel)]="respGeneroCustom" placeholder="Descreva seu gênero" required />
+          </label>
+          <label class="field required">
+            <span>Cor / Raça</span>
+            <select name="respCorRaca" [(ngModel)]="respCorRaca" required>
+              <option value="">Selecione</option>
+              <option value="Branca">Branca</option>
+              <option value="Preta">Preta</option>
+              <option value="Parda">Parda</option>
+              <option value="Amarela">Amarela</option>
+              <option value="Indígena">Indígena</option>
+              <option value="Prefiro não informar">Prefiro não informar</option>
+            </select>
+          </label>
+          <label class="field required">
+            <span>Data de nascimento</span>
+            <input type="date" name="respNascimento" [(ngModel)]="respNascimento" [min]="minDataNasc" [max]="maxDataNasc" (ngModelChange)="onRespNascimentoChange($event)" required />
+          </label>
+          <label class="field">
+            <span>Idade</span>
+            <input type="text" name="respIdade" [value]="respIdade !== null ? respIdade + ' anos' : ''" placeholder="Calculada automaticamente" readonly />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Endereço</h3>
+        <label class="same-address-check">
+          <input type="checkbox" [(ngModel)]="useSameAddress" (change)="toggleSameAddress()" name="useSameAddress" />
+          <span>Usar mesmo endereço do educando</span>
+        </label>
+        <div class="field-grid" [class.address-loading]="cepLoadingResp" [class.disabled-grid]="useSameAddress">
+          <label class="field required">
+            <span>CEP</span>
+            <div class="cep-wrapper" [class.searching]="cepLoadingResp">
+              <input type="text" name="respCep" [(ngModel)]="respEndereco.cep" placeholder="00000-000" maxlength="9" inputmode="numeric" [disabled]="useSameAddress" (blur)="buscarCepResp()" required />
+            </div>
+            <span class="cep-erro" *ngIf="cepErroResp">CEP não encontrado</span>
+          </label>
+          <label class="field required col-2">
+            <span>Endereço</span>
+            <input type="text" name="respEndereco" [(ngModel)]="respEndereco.logradouro" placeholder="Rua, Avenida..." autocomplete="street-address" [disabled]="useSameAddress" required />
+          </label>
+          <label class="field required">
+            <span>Número</span>
+            <input type="text" name="respNumero" [(ngModel)]="respEndereco.numero" placeholder="Ex: 123" inputmode="numeric" [disabled]="useSameAddress" required />
+          </label>
+          <label class="field">
+            <span>Complemento</span>
+            <input type="text" name="respComplemento" [(ngModel)]="respEndereco.complemento" placeholder="Apto, Bloco..." [disabled]="useSameAddress" />
+          </label>
+          <label class="field required">
+            <span>Bairro</span>
+            <input type="text" name="respBairro" [(ngModel)]="respEndereco.bairro" placeholder="Nome do bairro" [disabled]="useSameAddress" required />
+          </label>
+          <label class="field required">
+            <span>UF</span>
+            <input type="text" name="respUf" [(ngModel)]="respEndereco.uf" placeholder="SP" maxlength="2" style="text-transform:uppercase" [disabled]="useSameAddress" required />
+          </label>
+          <label class="field required">
+            <span>Cidade</span>
+            <input type="text" name="respCidade" [(ngModel)]="respEndereco.cidade" placeholder="Nome da cidade" autocomplete="address-level2" [disabled]="useSameAddress" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Contato</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>Telefone</span>
+            <input type="tel" name="respTelefone" [(ngModel)]="respTelefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="tel" (input)="mascaraTelefone($event)" required />
+          </label>
+          <label class="field required">
+            <span>Email</span>
+            <input type="email" name="respEmail" [(ngModel)]="respEmail" placeholder="email@exemplo.com" autocomplete="email" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h3 class="group-title">Documentos</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>RG</span>
+            <input type="text" name="respRg" [(ngModel)]="respRg" placeholder="00.000.000-0" maxlength="12" (input)="mascaraRg($event)" required />
+          </label>
+          <label class="field required">
+            <span>Órgão emissor</span>
+            <input type="text" name="respOrgaoEmissor" [(ngModel)]="respOrgaoEmissor" placeholder="Ex: SSP" required />
+          </label>
+          <label class="field required">
+            <span>Estado emissor</span>
+            <input type="text" name="respEstadoEmissor" [(ngModel)]="respEstadoEmissor" placeholder="SP" maxlength="2" required />
+          </label>
+          <label class="field required">
+            <span>CPF</span>
+            <input type="text" name="respCpf" [(ngModel)]="respCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" (input)="mascaraCpf($event)" required />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <div class="form-actions" *ngIf="activeTab === 'responsaveis'">
+      <button type="button" class="primary ml-auto" (click)="setTab('escolar')">
+        Avançar
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 10h10M12 7l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <!-- ABA: DADOS ESCOLARES -->
+    <section class="tab-panel" *ngIf="activeTab === 'escolar'">
+
+      <div class="field-group">
+        <h3 class="group-title">Informações Escolares</h3>
+        <div class="field-grid">
+
+          <!-- 1. Ano letivo -->
+          <label class="field required">
+            <span>Ano letivo</span>
+            <input type="text" name="anoLetivo" [(ngModel)]="anoLetivo" (ngModelChange)="onAnoLetivoChange($event)" placeholder="Ex: 2026" maxlength="4" required />
+          </label>
+
+          <!-- 2. Série (filtrada pelo ano) -->
+          <label class="field required">
+            <span>Série</span>
+            <select name="serie" [(ngModel)]="serie" (ngModelChange)="onSerieChange($event)" required [disabled]="!anoLetivo">
+              <option value="">Selecione</option>
+              <option *ngFor="let s of seriesDisponiveis" [value]="s">{{ s }}</option>
+            </select>
+          </label>
+
+          <!-- 3. Período (filtrado pelo ano + série) -->
+          <label class="field required">
+            <span>Período</span>
+            <select name="periodo" [(ngModel)]="periodo" (ngModelChange)="onPeriodoChange($event)" required [disabled]="!serie">
+              <option value="">Selecione</option>
+              <option *ngFor="let p of periodosDisponiveis" [value]="p.value">{{ p.label }}</option>
+            </select>
+          </label>
+
+          <!-- 4. Turma: visualização de vagas + confirmação pelo modal -->
+          <div class="field required turma-field">
+            <span>Turma</span>
+            <div class="turma-selector">
+              <button type="button" class="btn-vagas" (click)="abrirModal()" [disabled]="!periodo" title="Ver mapa de vagas das turmas disponíveis">
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="11" y="2" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="2" y="11" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="11" y="11" width="7" height="7" rx="1.5" fill="currentColor"/></svg>
+                Ver vagas
+              </button>
+              <span class="turma-selecionada-nome" *ngIf="turmaSelecionada">
+                {{ turmaConfirmada?.nome ?? turmaSelecionada }}
+              </span>
+              <span class="badge-vagas" *ngIf="turmaSelecionada" [class.cheia]="vagasDisponiveisConfirmadas === 0">
+                {{ vagasDisponiveisConfirmadas === 0 ? 'Turma lotada' : vagasDisponiveisConfirmadas + ' vaga(s) disponível(is)' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- 5. Campos preenchidos automaticamente ao confirmar a turma -->
+          <label class="field">
+            <span>Código da turma</span>
+            <input type="text" name="codigoTurma" [(ngModel)]="codigoTurma" placeholder="Confirmado pelo mapa de vagas" readonly />
+          </label>
+
+          <label class="field">
+            <span>Início das aulas</span>
+            <input type="date" name="dataInicio" [(ngModel)]="dataInicio" readonly />
+          </label>
+
+          <label class="field">
+            <span>Término das aulas</span>
+            <input type="date" name="dataTermino" [(ngModel)]="dataTermino" readonly />
+          </label>
+
+          <label class="field">
+            <span>Sala</span>
+            <input type="text" name="sala" [(ngModel)]="sala" placeholder="Confirmada pelo mapa de vagas" readonly />
+          </label>
+
+        </div>
+      </div>
+
+    </section>
+
+    <div class="form-actions" *ngIf="activeTab === 'escolar'">
+
+      <!-- Painel de erros de validação -->
+      <div class="validacao-erros" *ngIf="mostrarErros && errosValidacao.length > 0">
+        <div class="validacao-header">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#dc2626" stroke-width="1.5"/><path d="M10 6v4M10 14h.01" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <strong>Preencha os campos obrigatórios antes de continuar</strong>
+        </div>
+        <div class="validacao-grupos">
+          <div class="validacao-grupo" *ngFor="let grupo of errosValidacao">
+            <button type="button" class="validacao-tab-link" (click)="setTab(grupo.tab)">
+              {{ grupo.tabLabel }}
+              <svg width="11" height="11" viewBox="0 0 20 20" fill="none"><path d="M5 10h10M12 7l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <ul class="validacao-campos">
+              <li *ngFor="let campo of grupo.campos">{{ campo }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="primary ml-auto" (click)="abrirConfirmacao()">
+        Realizar matrícula
+      </button>
+    </div>
+
+  </form>
+  </div>
+</div>
+
+<!--  MODAL DE CONFIRMAÇÃO ═ -->
+<div class="modal-overlay" *ngIf="modalConfirmacaoAberto" (click)="fecharConfirmacao()">
+  <div class="modal-confirmacao" (click)="$event.stopPropagation()">
+
+    <!--  TELA DE SUCESSO  -->
+    <ng-container *ngIf="matriculaRealizada">
+      <div class="confirmacao-sucesso">
+        <button type="button" class="modal-close sucesso-close" (click)="voltarParaLista()" title="Voltar para a lista de matrículas">&#x2715;</button>
+        <div class="sucesso-icon">
+          <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+            <circle cx="26" cy="26" r="25" stroke="#1e8e3e" stroke-width="2" fill="#e6f4ea"/>
+            <path d="M14 27l8 8 16-16" stroke="#1e8e3e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>Matrícula realizada!</h2>
+        <p>Os e-mails com o link de criação de senha foram enviados para:</p>
+        <ul class="sucesso-emails">
+          <li><strong>Educando(a):</strong> {{ alunoEmail || '(sem e-mail)' }}</li>
+          <li><strong>Responsável:</strong> {{ respEmail || '(sem e-mail)' }}</li>
+        </ul>
+        <p class="sucesso-id">ID da matrícula: <strong>{{ matriculaId }}</strong></p>
+        <div class="sucesso-actions">
+          <button type="button" class="btn-secondary" (click)="novaMatriculaAposConclusao()">Nova matrícula</button>
+        </div>
+      </div>
+    </ng-container>
+
+    <!--  TELA DE CONFIRMAÇÃO  -->
+    <ng-container *ngIf="!matriculaRealizada">
+      <header class="modal-header">
+        <div class="modal-title-block">
+          <h2>Confirmar matrícula</h2>
+          <p class="modal-subtitle">Revise os dados antes de finalizar</p>
+        </div>
+        <button type="button" class="modal-close" (click)="fecharConfirmacao()">&#x2715;</button>
+      </header>
+
+      <div class="confirmacao-body">
+
+        <div class="conf-secao">
+          <h3>Matrícula</h3>
+          <div class="conf-grid">
+            <div class="conf-item"><span>ID Matrícula</span><strong>{{ matriculaId }}</strong></div>
+          </div>
+        </div>
+
+        <div class="conf-secao">
+          <h3>Educando(a)</h3>
+          <div class="conf-grid">
+            <div class="conf-item"><span>Nome</span><strong>{{ alunoNome || '—' }}</strong></div>
+            <div class="conf-item"><span>E-mail</span><strong>{{ alunoEmail || '—' }}</strong></div>
+            <div class="conf-item"><span>Data de nascimento</span><strong>{{ alunoNascimento || '—' }}</strong></div>
+          </div>
+        </div>
+
+        <div class="conf-secao">
+          <h3>Responsável</h3>
+          <div class="conf-grid">
+            <div class="conf-item"><span>Nome</span><strong>{{ respNome || '—' }}</strong></div>
+            <div class="conf-item"><span>E-mail</span><strong>{{ respEmail || '—' }}</strong></div>
+          </div>
+        </div>
+
+        <div class="conf-secao">
+          <h3>Dados Escolares</h3>
+          <div class="conf-grid">
+            <div class="conf-item"><span>Ano letivo</span><strong>{{ anoLetivo }}</strong></div>
+            <div class="conf-item"><span>Série</span><strong>{{ serie || '—' }}</strong></div>
+            <div class="conf-item"><span>Período</span><strong>{{ periodo || '—' }}</strong></div>
+            <div class="conf-item"><span>Turma</span><strong>{{ turmaConfirmada?.nome ?? turmaSelecionada || '—' }}</strong></div>
+            <div class="conf-item"><span>Código</span><strong>{{ codigoTurma || '—' }}</strong></div>
+            <div class="conf-item"><span>Sala</span><strong>{{ sala || '—' }}</strong></div>
+            <div class="conf-item"><span>Início</span><strong>{{ dataInicio || '—' }}</strong></div>
+            <div class="conf-item"><span>Término</span><strong>{{ dataTermino || '—' }}</strong></div>
+          </div>
+        </div>
+
+        <p class="conf-aviso">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#f59e0b" stroke-width="1.5"/><path d="M10 6v4M10 14h.01" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Ao confirmar, um e-mail com o link de criação de senha será enviado ao educando e ao responsável.
+        </p>
+      </div>
+
+      <div class="conf-erro" *ngIf="emailErro">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#dc2626" stroke-width="1.5"/><path d="M10 6v4M10 14h.01" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round"/></svg>
+        {{ emailErrMsg }}
+      </div>
+
+      <footer class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="fecharConfirmacao()" [disabled]="emailEnviando">Cancelar</button>
+        <button type="button" class="btn-confirmar" (click)="confirmarMatricula()" [disabled]="emailEnviando">
+          <span *ngIf="!emailEnviando">Confirmar e enviar e-mails</span>
+          <span *ngIf="emailEnviando" class="loading-text">
+            <span class="spinner"></span> Enviando...
+          </span>
+        </button>
+      </footer>
+    </ng-container>
+
+  </div>
+</div>
+
+<!--  MODAL DE VAGAS  -->
+<div class="modal-overlay" *ngIf="modalAberto" (click)="fecharModal()">
+  <div class="modal-vagas" (click)="$event.stopPropagation()">
+
+    <header class="modal-header">
+      <div class="modal-title-block">
+        <h2>{{ turmaModalNome }}</h2>
+        <p class="modal-subtitle">Mapa de vagas · {{ TOTAL_VAGAS }} carteiras no total</p>
+      </div>
+      <button type="button" class="modal-close" (click)="fecharModal()">&#x2715;</button>
+    </header>
+
+    <!-- Chips de turmas da série selecionada -->
+    <div class="turma-chips">
+      <button
+        *ngFor="let t of turmasFiltradas; trackBy: trackByTurma"
+        type="button"
+        class="turma-chip"
+        [class.active]="turmaModalTemp === t.codigo"
+        [class.lotada]="vagasLivres(t) === 0"
+        (click)="abrirModalVagas(t.codigo)"
+      >
+        <span class="chip-codigo">{{ t.codigo }}</span>
+        <span class="chip-vagas" [class.zero]="vagasLivres(t) === 0">
+          {{ vagasLivres(t) === 0 ? 'Lotada' : vagasLivres(t) + ' vagas' }}
+        </span>
+      </button>
+    </div>
+
+    <div class="modal-stats">
+      <span class="stat ocupada">
+        <i></i> {{ turmaAtual?.vagasOcupadas?.length ?? 0 }} ocupadas
+      </span>
+      <span class="stat disponivel">
+        <i></i> {{ vagasDisponiveis }} disponíveis
+      </span>
+    </div>
+
+    <div class="cinema-wrap">
+      <div class="quadro">QUADRO</div>
+
+      <div class="seat-grid">
+        <ng-container *ngFor="let linha of LINHAS; trackBy: trackByLinha">
+          <div class="seat-row">
+            <span class="row-label">{{ linha }}</span>
+            <button
+              *ngFor="let vaga of vagasPorLinha(linha); trackBy: trackByVaga"
+              type="button"
+              class="seat"
+              [class.ocupada]="vaga.ocupada"
+              [class.disponivel]="!vaga.ocupada"
+              [title]="vaga.linha + vaga.coluna + ' — ' + (vaga.ocupada ? 'Ocupada' : 'Disponível')"
+              [disabled]="vaga.ocupada"
+            >
+              <span class="seat-num">{{ vaga.coluna }}</span>
+            </button>
+          </div>
+        </ng-container>
+      </div>
+
+      <div class="seat-legend">
+        <span class="legend-item"><span class="legend-box disponivel"></span> Disponível</span>
+        <span class="legend-item"><span class="legend-box ocupada"></span> Ocupada</span>
+      </div>
+    </div>
+
+    <footer class="modal-footer">
+      <button type="button" class="btn-secondary" (click)="fecharModal()">Cancelar</button>
+      <button
+        type="button"
+        class="btn-confirmar"
+        [disabled]="vagasDisponiveis === 0"
+        (click)="confirmarTurma()"
+      >
+        {{ vagasDisponiveis === 0 ? 'Turma sem vagas' : 'Confirmar turma' }}
+      </button>
+    </footer>
+
+  </div>
+</div>
