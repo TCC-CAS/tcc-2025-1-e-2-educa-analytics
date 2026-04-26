@@ -360,6 +360,113 @@ def _endereco_dict(enderecos: list[dict], tipo: str) -> dict:
     return {"cep":"","logradouro":"","numero":"","complemento":"","bairro":"","cidade":"","uf":""}
 
 
+def _enrich_historico(historico_rows: list[dict]) -> list[dict]:
+    """Enriquece itens de histórico com disciplinas, notas e frequência do banco."""
+    if not historico_rows:
+        return []
+
+    from app.src.adapters.db_adapter import execute_query as _q
+
+    edu_ids = list({h["idMatricula"] for h in historico_rows if h.get("idMatricula")})
+    if not edu_ids:
+        return [_build_hist_item(h, {}) for h in historico_rows]
+
+    ph = ",".join(["%s"] * len(edu_ids))
+
+    # Notas: média por (idMatricula, idTurma, idDisciplina)
+    notas_rows = _q(
+        f"""
+        SELECT n.idMatricula, n.idTurma, n.idDisciplina,
+               d.nomeDisciplina,
+               AVG(n.notaEducando) AS media
+        FROM Notas n
+        JOIN Disciplinas d ON d.idDisciplina = n.idDisciplina
+        WHERE n.idMatricula IN ({ph})
+        GROUP BY n.idMatricula, n.idTurma, n.idDisciplina, d.nomeDisciplina
+        """,
+        tuple(edu_ids),
+    )
+
+    # Frequência: % por (idMatricula, idDisciplina) — usa prcFreq se preenchido,
+    # senão calcula via presença
+    freq_rows = _q(
+        f"""
+        SELECT idMatricula, idDisciplina,
+               COALESCE(
+                   MAX(prcFreq),
+                   ROUND(SUM(presenca) * 100.0 / COUNT(*), 1)
+               ) AS frequencia
+        FROM Frequencia
+        WHERE idMatricula IN ({ph})
+        GROUP BY idMatricula, idDisciplina
+        """,
+        tuple(edu_ids),
+    )
+
+    # Mapas de lookup: (idMatricula, idTurma) -> [notas_row]
+    notas_map: dict[tuple, list] = {}
+    for n in notas_rows:
+        key = (n["idMatricula"], n["idTurma"])
+        notas_map.setdefault(key, []).append(n)
+
+    # (idMatricula, idDisciplina) -> frequencia
+    freq_map: dict[tuple, float | None] = {
+        (f["idMatricula"], f["idDisciplina"]): float(f["frequencia"])
+        if f["frequencia"] is not None else None
+        for f in freq_rows
+    }
+
+    result = []
+    for h in historico_rows:
+        key = (h.get("idMatricula"), h.get("idTurma"))
+        disciplinas_db = notas_map.get(key, [])
+
+        disciplinas = []
+        for nd in disciplinas_db:
+            freq_disc = freq_map.get((nd["idMatricula"], nd["idDisciplina"]))
+            media = round(float(nd["media"]), 1) if nd["media"] is not None else None
+            disciplinas.append({
+                "nome":       nd.get("nomeDisciplina", ""),
+                "n1":         None,
+                "n2":         None,
+                "n3":         None,
+                "n4":         None,
+                "media":      media,
+                "frequencia": round(freq_disc, 1) if freq_disc is not None else None,
+                "situacao":   "Aprovado" if (media is not None and media >= 5) else
+                              "Reprovado" if media is not None else "Em andamento",
+            })
+
+        medias = [d["media"] for d in disciplinas if d["media"] is not None]
+        freqs  = [d["frequencia"] for d in disciplinas if d["frequencia"] is not None]
+
+        media_geral = round(sum(medias) / len(medias), 1) if medias else None
+        freq_geral  = round(sum(freqs)  / len(freqs),  1) if freqs  else None
+
+        result.append({
+            **_build_hist_item(h, {}),
+            "mediaGeral":  media_geral,
+            "frequencia":  freq_geral,
+            "disciplinas": disciplinas,
+        })
+
+    return result
+
+
+def _build_hist_item(h: dict, _unused: dict) -> dict:
+    return {
+        "anoLetivo":   str(h.get("anoLetivo") or ""),
+        "serie":       h.get("serie") or "",
+        "turma":       h.get("codTurma") or "",
+        "sala":        h.get("sala") or "",
+        "periodo":     h.get("periodo") or "",
+        "situacao":    _map_situacao(h.get("situacao")),
+        "mediaGeral":  None,
+        "frequencia":  None,
+        "disciplinas": [],
+    }
+
+
 def _format_record(row: dict, end_edu: dict, resp: dict | None, end_resp: dict, historico: list[dict]) -> dict:
     """Monta o dicionário no formato MatriculaRegistro esperado pelo frontend."""
     return {
@@ -402,20 +509,7 @@ def _format_record(row: dict, end_edu: dict, resp: dict | None, end_resp: dict, 
         "periodo":       row.get("periodo") or "",
         "sala":          row.get("sala") or "",
         # Histórico
-        "historico": [
-            {
-                "anoLetivo":  str(h.get("anoLetivo") or ""),
-                "serie":      h.get("serie") or "",
-                "turma":      h.get("codTurma") or "",
-                "sala":       h.get("sala") or "",
-                "periodo":    h.get("periodo") or "",
-                "situacao":   _map_situacao(h.get("situacao")),
-                "mediaGeral": None,
-                "frequencia": None,
-                "disciplinas": [],
-            }
-            for h in historico
-        ],
+        "historico": historico,
     }
 
 
@@ -495,18 +589,41 @@ def listar_matriculas() -> list[dict]:
 
     resp_map = {r["idMatricula"]: r for r in resp_list}
 
-    hist_map: dict[str, list[dict]] = {}
-    for h in hist_list:
-        hist_map.setdefault(h["idMatricula"], []).append(h)
+    hist_list_enriched = _enrich_historico(hist_list)
+
+    hist_enriched_map: dict[str, list[dict]] = {}
+    for raw_h, enriched_h in zip(hist_list, hist_list_enriched):
+        hist_enriched_map.setdefault(raw_h["idMatricula"], []).append(enriched_h)
+
+    # Mapa de email→responsável para fallback (registros sem idResponsavel preenchido)
+    email_to_resp: dict[str, dict] = {}
+    if any(not r.get("idResponsavel") for r in rows):
+        todos_resp = _q(
+            "SELECT idMatricula, nomeCompleto, dataNascimento, idade, genero, cor, "
+            "cpf, rg, email, telefone FROM EducandoResponsavel WHERE tipoUsuario = 'responsavel'"
+        )
+        for r in todos_resp:
+            if r.get("email"):
+                email_to_resp[r["email"]] = r
+                # Garante que os endereços do responsável fiquem no end_map
+                if r["idMatricula"] not in end_map:
+                    resp_end = _bulk_enderecos([r["idMatricula"]])
+                    for e in resp_end:
+                        end_map.setdefault(e["idMatricula"], []).append(e)
 
     result = []
     for row in rows:
         edu_id    = row["idMatricula"]
         resp_id   = row.get("idResponsavel")
         resp_rec  = resp_map.get(resp_id) if resp_id else None
+        # Fallback: busca responsável pelo email do educando
+        if not resp_rec:
+            resp_rec = email_to_resp.get(row.get("alunoEmail", ""))
+            if resp_rec:
+                resp_id = resp_rec["idMatricula"]
         edu_ends  = end_map.get(edu_id, [])
         resp_ends = end_map.get(resp_id, []) if resp_id else []
-        historico = hist_map.get(edu_id, [])
+        historico = hist_enriched_map.get(edu_id, [])
         result.append(_format_record(
             row,
             _endereco_dict(edu_ends, "educando"),
@@ -523,11 +640,26 @@ def buscar_matricula(id_matricula: str) -> dict | None:
     if not row:
         return None
 
-    edu_ends  = EnderecoModel.find_by_matricula(id_matricula)
-    historico = HistoricoEscolarModel.find_by_matricula(id_matricula)
+    edu_ends        = EnderecoModel.find_by_matricula(id_matricula)
+    historico_raw   = HistoricoEscolarModel.find_by_matricula(id_matricula)
+    historico       = _enrich_historico(historico_raw)
 
     resp_id  = row.get("idResponsavel")
     resp_rec = EducandoResponsavelModel.find_by_id(resp_id) if resp_id else None
+    # Fallback: busca responsável pelo email do educando quando idResponsavel é NULL
+    if not resp_rec:
+        from app.src.adapters.db_adapter import execute_query as _q
+        aluno_email = row.get("alunoEmail") or ""
+        if aluno_email:
+            candidatos = _q(
+                "SELECT idMatricula, nomeCompleto, dataNascimento, idade, genero, cor, "
+                "cpf, rg, email, telefone FROM EducandoResponsavel "
+                "WHERE tipoUsuario = 'responsavel' AND email = %s LIMIT 1",
+                (aluno_email,),
+            )
+            if candidatos:
+                resp_rec = candidatos[0]
+                resp_id = resp_rec["idMatricula"]
     resp_ends = EnderecoModel.find_by_matricula(resp_id) if resp_id else []
 
     return _format_record(

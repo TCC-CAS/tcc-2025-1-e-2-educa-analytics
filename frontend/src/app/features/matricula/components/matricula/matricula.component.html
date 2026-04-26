@@ -101,7 +101,7 @@
           </label>
           <label class="field required">
             <span>Data de nascimento</span>
-            <input type="date" name="alunoNascimento" [(ngModel)]="alunoNascimento" (ngModelChange)="onAlunoNascimentoChange($event)" required />
+            <input type="date" name="alunoNascimento" [(ngModel)]="alunoNascimento" [min]="minDataNasc" [max]="maxDataNasc" (ngModelChange)="onAlunoNascimentoChange($event)" required />
           </label>
           <label class="field">
             <span>Idade</span>
@@ -152,7 +152,7 @@
         <div class="field-grid">
           <label class="field required">
             <span>Telefone</span>
-            <input type="tel" name="alunoTelefone" [(ngModel)]="alunoTelefone" placeholder="(00) 00000-0000" inputmode="tel" required />
+            <input type="tel" name="alunoTelefone" [(ngModel)]="alunoTelefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="tel" (input)="mascaraTelefone($event)" required />
           </label>
           <label class="field required">
             <span>Email</span>
@@ -166,7 +166,7 @@
         <div class="field-grid">
           <label class="field required">
             <span>RG</span>
-            <input type="text" name="alunoRg" [(ngModel)]="alunoRg" placeholder="00.000.000-0" required />
+            <input type="text" name="alunoRg" [(ngModel)]="alunoRg" placeholder="00.000.000-0" maxlength="12" (input)="mascaraRg($event)" required />
           </label>
           <label class="field required">
             <span>Órgão emissor</span>
@@ -178,7 +178,7 @@
           </label>
           <label class="field required">
             <span>CPF</span>
-            <input type="text" name="alunoCpf" [(ngModel)]="alunoCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" required />
+            <input type="text" name="alunoCpf" [(ngModel)]="alunoCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" (input)="mascaraCpf($event)" required />
           </label>
         </div>
       </div>
@@ -244,7 +244,7 @@
           </label>
           <label class="field required">
             <span>Data de nascimento</span>
-            <input type="date" name="respNascimento" [(ngModel)]="respNascimento" (ngModelChange)="onRespNascimentoChange($event)" required />
+            <input type="date" name="respNascimento" [(ngModel)]="respNascimento" [min]="minDataNasc" [max]="maxDataNasc" (ngModelChange)="onRespNascimentoChange($event)" required />
           </label>
           <label class="field">
             <span>Idade</span>
@@ -299,7 +299,7 @@
         <div class="field-grid">
           <label class="field required">
             <span>Telefone</span>
-            <input type="tel" name="respTelefone" [(ngModel)]="respTelefone" placeholder="(00) 00000-0000" inputmode="tel" required />
+            <input type="tel" name="respTelefone" [(ngModel)]="respTelefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="tel" (input)="mascaraTelefone($event)" required />
           </label>
           <label class="field required">
             <span>Email</span>
@@ -313,7 +313,7 @@
         <div class="field-grid">
           <label class="field required">
             <span>RG</span>
-            <input type="text" name="respRg" [(ngModel)]="respRg" placeholder="00.000.000-0" required />
+            <input type="text" name="respRg" [(ngModel)]="respRg" placeholder="00.000.000-0" maxlength="12" (input)="mascaraRg($event)" required />
           </label>
           <label class="field required">
             <span>Órgão emissor</span>
@@ -325,7 +325,7 @@
           </label>
           <label class="field required">
             <span>CPF</span>
-            <input type="text" name="respCpf" [(ngModel)]="respCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" required />
+            <input type="text" name="respCpf" [(ngModel)]="respCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" (input)="mascaraCpf($event)" required />
           </label>
         </div>
       </div>

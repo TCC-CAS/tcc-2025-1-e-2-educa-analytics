@@ -361,7 +361,7 @@
         </div>
         <div class="campo">
           <label>Data de nascimento</label>
-          <input *ngIf="modoEdicao" type="date" [(ngModel)]="edicao.alunoNascimento" (ngModelChange)="onNascimentoChange('aluno')">
+          <input *ngIf="modoEdicao" type="date" [(ngModel)]="edicao.alunoNascimento" [min]="minDataNasc" [max]="maxDataNasc" (ngModelChange)="onNascimentoChange('aluno')">
           <span *ngIf="!modoEdicao" class="campo-valor">{{ formatarData(edicao.alunoNascimento) }}</span>
         </div>
         <div class="campo">
@@ -370,12 +370,12 @@
         </div>
         <div class="campo">
           <label>CPF</label>
-          <input *ngIf="modoEdicao" type="text" [(ngModel)]="edicao.alunoCpf">
+          <input *ngIf="modoEdicao" type="text" name="alunoCpf" [(ngModel)]="edicao.alunoCpf" maxlength="14" placeholder="000.000.000-00" inputmode="numeric" (input)="mascaraCpf($event)">
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.alunoCpf || '-' }}</span>
         </div>
         <div class="campo">
           <label>RG</label>
-          <input *ngIf="modoEdicao" type="text" [(ngModel)]="edicao.alunoRg">
+          <input *ngIf="modoEdicao" type="text" name="alunoRg" [(ngModel)]="edicao.alunoRg" maxlength="12" placeholder="00.000.000-0" (input)="mascaraRg($event)">
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.alunoRg || '-' }}</span>
         </div>
       </div>
@@ -390,13 +390,8 @@
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.alunoEmail || '-' }}</span>
         </div>
         <div class="campo">
-          <label>Celular</label>
-          <input *ngIf="modoEdicao" type="text" [(ngModel)]="edicao.alunoCelular">
-          <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.alunoCelular || '-' }}</span>
-        </div>
-        <div class="campo">
-          <label>Telefone</label>
-          <input *ngIf="modoEdicao" type="text" [(ngModel)]="edicao.alunoTelefone">
+          <label>Telefone / Celular</label>
+          <input *ngIf="modoEdicao" type="text" name="alunoTelefone" [(ngModel)]="edicao.alunoTelefone" maxlength="15" placeholder="(00) 00000-0000" inputmode="tel" (input)="mascaraTelefone($event)">
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.alunoTelefone || '-' }}</span>
         </div>
       </div>
@@ -455,11 +450,6 @@
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.respNome }}</span>
         </div>
         <div class="campo">
-          <label>Parentesco</label>
-          <input *ngIf="modoEdicao" type="text" [(ngModel)]="edicao.respParentesco">
-          <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.respParentesco || '-' }}</span>
-        </div>
-        <div class="campo">
           <label>Gênero</label>
           <input *ngIf="modoEdicao" type="text" [(ngModel)]="edicao.respGenero">
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.respGenero || '-' }}</span>
@@ -479,7 +469,7 @@
         </div>
         <div class="campo">
           <label>Data de nascimento</label>
-          <input *ngIf="modoEdicao" type="date" [(ngModel)]="edicao.respNascimento" (ngModelChange)="onNascimentoChange('resp')">
+          <input *ngIf="modoEdicao" type="date" [(ngModel)]="edicao.respNascimento" [min]="minDataNasc" [max]="maxDataNasc" (ngModelChange)="onNascimentoChange('resp')">
           <span *ngIf="!modoEdicao" class="campo-valor">{{ formatarData(edicao.respNascimento) }}</span>
         </div>
         <div class="campo">
@@ -488,12 +478,12 @@
         </div>
         <div class="campo">
           <label>CPF</label>
-          <input *ngIf="modoEdicao" type="text" [(ngModel)]="edicao.respCpf">
+          <input *ngIf="modoEdicao" type="text" name="respCpf" [(ngModel)]="edicao.respCpf" maxlength="14" placeholder="000.000.000-00" inputmode="numeric" (input)="mascaraCpf($event)">
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.respCpf || '-' }}</span>
         </div>
         <div class="campo">
           <label>RG</label>
-          <input *ngIf="modoEdicao" type="text" [(ngModel)]="edicao.respRg">
+          <input *ngIf="modoEdicao" type="text" name="respRg" [(ngModel)]="edicao.respRg" maxlength="12" placeholder="00.000.000-0" (input)="mascaraRg($event)">
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.respRg || '-' }}</span>
         </div>
       </div>
@@ -508,13 +498,8 @@
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.respEmail || '-' }}</span>
         </div>
         <div class="campo">
-          <label>Celular</label>
-          <input *ngIf="modoEdicao" type="text" [(ngModel)]="edicao.respCelular">
-          <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.respCelular || '-' }}</span>
-        </div>
-        <div class="campo">
-          <label>Telefone</label>
-          <input *ngIf="modoEdicao" type="text" [(ngModel)]="edicao.respTelefone">
+          <label>Telefone / Celular</label>
+          <input *ngIf="modoEdicao" type="text" name="respTelefone" [(ngModel)]="edicao.respTelefone" maxlength="15" placeholder="(00) 00000-0000" inputmode="tel" (input)="mascaraTelefone($event)">
           <span *ngIf="!modoEdicao" class="campo-valor">{{ edicao.respTelefone || '-' }}</span>
         </div>
       </div>

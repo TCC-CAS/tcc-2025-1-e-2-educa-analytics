@@ -532,6 +532,9 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
   }
 
   // Idade
+  readonly maxDataNasc = new Date().toISOString().split('T')[0];
+  readonly minDataNasc = '1900-01-01';
+
   private calcularIdade(dataNascimento: string): number | null {
     if (!dataNascimento) return null;
     const nascimento = new Date(dataNascimento);
@@ -542,7 +545,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     if (mesAniversario > 0 || (mesAniversario === 0 && nascimento.getDate() > hoje.getDate())) {
       idade--;
     }
-    return idade >= 0 ? idade : null;
+    return (idade >= 0 && idade <= 120) ? idade : null;
   }
 
   onAlunoNascimentoChange(data: string): void {
@@ -551,6 +554,40 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
 
   onRespNascimentoChange(data: string): void {
     this.respIdade = this.calcularIdade(data);
+  }
+
+  mascaraCpf(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    let v = el.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
+    else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3');
+    else if (v.length > 3) v = v.replace(/(\d{3})(\d{0,3})/, '$1.$2');
+    el.value = v;
+    if (el.name === 'alunoCpf') this.alunoCpf = v;
+    else if (el.name === 'respCpf') this.respCpf = v;
+  }
+
+  mascaraRg(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    let v = el.value.replace(/[^\dXx]/g, '').slice(0, 9);
+    if (v.length > 8) v = v.replace(/(\d{2})(\d{3})(\d{3})([\dXx])/, '$1.$2.$3-$4');
+    else if (v.length > 5) v = v.replace(/(\d{2})(\d{3})(\d{0,3})/, '$1.$2.$3');
+    else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,3})/, '$1.$2');
+    el.value = v;
+    if (el.name === 'alunoRg') this.alunoRg = v;
+    else if (el.name === 'respRg') this.respRg = v;
+  }
+
+  mascaraTelefone(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    let v = el.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length === 11) v = v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    else if (v.length === 10) v = v.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    else if (v.length > 6) v = v.replace(/(\d{2})(\d{4,5})(\d{0,4})/, '($1) $2-$3');
+    else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+    el.value = v;
+    if (el.name === 'alunoTelefone') this.alunoTelefone = v;
+    else if (el.name === 'respTelefone') this.respTelefone = v;
   }
 
   // CEP

@@ -391,14 +391,59 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
     return idade;
   }
 
+  readonly maxDataNasc = new Date().toISOString().split('T')[0];
+  readonly minDataNasc = '1900-01-01';
+
   onNascimentoChange(campo: 'aluno' | 'resp'): void {
     if (!this.edicao) return;
     if (campo === 'aluno') {
       const idade = this.calcularIdade(this.edicao.alunoNascimento);
-      this.edicao.alunoIdade = idade ?? 0;
+      this.edicao.alunoIdade = (idade !== null && idade >= 0 && idade <= 120) ? idade : 0;
+      if (idade !== null && (idade < 0 || idade > 120)) this.edicao.alunoNascimento = '';
     } else {
       const idade = this.calcularIdade(this.edicao.respNascimento);
-      this.edicao.respIdade = idade ?? 0;
+      this.edicao.respIdade = (idade !== null && idade >= 0 && idade <= 120) ? idade : 0;
+      if (idade !== null && (idade < 0 || idade > 120)) this.edicao.respNascimento = '';
+    }
+  }
+
+  mascaraCpf(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    let v = el.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
+    else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3');
+    else if (v.length > 3) v = v.replace(/(\d{3})(\d{0,3})/, '$1.$2');
+    el.value = v;
+    if (this.edicao) {
+      const campo = el.name as 'alunoCpf' | 'respCpf';
+      (this.edicao as any)[campo] = v;
+    }
+  }
+
+  mascaraRg(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    let v = el.value.replace(/[^\dXx]/g, '').slice(0, 9);
+    if (v.length > 8) v = v.replace(/(\d{2})(\d{3})(\d{3})([\dXx])/, '$1.$2.$3-$4');
+    else if (v.length > 5) v = v.replace(/(\d{2})(\d{3})(\d{0,3})/, '$1.$2.$3');
+    else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,3})/, '$1.$2');
+    el.value = v;
+    if (this.edicao) {
+      const campo = el.name as 'alunoRg' | 'respRg';
+      (this.edicao as any)[campo] = v;
+    }
+  }
+
+  mascaraTelefone(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    let v = el.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length === 11) v = v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    else if (v.length === 10) v = v.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    else if (v.length > 6) v = v.replace(/(\d{2})(\d{4,5})(\d{0,4})/, '($1) $2-$3');
+    else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+    el.value = v;
+    if (this.edicao) {
+      const campo = el.name as 'alunoTelefone' | 'respTelefone';
+      (this.edicao as any)[campo] = v;
     }
   }
 
