@@ -1,6 +1,7 @@
 ﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 
 type EducadorTab = 'dados' | 'formacao';
 
@@ -24,6 +25,13 @@ interface FormacaoAcademica {
   situacao: string;
 }
 
+interface Disciplina {
+  idDisciplina: number;
+  codDisciplina: string;
+  nomeDisciplina: string;
+  areaConhecimento: string;
+}
+
 @Component({
   selector: 'app-educador-form',
   templateUrl: './educador-form.component.html',
@@ -32,7 +40,6 @@ interface FormacaoAcademica {
 })
 export class EducadorFormComponent implements OnInit {
 
-  educadorId: number | null = null;
   isEdicao = false;
   activeTab: EducadorTab = 'dados';
 
@@ -63,8 +70,17 @@ export class EducadorFormComponent implements OnInit {
   cpf = '';
 
   // Dados Profissionais
-  disciplinaLecionada = '';
-  turno = '';
+  disciplinasSelecionadas: number[] = [];
+  periodosSelecionados: string[] = [];
+
+  // Catálogo de disciplinas da API
+  disciplinasDisponiveis: Disciplina[] = [];
+  readonly periodosDisponiveis = [
+    { value: 'matutino',   label: 'Matutino' },
+    { value: 'vespertino', label: 'Vespertino' },
+    { value: 'noturno',    label: 'Noturno' },
+    { value: 'integral',   label: 'Integral' },
+  ];
 
   // Formacoes
   formacoes: FormacaoAcademica[] = [];
@@ -75,19 +91,119 @@ export class EducadorFormComponent implements OnInit {
   mostrarErros = false;
   errosValidacao: { tab: EducadorTab; tabLabel: string; campos: string[] }[] = [];
 
-  // Modal
-  confirm = { visible: false, title: '', message: '', danger: false, callback: () => {} };
+  // Modal de confirmação
+  modalConfirmacaoAberto = false;
+  emailEnviando = false;
+  educadorRealizado = false;
+  emailErro = false;
+  emailErrMsg = '';
+  educadorCadastradoId = '';
 
   constructor(private route: ActivatedRoute, private router: Router, private http: HttpClient) {}
 
   ngOnInit(): void {
+    this.carregarDisciplinas();
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.educadorId = parseInt(id);
       this.isEdicao = true;
+      this.carregarEducador(id);
     } else {
       this.matriculaFuncional = 'EDU-' + Math.floor(10000 + Math.random() * 90000);
     }
+  }
+
+  carregarDisciplinas(): void {
+    this.http.get<Disciplina[]>(`${environment.apiUrl}/disciplinas`).subscribe({
+      next: (lista) => { this.disciplinasDisponiveis = lista; },
+      error: () => {} // silencioso — não bloqueia o form
+    });
+  }
+
+  toggleDisciplina(id: number): void {
+    const idx = this.disciplinasSelecionadas.indexOf(id);
+    if (idx >= 0) {
+      this.disciplinasSelecionadas = this.disciplinasSelecionadas.filter(d => d !== id);
+    } else {
+      this.disciplinasSelecionadas = [...this.disciplinasSelecionadas, id];
+    }
+  }
+
+  isDisciplinaSelecionada(id: number): boolean {
+    return this.disciplinasSelecionadas.includes(id);
+  }
+
+  togglePeriodo(value: string): void {
+    const idx = this.periodosSelecionados.indexOf(value);
+    if (idx >= 0) {
+      this.periodosSelecionados = this.periodosSelecionados.filter(p => p !== value);
+    } else {
+      this.periodosSelecionados = [...this.periodosSelecionados, value];
+    }
+  }
+
+  isPeriodoSelecionado(value: string): boolean {
+    return this.periodosSelecionados.includes(value);
+  }
+
+  // ── Máscaras ──────────────────────────────────────────────────────────────
+
+  onRgInput(event: Event): void {
+    let v = (event.target as HTMLInputElement).value.replace(/\D/g, '');
+    if (v.length > 9) v = v.slice(0, 9);
+    if (v.length > 8) v = v.slice(0, 2) + '.' + v.slice(2, 5) + '.' + v.slice(5, 8) + '-' + v.slice(8);
+    else if (v.length > 5) v = v.slice(0, 2) + '.' + v.slice(2, 5) + '.' + v.slice(5);
+    else if (v.length > 2) v = v.slice(0, 2) + '.' + v.slice(2);
+    this.rg = v;
+  }
+
+  onCpfInput(event: Event): void {
+    let v = (event.target as HTMLInputElement).value.replace(/\D/g, '');
+    if (v.length > 11) v = v.slice(0, 11);
+    if (v.length > 9) v = v.slice(0, 3) + '.' + v.slice(3, 6) + '.' + v.slice(6, 9) + '-' + v.slice(9);
+    else if (v.length > 6) v = v.slice(0, 3) + '.' + v.slice(3, 6) + '.' + v.slice(6);
+    else if (v.length > 3) v = v.slice(0, 3) + '.' + v.slice(3);
+    this.cpf = v;
+  }
+
+  onTelefoneInput(event: Event): void {
+    let v = (event.target as HTMLInputElement).value.replace(/\D/g, '');
+    if (v.length > 11) v = v.slice(0, 11);
+    if (v.length === 11) {
+      v = '(' + v.slice(0, 2) + ') ' + v.slice(2, 7) + '-' + v.slice(7);
+    } else if (v.length === 10) {
+      v = '(' + v.slice(0, 2) + ') ' + v.slice(2, 6) + '-' + v.slice(6);
+    } else if (v.length > 6) {
+      v = '(' + v.slice(0, 2) + ') ' + v.slice(2);
+    } else if (v.length > 2) {
+      v = '(' + v.slice(0, 2) + ') ' + v.slice(2);
+    }
+    this.telefone = v;
+  }
+
+  carregarEducador(id: string): void {
+    this.http.get<any>(`${environment.apiUrl}/educadores/${id}`).subscribe({
+      next: (dados) => {
+        this.matriculaFuncional    = dados.matriculaFuncional || dados.idMatricula;
+        this.nomeCompleto          = dados.nomeCompleto || '';
+        this.nacionalidade         = dados.nacionalidade || '';
+        this.generoSelecionado     = dados.genero || '';
+        this.generoOutro           = dados.genero === 'outro';
+        this.corRaca               = dados.corRaca || '';
+        this.dataNascimento        = dados.dataNascimento || '';
+        this.idade                 = dados.idade ?? null;
+        this.telefone              = dados.telefone || '';
+        this.email                 = dados.email || '';
+        this.rg                    = dados.rg || '';
+        this.orgaoEmissor          = dados.orgaoEmissor || '';
+        this.estadoEmissor         = dados.estadoEmissor || '';
+        this.cpf                   = dados.cpf || '';
+        this.disciplinasSelecionadas = dados.disciplinas || [];
+        this.periodosSelecionados    = dados.periodos || [];
+        if (dados.endereco) { this.endereco = { ...dados.endereco }; }
+        if (dados.formacoes) { this.formacoes = dados.formacoes; }
+      },
+      error: () => alert('Erro ao carregar dados do educador.')
+    });
   }
 
   setTab(tab: EducadorTab): void { this.activeTab = tab; }
@@ -159,8 +275,8 @@ export class EducadorFormComponent implements OnInit {
     if (!this.cpf) d.push('CPF');
     if (d.length) this.errosValidacao.push({ tab: 'dados', tabLabel: 'Dados Pessoais', campos: d });
     const f: string[] = [];
-    if (!this.disciplinaLecionada) f.push('Disciplina lecionada');
-    if (!this.turno) f.push('Turno');
+    if (this.disciplinasSelecionadas.length === 0) f.push('Pelo menos uma disciplina');
+    if (this.periodosSelecionados.length === 0) f.push('Pelo menos um período');
     if (f.length) this.errosValidacao.push({ tab: 'formacao', tabLabel: 'Formacao Academica', campos: f });
     return this.errosValidacao.length === 0;
   }
@@ -168,23 +284,56 @@ export class EducadorFormComponent implements OnInit {
   abrirConfirmacao(): void {
     this.mostrarErros = true;
     if (!this.validar()) return;
-    this.openConfirm(
-      this.isEdicao ? 'Atualizar educador' : 'Cadastrar educador',
-      `Confirma o cadastro de "${this.nomeCompleto}" como educador?`,
-      false, () => this.salvar()
-    );
+    this.emailErro = false;
+    this.modalConfirmacaoAberto = true;
   }
 
-  salvar(): void {
-    console.log('Salvar educador:', { matriculaFuncional: this.matriculaFuncional, nomeCompleto: this.nomeCompleto });
-    this.router.navigate(['/educadores']);
+  fecharModal(): void {
+    if (this.emailEnviando) return;
+    this.modalConfirmacaoAberto = false;
   }
 
-  voltar(): void { this.router.navigate(['/educadores']); }
+  confirmarCadastro(): void {
+    const payload = {
+      matriculaFuncional:        this.matriculaFuncional,
+      nomeCompleto:              this.nomeCompleto,
+      nacionalidade:             this.nacionalidade,
+      genero:                    this.generoOutro ? this.generoCustom : this.generoSelecionado,
+      corRaca:                   this.corRaca,
+      dataNascimento:            this.dataNascimento || null,
+      telefone:                  this.telefone,
+      email:                     this.email,
+      rg:                        this.rg,
+      orgaoEmissor:              this.orgaoEmissor,
+      estadoEmissor:             this.estadoEmissor,
+      cpf:                       this.cpf,
+      disciplinas:               this.disciplinasSelecionadas,
+      periodos:                  this.periodosSelecionados,
+      endereco:                  this.endereco,
+      formacoes:                 this.formacoes,
+    };
 
-  openConfirm(title: string, message: string, danger: boolean, callback: () => void): void {
-    this.confirm = { visible: true, title, message, danger, callback };
+    this.emailEnviando = true;
+    this.emailErro = false;
+
+    const req$ = this.isEdicao
+      ? this.http.put<any>(`${environment.apiUrl}/educadores/${this.matriculaFuncional}`, payload)
+      : this.http.post<any>(`${environment.apiUrl}/educadores`, payload);
+
+    req$.subscribe({
+      next: (res: any) => {
+        this.emailEnviando = false;
+        this.educadorCadastradoId = res?.idMatricula || this.matriculaFuncional;
+        this.educadorRealizado = true;
+      },
+      error: (err: any) => {
+        this.emailEnviando = false;
+        this.emailErro = true;
+        this.emailErrMsg = err?.error?.error || 'Erro ao salvar. Verifique os dados e tente novamente.';
+      }
+    });
   }
-  confirmAction(): void { this.confirm.visible = false; this.confirm.callback(); }
-  cancelConfirm(): void  { this.confirm.visible = false; }
+
+  voltar(): void { this.router.navigate(['/colaboradores']); }
+  voltarParaLista(): void { this.router.navigate(['/colaboradores']); }
 }

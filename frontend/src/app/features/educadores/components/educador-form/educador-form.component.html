@@ -3,6 +3,10 @@
 
   <header class="page-header">
     <div>
+      <button type="button" class="btn-voltar" (click)="voltar()">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M12 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Voltar para lista de colaboradores
+      </button>
       <h1>{{ isEdicao ? 'Editar educador' : 'Cadastro de educador' }}</h1>
       <p>Preencha os dados do educador. Campos marcados com <span class="required-legend">*</span> são obrigatórios.</p>
     </div>
@@ -122,8 +126,8 @@
         <h3 class="group-title">Contato</h3>
         <div class="field-grid">
           <label class="field required">
-            <span>Telefone *</span>
-            <input type="tel" name="telefone" [(ngModel)]="telefone" placeholder="(00) 00000-0000" inputmode="tel" required />
+            <span>Telefone / Celular *</span>
+            <input type="tel" name="telefone" [ngModel]="telefone" (input)="onTelefoneInput($event)" (ngModelChange)="telefone=$event" placeholder="(00) 00000-0000" inputmode="tel" required />
           </label>
           <label class="field required">
             <span>E-mail *</span>
@@ -137,7 +141,7 @@
         <div class="field-grid">
           <label class="field required">
             <span>RG *</span>
-            <input type="text" name="rg" [(ngModel)]="rg" placeholder="00.000.000-0" required />
+            <input type="text" name="rg" [ngModel]="rg" (input)="onRgInput($event)" (ngModelChange)="rg=$event" placeholder="00.000.000-0" maxlength="12" required />
           </label>
           <label class="field required">
             <span>Órgão emissor *</span>
@@ -149,7 +153,7 @@
           </label>
           <label class="field required">
             <span>CPF *</span>
-            <input type="text" name="cpf" [(ngModel)]="cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" required />
+            <input type="text" name="cpf" [ngModel]="cpf" (input)="onCpfInput($event)" (ngModelChange)="cpf=$event" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" required />
           </label>
         </div>
       </div>
@@ -173,20 +177,32 @@
             <span>Matrícula Funcional</span>
             <input type="text" name="matFuncional2" [(ngModel)]="matriculaFuncional" readonly />
           </label>
-          <label class="field required">
-            <span>Disciplina lecionada *</span>
-            <input type="text" name="disciplinaLecionada" [(ngModel)]="disciplinaLecionada" placeholder="Ex: Matemática" required />
-          </label>
-          <label class="field required">
-            <span>Turno *</span>
-            <select name="turno" [(ngModel)]="turno" required>
-              <option value="">Selecione</option>
-              <option value="matutino">Matutino</option>
-              <option value="vespertino">Vespertino</option>
-              <option value="noturno">Noturno</option>
-              <option value="integral">Integral</option>
-            </select>
-          </label>
+        </div>
+
+        <div class="check-group">
+          <span class="check-group-label">Disciplinas lecionadas *</span>
+          <div class="check-list">
+            <label class="check-item" *ngFor="let d of disciplinasDisponiveis">
+              <input type="checkbox"
+                     [checked]="isDisciplinaSelecionada(d.idDisciplina)"
+                     (change)="toggleDisciplina(d.idDisciplina)" />
+              <span class="check-text">{{ d.nomeDisciplina }}</span>
+              <span class="check-area">{{ d.areaConhecimento }}</span>
+            </label>
+          </div>
+          <p class="check-vazio" *ngIf="disciplinasDisponiveis.length === 0">Carregando disciplinas...</p>
+        </div>
+
+        <div class="check-group" style="margin-top:1rem">
+          <span class="check-group-label">Períodos em que leciona *</span>
+          <div class="check-list check-list--inline">
+            <label class="check-item" *ngFor="let p of periodosDisponiveis">
+              <input type="checkbox"
+                     [checked]="isPeriodoSelecionado(p.value)"
+                     (change)="togglePeriodo(p.value)" />
+              <span class="check-text">{{ p.label }}</span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -292,7 +308,7 @@
 
       <div class="form-actions-row">
         <button type="button" class="ghost" (click)="voltar()">Cancelar</button>
-        <button type="button" class="primary" (click)="abrirConfirmacao()">
+        <button type="button" class="primary" (click)="abrirConfirmacao()" [disabled]="emailEnviando">
           {{ isEdicao ? 'Atualizar' : 'Cadastrar educador' }}
         </button>
       </div>
@@ -302,17 +318,80 @@
   </div>
 </div>
 
-<!-- MODAL DE CONFIRMACAO -->
-<div class="modal-overlay" *ngIf="confirm.visible" (click)="cancelConfirm()">
-  <div class="modal" (click)="$event.stopPropagation()">
-    <div class="modal-icon" [class.danger]="confirm.danger">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    </div>
-    <h3 class="modal-title">{{ confirm.title }}</h3>
-    <p class="modal-message">{{ confirm.message }}</p>
-    <div class="modal-actions">
-      <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
-      <button type="button" class="modal-btn modal-confirm" (click)="confirmAction()">Confirmar</button>
-    </div>
+<!-- MODAL DE CONFIRMAÇÃO -->
+<div class="modal-overlay" *ngIf="modalConfirmacaoAberto" (click)="fecharModal()">
+  <div class="modal-confirmacao" (click)="$event.stopPropagation()">
+
+    <!-- TELA DE SUCESSO -->
+    <ng-container *ngIf="educadorRealizado">
+      <div class="confirmacao-sucesso">
+        <button type="button" class="modal-close sucesso-close" (click)="voltarParaLista()" title="Voltar">&#x2715;</button>
+        <div class="sucesso-icon">
+          <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+            <circle cx="26" cy="26" r="25" stroke="#1e8e3e" stroke-width="2" fill="#e6f4ea"/>
+            <path d="M14 27l8 8 16-16" stroke="#1e8e3e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>{{ isEdicao ? 'Educador atualizado!' : 'Educador cadastrado!' }}</h2>
+        <ng-container *ngIf="!isEdicao">
+          <p>Um e-mail com o ID e o link para definição de senha foi enviado para:</p>
+          <p class="sucesso-email"><strong>{{ email }}</strong></p>
+        </ng-container>
+        <p class="sucesso-id">ID do educador: <strong>{{ educadorCadastradoId }}</strong></p>
+        <div class="sucesso-actions">
+          <button type="button" class="btn-secondary" (click)="voltarParaLista()">Voltar para a lista</button>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- TELA DE CONFIRMAÇÃO -->
+    <ng-container *ngIf="!educadorRealizado">
+      <header class="modal-header">
+        <div class="modal-title-block">
+          <h2>{{ isEdicao ? 'Confirmar atualização' : 'Confirmar cadastro' }}</h2>
+          <p class="modal-subtitle">Revise os dados antes de finalizar</p>
+        </div>
+        <button type="button" class="modal-close" (click)="fecharModal()">&#x2715;</button>
+      </header>
+
+      <div class="confirmacao-body">
+        <div class="conf-secao">
+          <h3>Identificação</h3>
+          <div class="conf-grid">
+            <div class="conf-item"><span>Matrícula</span><strong>{{ matriculaFuncional }}</strong></div>
+            <div class="conf-item"><span>Nome</span><strong>{{ nomeCompleto || '—' }}</strong></div>
+            <div class="conf-item"><span>E-mail</span><strong>{{ email || '—' }}</strong></div>
+            <div class="conf-item"><span>CPF</span><strong>{{ cpf || '—' }}</strong></div>
+          </div>
+        </div>
+        <div class="conf-secao">
+          <h3>Dados Profissionais</h3>
+          <div class="conf-grid">
+            <div class="conf-item"><span>Disciplinas</span><strong>{{ disciplinasSelecionadas.length }} selecionada(s)</strong></div>
+            <div class="conf-item"><span>Períodos</span><strong>{{ periodosSelecionados.join(', ') || '—' }}</strong></div>
+          </div>
+        </div>
+        <p class="conf-aviso" *ngIf="!isEdicao">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#f59e0b" stroke-width="1.5"/><path d="M10 6v4M10 14h.01" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Ao confirmar, um e-mail com o ID e o link de definição de senha será enviado ao educador.
+        </p>
+      </div>
+
+      <div class="conf-erro" *ngIf="emailErro">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#dc2626" stroke-width="1.5"/><path d="M10 6v4M10 14h.01" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round"/></svg>
+        {{ emailErrMsg }}
+      </div>
+
+      <footer class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="fecharModal()" [disabled]="emailEnviando">Cancelar</button>
+        <button type="button" class="btn-confirmar" (click)="confirmarCadastro()" [disabled]="emailEnviando">
+          <span *ngIf="!emailEnviando">{{ isEdicao ? 'Confirmar atualização' : 'Confirmar e enviar e-mail' }}</span>
+          <span *ngIf="emailEnviando" class="loading-text">
+            <span class="spinner"></span> Salvando...
+          </span>
+        </button>
+      </footer>
+    </ng-container>
+
   </div>
 </div>
