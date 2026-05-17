@@ -697,6 +697,7 @@ def atualizar_matricula(id_matricula: str, body: str | dict) -> dict:
     data = json.loads(body) if isinstance(body, str) else body
     educando = data.get("educando") or {}
     responsavel = data.get("responsavel") or {}
+    dados_escolares = data.get("dadosEscolares") or {}
 
     if educando:
         EducandoResponsavelModel.update_data(id_matricula, educando)
@@ -709,5 +710,134 @@ def atualizar_matricula(id_matricula: str, body: str | dict) -> dict:
         if responsavel.get("endereco"):
             EnderecoModel.create({**responsavel["endereco"], "idMatricula": resp_id, "tipoUsuario": "responsavel"})
 
+    # Atualiza dados escolares no HistoricoEscolar
+    if dados_escolares:
+        campos_atualizar = []
+        valores = []
+        
+        if dados_escolares.get("anoLetivo"):
+            campos_atualizar.append("anoLetivo = %s")
+            valores.append(dados_escolares["anoLetivo"])
+        
+        if dados_escolares.get("serie"):
+            campos_atualizar.append("serie = %s")
+            valores.append(dados_escolares["serie"])
+        
+        if dados_escolares.get("periodo"):
+            campos_atualizar.append("periodo = %s")
+            valores.append(dados_escolares["periodo"])
+        
+        if dados_escolares.get("codigoTurma"):
+            campos_atualizar.append("idTurma = %s")
+            valores.append(dados_escolares["codigoTurma"])
+        
+        if dados_escolares.get("dataInicio"):
+            campos_atualizar.append("dataInicio = %s")
+            valores.append(dados_escolares["dataInicio"])
+        
+        if dados_escolares.get("dataTermino"):
+            campos_atualizar.append("dataTermino = %s")
+            valores.append(dados_escolares["dataTermino"])
+        
+        if campos_atualizar:
+            valores.append(id_matricula)
+            query = f"""
+                UPDATE HistoricoEscolar 
+                SET {', '.join(campos_atualizar)}
+                WHERE idMatricula = %s
+            """
+            execute_query(query, tuple(valores))
+
     result = buscar_matricula(id_matricula)
     return result or {"idMatricula": id_matricula}
+
+
+def excluir_matricula(id_matricula: str) -> dict:
+    """
+    Exclui uma matrícula e todos os dados relacionados.
+    
+    Remove em ordem:
+    1. Histórico escolar
+    2. Endereços (educando e responsável)
+    3. Logins (educando e responsável)
+    4. Educando e responsável (se não houver outras matrículas ativas)
+    """
+    # Busca a matrícula para obter dados do responsável
+    matricula = buscar_matricula(id_matricula)
+    if not matricula:
+        raise ValueError(f"Matrícula {id_matricula} não encontrada")
+    
+    # Obtém o idMatricula do responsável através do HistoricoEscolar
+    resp_id = None
+    resp_rows = execute_query(
+        "SELECT idResponsavel FROM HistoricoEscolar WHERE idMatricula = %s LIMIT 1",
+        (id_matricula,)
+    )
+    if resp_rows and len(resp_rows) > 0:
+        resp_id = resp_rows[0].get("idResponsavel")
+    
+    queries = []
+    
+    # 1. Remove histórico escolar
+    queries.append((
+        "DELETE FROM HistoricoEscolar WHERE idMatricula = %s",
+        (id_matricula,)
+    ))
+    
+    # 2. Remove notas do educando
+    queries.append((
+        "DELETE FROM Notas WHERE idMatricula = %s",
+        (id_matricula,)
+    ))
+    
+    # 3. Remove frequência do educando
+    queries.append((
+        "DELETE FROM Frequencia WHERE idMatricula = %s",
+        (id_matricula,)
+    ))
+    
+    # 4. Remove endereços do educando
+    queries.append((
+        "DELETE FROM Endereco WHERE idMatricula = %s AND tipoUsuario = 'educando'",
+        (id_matricula,)
+    ))
+    
+    # 5. Remove login do educando
+    queries.append((
+        "DELETE FROM Login WHERE idMatricula = %s",
+        (id_matricula,)
+    ))
+    
+    # 6. Remove o educando
+    queries.append((
+        "DELETE FROM EducandoResponsavel WHERE idMatricula = %s",
+        (id_matricula,)
+    ))
+    
+    # 7. Se houver responsável, verifica se pode removê-lo
+    if resp_id:
+        # Verifica se o responsável tem outras matrículas ativas
+        outras_matriculas = execute_query(
+            "SELECT COUNT(*) as total FROM HistoricoEscolar WHERE idResponsavel = %s AND idMatricula != %s",
+            (resp_id, id_matricula)
+        )
+        
+        # Se não houver outras matrículas, remove o responsável também
+        if outras_matriculas and outras_matriculas[0].get("total", 0) == 0:
+            queries.append((
+                "DELETE FROM Endereco WHERE idMatricula = %s AND tipoUsuario = 'responsavel'",
+                (resp_id,)
+            ))
+            queries.append((
+                "DELETE FROM Login WHERE idMatricula = %s",
+                (resp_id,)
+            ))
+            queries.append((
+                "DELETE FROM EducandoResponsavel WHERE idMatricula = %s",
+                (resp_id,)
+            ))
+    
+    # Executa todas as queries em transação
+    execute_transaction(queries)
+    
+    return {"idMatricula": id_matricula, "status": "excluída"}

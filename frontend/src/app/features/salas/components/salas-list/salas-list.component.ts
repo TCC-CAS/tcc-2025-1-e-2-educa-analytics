@@ -1,24 +1,9 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { SalasService, Sala } from '../../services/salas.service';
 
 type StatusSala = 'ativa' | 'inativa';
 type TipoSala = 'sala-de-aula' | 'laboratorio' | 'auditorio' | 'biblioteca' | 'quadra' | 'outro';
-
-interface Sala {
-  id: number;
-  codigo: string;
-  nome: string;
-  tipo: TipoSala;
-  capacidade: number;
-  bloco: string;
-  andar: string;
-  projetor: boolean;
-  arCondicionado: boolean;
-  ventilador: boolean;
-  computadores: boolean;
-  acessibilidade: boolean;
-  status: StatusSala;
-}
 
 interface SalaFiltro {
   codigo: string;
@@ -33,7 +18,7 @@ interface SalaFiltro {
   styleUrls: ['./salas-list.component.scss'],
   host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
-export class SalasListComponent implements AfterViewInit {
+export class SalasListComponent implements OnInit, AfterViewInit {
 
   readonly tiposLabel: Record<TipoSala, string> = {
     'sala-de-aula': 'Sala de Aula',
@@ -44,19 +29,64 @@ export class SalasListComponent implements AfterViewInit {
     'outro':        'Outro'
   };
 
-  salas: Sala[] = [
-    { id: 1, codigo: '101',    nome: 'Sala 101',                    tipo: 'sala-de-aula', capacidade: 35,  bloco: 'A', andar: 'Térreo', projetor: true,  arCondicionado: true,  ventilador: false, computadores: false, acessibilidade: true,  status: 'ativa'   },
-    { id: 2, codigo: '102',    nome: 'Sala 102',                    tipo: 'sala-de-aula', capacidade: 35,  bloco: 'A', andar: 'Térreo', projetor: false, arCondicionado: false, ventilador: true,  computadores: false, acessibilidade: false, status: 'ativa'   },
-    { id: 3, codigo: '201',    nome: 'Sala 201',                    tipo: 'sala-de-aula', capacidade: 30,  bloco: 'A', andar: '1º',     projetor: true,  arCondicionado: true,  ventilador: false, computadores: false, acessibilidade: false, status: 'ativa'   },
-    { id: 4, codigo: 'LAB-01', nome: 'Laboratório de Ciências',       tipo: 'laboratorio',  capacidade: 20,  bloco: 'B', andar: 'Térreo', projetor: true,  arCondicionado: true,  ventilador: false, computadores: false, acessibilidade: true,  status: 'ativa'   },
-    { id: 5, codigo: 'LAB-02', nome: 'Laboratório de Informática',   tipo: 'laboratorio',  capacidade: 25,  bloco: 'B', andar: '1º',     projetor: true,  arCondicionado: true,  ventilador: false, computadores: true,  acessibilidade: false, status: 'ativa'   },
-    { id: 6, codigo: 'AUD-01', nome: 'Auditório Principal',           tipo: 'auditorio',    capacidade: 150, bloco: 'C', andar: 'Térreo', projetor: true,  arCondicionado: true,  ventilador: false, computadores: false, acessibilidade: true,  status: 'ativa'   },
-    { id: 7, codigo: '301',    nome: 'Sala 301',                    tipo: 'sala-de-aula', capacidade: 30,  bloco: 'A', andar: '2º',     projetor: false, arCondicionado: false, ventilador: true,  computadores: false, acessibilidade: false, status: 'inativa' }
-  ];
+  getTipoLabel(tipo: string): string {
+    return this.tiposLabel[tipo as TipoSala] || tipo;
+  }
 
-  filteredSalas: Sala[] = [...this.salas];
+  salas: Sala[] = [];
+  filteredSalas: Sala[] = [];
+  loading = false;
 
   filtro: SalaFiltro = { codigo: '', nome: '', tipo: '', status: '' };
+
+  // Paginação
+  paginaAtual = 1;
+  itensPorPagina = 10;
+  Math = Math;
+
+  get totalPaginas(): number {
+    return Math.ceil(this.filteredSalas.length / this.itensPorPagina);
+  }
+
+  get salasPaginadas(): Sala[] {
+    const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
+    const fim = inicio + this.itensPorPagina;
+    return this.filteredSalas.slice(inicio, fim);
+  }
+
+  get paginasVisiveis(): number[] {
+    const total = this.totalPaginas;
+    const atual = this.paginaAtual;
+    const delta = 2;
+    const range: number[] = [];
+    
+    for (let i = Math.max(2, atual - delta); i <= Math.min(total - 1, atual + delta); i++) {
+      range.push(i);
+    }
+    
+    if (atual - delta > 2) {
+      range.unshift(-1);
+    }
+    if (atual + delta < total - 1) {
+      range.push(-1);
+    }
+    
+    range.unshift(1);
+    if (total > 1) {
+      range.push(total);
+    }
+    
+    return range;
+  }
+
+  get filtrosAtivos(): number {
+    let count = 0;
+    if (this.filtro.codigo) count++;
+    if (this.filtro.nome) count++;
+    if (this.filtro.tipo) count++;
+    if (this.filtro.status) count++;
+    return count;
+  }
 
   selectedIds = new Set<number>();
   bulkAction = '';
@@ -75,11 +105,19 @@ export class SalasListComponent implements AfterViewInit {
 
   confirmarLote(): void {
     this.modalLoteVisible = false;
-    this.salas = this.salas.map(s =>
-      this.selectedIds.has(s.id) ? { ...s, status: this.statusLote } : s
-    );
-    this.selectedIds.clear();
-    this.applyFilters();
+    const ids = Array.from(this.selectedIds);
+    
+    this.salasService.atualizarStatusLote(ids, this.statusLote).subscribe({
+      next: (response) => {
+        this.carregarSalas();
+        this.selectedIds.clear();
+        this.showMessage(`${response.data.atualizados} sala(s) atualizada(s) com sucesso`, 'success');
+      },
+      error: (err) => {
+        console.error('Erro ao atualizar status em lote:', err);
+        this.showMessage('Erro ao atualizar status das salas', 'error');
+      }
+    });
   }
 
   cancelarLote(): void {
@@ -97,7 +135,27 @@ export class SalasListComponent implements AfterViewInit {
     callback: () => {}
   };
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private salasService: SalasService) {}
+
+  ngOnInit(): void {
+    this.carregarSalas();
+  }
+
+  carregarSalas(): void {
+    this.loading = true;
+    this.salasService.listarSalas().subscribe({
+      next: (response) => {
+        this.salas = response.data || [];
+        this.filteredSalas = [...this.salas];
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Erro ao carregar salas:', err);
+        this.showMessage('Erro ao carregar salas', 'error');
+        this.loading = false;
+      }
+    });
+  }
 
   ngAfterViewInit(): void {
     this.forceLeftAlignmentStyles();
@@ -221,6 +279,7 @@ export class SalasListComponent implements AfterViewInit {
       (!this.filtro.status|| s.status === this.filtro.status)
     );
 
+    this.paginaAtual = 1;
     this.syncSelection();
   }
 
@@ -228,6 +287,18 @@ export class SalasListComponent implements AfterViewInit {
     this.filtro = { codigo: '', nome: '', tipo: '', status: '' };
     this.applyFilters();
   }
+
+  irParaPagina(pagina: number): void {
+    if (pagina >= 1 && pagina <= this.totalPaginas) {
+      this.paginaAtual = pagina;
+    }
+  }
+
+  onItensPorPaginaChange(): void {
+    this.paginaAtual = 1;
+  }
+
+  trackByIndex(i: number): number { return i; }
 
   isSelected(id: number): boolean { return this.selectedIds.has(id); }
 
@@ -237,17 +308,17 @@ export class SalasListComponent implements AfterViewInit {
 
   toggleAll(checked: boolean): void {
     checked
-      ? this.filteredSalas.forEach(s => this.selectedIds.add(s.id))
+      ? this.filteredSalas.forEach(s => s.id && this.selectedIds.add(s.id))
       : this.selectedIds.clear();
   }
 
   allSelected(): boolean {
     return this.filteredSalas.length > 0 &&
-           this.filteredSalas.every(s => this.selectedIds.has(s.id));
+           this.filteredSalas.every(s => s.id && this.selectedIds.has(s.id));
   }
 
   syncSelection(): void {
-    const validIds = new Set(this.filteredSalas.map(s => s.id));
+    const validIds = new Set(this.filteredSalas.map(s => s.id).filter((id): id is number => id !== undefined));
     this.selectedIds.forEach(id => { if (!validIds.has(id)) this.selectedIds.delete(id); });
   }
 
@@ -263,9 +334,18 @@ export class SalasListComponent implements AfterViewInit {
       `Deseja ${acao} a sala ${sala.codigo}?`,
       false,
       () => {
-        sala.status = novoStatus;
-        this.applyFilters();
-        this.showMessage(`Sala ${sala.codigo} ${novoStatus === 'ativa' ? 'ativada' : 'desativada'} com sucesso.`, 'success');
+        if (sala.id) {
+          this.salasService.atualizarStatus(sala.id, novoStatus).subscribe({
+            next: () => {
+              this.carregarSalas();
+              this.showMessage(`Sala ${sala.codigo} ${novoStatus === 'ativa' ? 'ativada' : 'desativada'} com sucesso.`, 'success');
+            },
+            error: (err) => {
+              console.error('Erro ao atualizar status:', err);
+              this.showMessage('Erro ao atualizar status da sala', 'error');
+            }
+          });
+        }
       }
     );
   }
@@ -276,9 +356,18 @@ export class SalasListComponent implements AfterViewInit {
       `Tem certeza que deseja excluir a sala ${sala.codigo}? Esta ação não pode ser desfeita.`,
       true,
       () => {
-        this.salas = this.salas.filter(s => s.id !== sala.id);
-        this.applyFilters();
-        this.showMessage(`Sala ${sala.codigo} excluída com sucesso.`, 'success');
+        if (sala.id) {
+          this.salasService.excluirSala(sala.id).subscribe({
+            next: () => {
+              this.carregarSalas();
+              this.showMessage(`Sala ${sala.codigo} excluída com sucesso.`, 'success');
+            },
+            error: (err) => {
+              console.error('Erro ao excluir sala:', err);
+              this.showMessage('Erro ao excluir sala', 'error');
+            }
+          });
+        }
       }
     );
   }
@@ -292,7 +381,7 @@ export class SalasListComponent implements AfterViewInit {
 
     if (this.bulkAction === 'excluir') {
       this.openConfirm('Excluir salas', `Tem certeza que deseja excluir ${label}? Esta ação não pode ser desfeita.`, true, () => {
-        this.salas = this.salas.filter(s => !this.selectedIds.has(s.id));
+        this.salas = this.salas.filter(s => s.id && !this.selectedIds.has(s.id));
         this.selectedIds.clear(); this.bulkAction = '';
         this.applyFilters();
         this.showMessage('Salas excluídas com sucesso.', 'success');
@@ -307,7 +396,7 @@ export class SalasListComponent implements AfterViewInit {
       `Deseja ${acao} ${label} selecionada${count > 1 ? 's' : ''}?`,
       false,
       () => {
-        this.salas = this.salas.map(s => this.selectedIds.has(s.id) ? { ...s, status: novoStatus } : s);
+        this.salas = this.salas.map(s => (s.id && this.selectedIds.has(s.id)) ? { ...s, status: novoStatus } : s);
         this.selectedIds.clear(); this.bulkAction = '';
         this.applyFilters();
         this.showMessage(`Salas ${novoStatus === 'ativa' ? 'ativadas' : 'desativadas'} com sucesso.`, 'success');

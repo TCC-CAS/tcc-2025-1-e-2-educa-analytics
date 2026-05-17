@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-// Light Professional Theme — Form
+// Light Professional Theme — Sala Form
 // ═══════════════════════════════════════════════════════════
 $primary:    #2563eb;
 $danger:     #dc2626;
@@ -11,283 +11,344 @@ $border:     #e2e8f0;
 $text:       #1e293b;
 $text-muted: #64748b;
 $radius:     10px;
+
 :host {
   display: block;
   height: 100%;
   overflow: hidden;
   flex-shrink: 1;
-  background-color: #ffffff;
-  background-image:
-    linear-gradient(rgba(0,0,0,0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,0.07) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-color: #f8fafc;
   font-family: 'Inter', 'Segoe UI', sans-serif;
   color: $text;
 }
+
 .sala-form-page {
   height: 100%;
-  overflow-y: auto;
-  box-sizing: border-box;
-  padding: 2.5rem 2rem 3rem;
-  max-width: 900px;
-  width: 100%;
-  margin: 0 auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  justify-content: flex-start;
+  padding: 1.5rem 2rem 1rem;
+  color: $text;
+  box-sizing: border-box;
 
-  @media (max-width: 768px) { padding: 1.5rem 1rem 2rem; }
+  @media (max-width: 768px) { padding: 1rem; }
 }
-.page-header {
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(37,99,235,0.15);
-  border-left: 4px solid $primary;
-  border-radius: 12px;
-  padding: 1.1rem 1.5rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+
+.form-wrapper {
+  max-width: 1050px;
+  margin: 0 auto;
+  width: 100%;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  background: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: $primary;
+  }
 
   h1 {
-    margin: 0 0 .2rem;
-    font-size: 1.75rem;
-    font-weight: 800;
+    margin: 0 0 0.25rem;
+    font-size: 1.5rem;
+    font-weight: 700;
     color: $primary;
-    letter-spacing: -0.01em;
     text-transform: uppercase;
+    letter-spacing: 0.02em;
   }
-  p { margin: 0; font-size: .95rem; color: $text-muted; }
+
+  p {
+    margin: 0;
+    color: $text-muted;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .required-legend {
+    color: $danger;
+    font-weight: 700;
+  }
 }
+
 .message {
-  padding: .75rem 1rem;
-  border-radius: $radius;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
   background: #dcfce7;
   color: #166534;
   border: 1px solid #bbf7d0;
-  font-size: .875rem;
+  font-size: 0.875rem;
   font-weight: 500;
   display: flex;
   align-items: center;
-  gap: .5rem;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 
   svg { flex-shrink: 0; }
-  &.error, &[class*="error"] { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+  &.error { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
   &.success { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
 }
-.form-wrapper {
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(226,232,240,0.9);
-  border-radius: 12px;
-  padding: 1.75rem;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-.field-group {
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(226,232,240,0.9);
-  border-top: 3px solid $primary;
+
+.form {
+  background: #ffffff;
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.03);
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  position: relative;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+  }
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+
+  &:last-of-type { margin-bottom: 0; }
 }
 
 .group-title {
-  margin: 0 0 1.25rem;
-  font-size: .78rem;
+  font-size: 0.82rem;
   font-weight: 800;
-  color: $primary;
   text-transform: uppercase;
-  letter-spacing: .09em;
-  padding-bottom: .75rem;
-  border-bottom: 2px solid rgba(37,99,235,0.12);
+  letter-spacing: 0.08em;
+  color: $primary;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(37,99,235,0.15);
 }
+
 .field-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.1rem;
-
-  @media (max-width: 640px) { grid-template-columns: 1fr; }
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem 1rem;
+  align-items: start;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.1rem;
+.col-2 { grid-column: span 2; }
+.col-full { grid-column: 1 / -1; }
 
-  @media (max-width: 640px) { grid-template-columns: 1fr; }
-}
-
-.field, .form-field {
+// Simple Label Fields
+.field {
   display: flex;
   flex-direction: column;
-  gap: .4rem;
+  gap: 0.5rem;
+  width: 100%;
 
-  &.col-2, &.full-width, &.full, &.col-full { grid-column: 1 / -1; }
-
-  > span,
-  > label,
-  label[for] {
-    font-size: .82rem;
+  label {
+    font-size: 0.82rem;
     font-weight: 700;
     color: $text-muted;
     text-transform: uppercase;
-    letter-spacing: .07em;
+    letter-spacing: 0.05em;
+    margin-bottom: 0;
   }
 
-  input[type="text"],
-  input[type="number"],
-  input[type="email"],
-  input[type="tel"],
-  input[type="date"],
-  input[type="time"],
-  input[type="month"],
+  &.required label::after {
+    content: ' *';
+    color: $danger;
+    font-weight: 700;
+  }
+
+  input,
   select,
   textarea {
-    height: 42px;
-    padding: 0 .9rem;
-    border: 1.5px solid $border;
-    border-radius: 8px;
-    font-size: .95rem;
-    color: $text;
-    background: #fff;
-    outline: none;
-    box-sizing: border-box;
     width: 100%;
+    box-sizing: border-box;
+    padding: 0.7rem 1rem;
+    border: 2px solid rgba(226,232,240,0.9);
+    border-radius: 8px;
+    font-size: 0.95rem;
     font-family: inherit;
-    appearance: none;
-    transition: border-color .15s, box-shadow .15s, background .15s;
+    color: $text;
+    background: #ffffff;
+    outline: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 
-    &::placeholder { color: #b0bec5; }
+    &::placeholder {
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+
     &:focus {
       border-color: $primary;
-      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-      background: rgba(37,99,235,0.01);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1), 0 2px 4px rgba(37,99,235,0.08);
+    }
+
+    &:hover:not(:focus) {
+      border-color: rgba(37,99,235,0.4);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    }
+  }
+
+  input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%232563eb' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+    cursor: pointer;
+
+    option {
+      background: #fff;
+      color: $text;
+      padding: 0.5rem;
     }
   }
 
   textarea {
-    height: auto;
-    padding: .75rem .9rem;
     resize: vertical;
-    min-height: 90px;
+    min-height: 100px;
+    line-height: 1.5;
   }
 }
 
-.required-legend {
-  color: $danger;
-  font-weight: 700;
+// Recursos Grid (checkboxes)
+.recursos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+  padding: 0.25rem 0;
 }
 
-.field.required > span::after,
-label.required > span::after {
-  content: ' *';
-  color: $danger;
-}
 .checkbox-field {
-  justify-content: center;
-}
-
-.checkbox-wrap {
   display: flex;
   align-items: center;
-  gap: .6rem;
-  height: 42px;
-  padding: 0 .75rem;
-  border: 1.5px solid $border;
-  border-radius: 8px;
-  background: #fff;
+  gap: 0.6rem;
   cursor: pointer;
-  transition: border-color .15s, background .15s, box-shadow .15s;
+  padding: 0.8rem 1rem;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 2px solid rgba(226,232,240,0.8);
+  transition: all 0.2s ease;
 
   &:hover {
-    border-color: $primary;
     background: rgba(37,99,235,0.03);
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.07);
+    border-color: rgba(37,99,235,0.3);
+    box-shadow: 0 2px 6px rgba(37,99,235,0.08);
   }
 
   input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: $primary;
+    width: 18px;
+    height: 18px;
     cursor: pointer;
+    accent-color: $primary;
     flex-shrink: 0;
     margin: 0;
+  }
 
-    &:checked + .checkbox-label { color: $primary; font-weight: 700; }
+  .checkbox-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: $text;
+    user-select: none;
+  }
+
+  &:has(input:checked) {
+    background: rgba(37,99,235,0.05);
+    border-color: $primary;
+    box-shadow: 0 0 0 1px rgba(37,99,235,0.2);
+
+    .checkbox-label {
+      color: $primary;
+      font-weight: 600;
+    }
   }
 }
 
-.checkbox-label {
-  font-size: .9rem;
-  color: $text;
-  font-weight: 500;
-  transition: color .15s;
-}
 .form-actions {
   display: flex;
-  align-items: center;
   justify-content: flex-end;
-  gap: .75rem;
-  padding-top: .5rem;
-}
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid rgba(226,232,240,0.6);
 
-// ── Primary button ───────────────────────────────────────────
-button.primary,
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .5rem;
-  height: 44px;
-  padding: 0 1.75rem;
-  border-radius: 10px;
-  font-size: .95rem;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-  white-space: nowrap;
-  letter-spacing: .03em;
-  background: linear-gradient(135deg, #3b82f6 0%, $primary 100%);
-  color: #fff;
-  box-shadow: 0 2px 10px rgba(37,99,235,0.3), 0 1px 3px rgba(37,99,235,0.15);
-  transition: background .15s, box-shadow .15s, transform .1s;
+  button {
+    height: 42px;
+    padding: 0 1.5rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
 
-  &:hover {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    box-shadow: 0 6px 20px rgba(37,99,235,0.4);
-    transform: translateY(-1px);
+    &.primary {
+      background: $primary;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+
+      &:hover {
+        background: #1e40af;
+        box-shadow: 0 4px 12px rgba(37,99,235,0.35);
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 4px rgba(37,99,235,0.3);
+      }
+    }
+
+    &.btn-secondary {
+      background: #f1f5f9;
+      color: $text-muted;
+      border: 2px solid rgba(226,232,240,0.8);
+
+      &:hover {
+        background: #e2e8f0;
+        color: $text;
+        border-color: rgba(148,163,184,0.6);
+      }
+
+      &:active {
+        background: #cbd5e1;
+      }
+    }
   }
-  &:active { transform: translateY(1px); box-shadow: none; }
 }
-
-// ── Ghost / secondary button ─────────────────────────────────
-button.ghost,
-.btn-ghost,
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .5rem;
-  height: 44px;
-  padding: 0 1.35rem;
-  border-radius: 10px;
-  font-size: .9rem;
-  font-weight: 600;
-  cursor: pointer;
-  background: transparent;
-  color: $text-muted;
-  border: 1.5px solid $border;
-  transition: background .15s, border-color .15s, color .15s;
-
-  &:hover { background: #f8fafc; color: $text; border-color: #94a3b8; }
-}
-@keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
