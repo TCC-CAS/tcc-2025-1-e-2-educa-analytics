@@ -590,6 +590,15 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     else if (el.name === 'respTelefone') this.respTelefone = v;
   }
 
+  mascaraCep(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    let v = el.value.replace(/\D/g, '').slice(0, 8);
+    if (v.length > 5) v = v.replace(/(\d{5})(\d{0,3})/, '$1-$2');
+    el.value = v;
+    if (el.name === 'alunoCep') this.alunoEndereco.cep = v;
+    else if (el.name === 'respCep') this.respEndereco.cep = v;
+  }
+
   // CEP
   buscarCepAluno(): void {
     const cep = this.alunoEndereco.cep.replace(/\D/g, '');

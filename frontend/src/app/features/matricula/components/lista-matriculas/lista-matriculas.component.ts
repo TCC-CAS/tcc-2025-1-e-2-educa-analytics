@@ -4,7 +4,17 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 
 export type DetalheTab = 'educando' | 'responsavel' | 'escolar' | 'historico';
-export type StatusMatricula = 'Ativa' | 'Concluída' | 'Abandonada';
+export type StatusMatricula = 'Ativa' | 'Concluída' | 'Abandonada' | 'Transferida';
+
+interface ViaCepResponse {
+  cep: string;
+  logradouro: string;
+  complemento: string;
+  bairro: string;
+  localidade: string;
+  uf: string;
+  erro?: boolean;
+}
 
 export interface HistoricoItem {
   anoLetivo: string;
@@ -49,7 +59,7 @@ export interface MatriculaRegistro {
     complemento: string; bairro: string; cidade: string; uf: string;
   };
 
-  // ResponsÃ¡vel
+  // Responsável
   respNome: string;
   respNascimento: string;
   respIdade: number;
@@ -76,8 +86,37 @@ export interface MatriculaRegistro {
   periodo: string;
   sala: string;
 
-  // HistÃ³rico
+  // Histórico
   historico: HistoricoItem[];
+}
+
+interface TurmaDetalhe {
+  codigo: string;
+  nome: string;
+  anoLetivo: string;
+  serie: string;
+  periodo: string;
+  sala: string;
+  dataInicio: string;
+  dataTermino: string;
+  vagasOcupadas: number[];
+}
+
+interface TurmaBackend {
+  idTurma: number;
+  codTurma: string;
+  nomeTurma: string;
+  periodo: string;
+  anoLetivo: string;
+  serie: string;
+  qldVagas: number;
+  dataInicio: string;
+  dataFim: string;
+  status: string;
+  idSala: number | null;
+  nomeSala: string | null;
+  vagasOcupadas: number[];
+  vagasDisponiveis: number;
 }
 
 @Component({
@@ -88,6 +127,12 @@ export interface MatriculaRegistro {
   host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
 export class ListaMatriculasComponent implements OnInit, AfterViewInit {
+  // Propriedades de navegação e estado
+  view: 'lista' | 'detalhe' = 'lista';
+  modoEdicao = false;
+  activeTab: DetalheTab = 'educando';
+  secaoAtiva = '';
+  historicoExpandido: number | null = null;
 
   constructor(
     private router: Router,
@@ -166,22 +211,17 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // Estado da tela
-  view: 'lista' | 'detalhe' = 'lista';
-  modoEdicao = false;
-  activeTab: DetalheTab = 'educando';
-  historicoExpandido: number | null = null;
-
-  // Filtrosâ”€â”€â”€
+  // Filtros
   filtroNome = '';
   filtroSerie = '';
   filtroTurma = '';
   filtroAno = '';
   filtroStatus = '';
+  filtroSituacao = '';
   filtroPeriodo = '';
 
   get filtrosAtivos(): number {
-    return [this.filtroNome, this.filtroSerie, this.filtroTurma, this.filtroAno, this.filtroStatus, this.filtroPeriodo]
+    return [this.filtroNome, this.filtroSerie, this.filtroTurma, this.filtroAno, this.filtroStatus, this.filtroSituacao, this.filtroPeriodo]
       .filter(v => v !== '').length;
   }
 
@@ -202,11 +242,69 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
   edicao: MatriculaRegistro | null = null;
 
   readonly series = [
-    '1Âº Ano', '2Âº Ano', '3Âº Ano', '4Âº Ano', '5Âº Ano',
-    '6Âº Ano', '7Âº Ano', '8Âº Ano', '9Âº Ano'
+    '1º Ano', '2º Ano', '3º Ano', '4º Ano', '5º Ano',
+    '6º Ano', '7º Ano', '8º Ano', '9º Ano'
   ];
 
-  readonly statusList: StatusMatricula[] = ['Ativa', 'Concluída', 'Abandonada'];
+  readonly statusList: StatusMatricula[] = ['Ativa', 'Concluída', 'Abandonada', 'Transferida'];
+
+  // Gênero (para edição)
+  alunoGeneroSelecionado = '';
+  alunoGeneroOutro = false;
+  alunoGeneroCustom = '';
+  
+  respGeneroSelecionado = '';
+  respGeneroOutro = false;
+  respGeneroCustom = '';
+
+  readonly generosOpcoes = [
+    { value: 'mulher-cis', label: 'Mulher cis' },
+    { value: 'homem-cis', label: 'Homem cis' },
+    { value: 'homem-trans', label: 'Homem trans' },
+    { value: 'mulher-trans', label: 'Mulher trans' },
+    { value: 'agenero', label: 'Agênero' },
+    { value: 'genero-fluido', label: 'Gênero fluido' },
+    { value: 'bigenero', label: 'Bigênero' },
+    { value: 'demigenero', label: 'Demigênero' },
+    { value: 'intergenero', label: 'Intergênero' },
+    { value: 'nao-informar', label: 'Prefiro não informar' },
+    { value: 'outro', label: 'Outro' }
+  ];
+
+  // Lógica de cascata para turmas (edição)
+  anosLetivos: string[] = Array.from({ length: 6 }, (_, i) =>
+    (new Date().getFullYear() - 1 + i).toString()
+  );
+  
+  seriesDisponiveis: string[] = [];
+  periodosDisponiveis: { value: string; label: string }[] = [];
+  turmasDisponiveis: TurmaDetalhe[] = [];
+  turmasCarregando = false;
+
+  private readonly periodosLabel: Record<string, string> = {
+    matutino: 'Manhã', 
+    vespertino: 'Tarde', 
+    noturno: 'Noite', 
+    integral: 'Integral'
+  };
+
+  private readonly periodosLabelReverso: Record<string, string> = {
+    'Manhã': 'matutino',
+    'Tarde': 'vespertino',
+    'Noite': 'noturno',
+    'Integral': 'integral',
+    'matutino': 'matutino',
+    'vespertino': 'vespertino',
+    'noturno': 'noturno',
+    'integral': 'integral'
+  };
+
+  // CEP e endereço
+  cepLoadingAluno = false;
+  cepErroAluno = false;
+  cepLoadingResp = false;
+  cepErroResp = false;
+  useSameAddress = false;
 
   // Dados e estado de carregamento
   matriculas: MatriculaRegistro[] = [];
@@ -261,8 +359,7 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
       if (this.filtroSerie  && m.serie        !== this.filtroSerie)  return false;
       if (this.filtroTurma  && m.codigoTurma  !== this.filtroTurma)  return false;
       if (this.filtroAno    && m.anoLetivo    !== this.filtroAno)    return false;
-      if (this.filtroStatus  && m.status    !== this.filtroStatus)  return false;
-      if (this.filtroPeriodo && m.periodo    !== this.filtroPeriodo) return false;
+      if (this.filtroStatus  && m.status    !== this.filtroStatus)  return false;      if (this.filtroSituacao && this.getSituacao(m) !== this.filtroSituacao) return false;      if (this.filtroPeriodo && m.periodo    !== this.filtroPeriodo) return false;
       return true;
     });
     this.totalPaginas = Math.max(1, Math.ceil(this.matriculasFiltradas.length / this.itensPorPagina));
@@ -279,14 +376,37 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
   trackByIndex(i: number): number { return i; }
   trackByNome(_: number, s: string): string { return s; }
 
-  // AÃ§Ãµes de lista
+  // Ações de lista
   abrirDetalhe(m: MatriculaRegistro): void {
     this.selecionado = m;
     this.edicao = JSON.parse(JSON.stringify(m)); // deep copy
     this.modoEdicao = false;
     this.activeTab = 'educando';
+    this.secaoAtiva = 'identificacao-educando';
     this.historicoExpandido = null;
     this.view = 'detalhe';
+    
+    // Resetar estados de CEP e endereço
+    this.cepLoadingAluno = false;
+    this.cepErroAluno = false;
+    this.cepLoadingResp = false;
+    this.cepErroResp = false;
+    this.useSameAddress = false;
+    
+    // Inicializa gênero
+    this.alunoGeneroSelecionado = m.alunoGenero || '';
+    this.alunoGeneroOutro = !this.generosOpcoes.some(g => g.value === m.alunoGenero);
+    this.alunoGeneroCustom = this.alunoGeneroOutro ? m.alunoGenero : '';
+    
+    this.respGeneroSelecionado = m.respGenero || '';
+    this.respGeneroOutro = !this.generosOpcoes.some(g => g.value === m.respGenero);
+    this.respGeneroCustom = this.respGeneroOutro ? m.respGenero : '';
+    
+    // Converte período para o formato de valor (matutino, vespertino, etc)
+    if (this.edicao && this.edicao.periodo) {
+      this.edicao.periodo = this.periodosLabelReverso[this.edicao.periodo] || this.edicao.periodo;
+    }
+    
     this.cdr.markForCheck();
   }
 
@@ -298,6 +418,24 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
     this.cdr.markForCheck();
   }
 
+  selecionarSecao(secaoId: string): void {
+    this.secaoAtiva = secaoId;
+    this.cdr.markForCheck();
+  }
+
+  mudarAba(aba: DetalheTab): void {
+    this.activeTab = aba;
+    // Definir seção inicial ao trocar de aba
+    if (aba === 'educando') {
+      this.secaoAtiva = 'identificacao-educando';
+    } else if (aba === 'responsavel') {
+      this.secaoAtiva = 'identificacao-responsavel';
+    } else {
+      this.secaoAtiva = '';
+    }
+    this.cdr.markForCheck();
+  }
+
   novaMatricula(): void {
     this.router.navigate(['/matricula/nova']);
   }
@@ -306,9 +444,26 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
     this.router.navigate(['/matricula/nova'], { state: { rematricula: m } });
   }
 
-  // AÃ§Ãµes de detalhe
+  // Ações de detalhe
   iniciarEdicao(): void {
     this.modoEdicao = true;
+    
+    // Carrega séries se ano letivo está definido
+    if (this.edicao?.anoLetivo) {
+      this.computarSeries();
+    }
+    
+    // Carrega períodos se série está definida
+    if (this.edicao?.anoLetivo && this.edicao?.serie) {
+      this.computarPeriodos();
+    }
+    
+    // Carrega turmas se período está definido
+    if (this.edicao?.anoLetivo && this.edicao?.serie && this.edicao?.periodo) {
+      this.carregarTurmasEdicao();
+    }
+    
+    this.cdr.markForCheck();
   }
 
   cancelarEdicao(): void {
@@ -335,12 +490,17 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
   salvarEdicao(): void {
     if (!this.edicao) return;
     const id = this.edicao.idMatricula;
+    
+    // Determina o gênero final (customizado ou selecionado)
+    const generoEducando = this.alunoGeneroOutro ? this.alunoGeneroCustom : this.alunoGeneroSelecionado;
+    const generoResponsavel = this.respGeneroOutro ? this.respGeneroCustom : this.respGeneroSelecionado;
+    
     const payload = {
       educando: {
         nomeCompleto:   this.edicao.alunoNome,
         dataNascimento: this.edicao.alunoNascimento,
         idade:          this.edicao.alunoIdade,
-        genero:         this.edicao.alunoGenero,
+        genero:         generoEducando || this.edicao.alunoGenero,
         cor:            this.edicao.alunoCorRaca,
         cpf:            this.edicao.alunoCpf,
         rg:             this.edicao.alunoRg,
@@ -349,15 +509,26 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
         endereco:       this.edicao.alunoEndereco,
       },
       responsavel: this.edicao.respNome ? {
-        idMatricula:    this.edicao.id,   // idResponsavel nÃ£o exposto diretamente
+        idMatricula:    this.edicao.id,
         nomeCompleto:   this.edicao.respNome,
         dataNascimento: this.edicao.respNascimento,
+        genero:         generoResponsavel || this.edicao.respGenero,
         cpf:            this.edicao.respCpf,
         rg:             this.edicao.respRg,
         email:          this.edicao.respEmail,
         telefone:       this.edicao.respTelefone,
         endereco:       this.edicao.respEndereco,
       } : undefined,
+      dadosEscolares: {
+        anoLetivo:      this.edicao.anoLetivo,
+        serie:          this.edicao.serie,
+        periodo:        this.edicao.periodo,
+        codigoTurma:    this.edicao.codigoTurma,
+        turma:          this.edicao.turma,
+        sala:           this.edicao.sala,
+        dataInicio:     this.edicao.dataInicio,
+        dataTermino:    this.edicao.dataTermino,
+      }
     };
     this.http.put<MatriculaRegistro>(`${environment.apiUrl}/matricula/${id}`, payload).subscribe({
       next: (updated) => {
@@ -447,13 +618,113 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
     }
   }
 
+  // Métodos de formatação para visualização
+  formatarCpf(cpf: string | undefined): string {
+    if (!cpf) return '-';
+    const numeros = cpf.replace(/\D/g, '');
+    if (numeros.length !== 11) return cpf;
+    return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  }
+
+  formatarRg(rg: string | undefined): string {
+    if (!rg) return '-';
+    const limpo = rg.replace(/[^\dXx]/g, '');
+    if (limpo.length < 8) return rg;
+    if (limpo.length === 9) {
+      return limpo.replace(/(\d{2})(\d{3})(\d{3})([\dXx])/, '$1.$2.$3-$4');
+    }
+    return rg;
+  }
+
+  formatarTelefone(telefone: string | undefined): string {
+    if (!telefone) return '-';
+    const numeros = telefone.replace(/\D/g, '');
+    if (numeros.length === 11) {
+      return numeros.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (numeros.length === 10) {
+      return numeros.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    }
+    return telefone;
+  }
+
+  formatarCep(cep: string | undefined): string {
+    if (!cep) return '-';
+    const numeros = cep.replace(/\D/g, '');
+    if (numeros.length !== 8) return cep;
+    return numeros.replace(/(\d{5})(\d{3})/, '$1-$2');
+  }
+
   statusClass(status: StatusMatricula): string {
     const map: Record<StatusMatricula, string> = {
       'Ativa': 'status-ativa',
       'Concluída': 'status-concluida',
       'Abandonada': 'status-abandonada',
+      'Transferida': 'status-transferida',
     };
     return map[status] ?? '';
+  }
+
+  getSituacao(m: MatriculaRegistro): 'Aprovado' | 'Reprovado' | 'Em andamento' {
+    // Se a matrícula foi abandonada, consideramos como situação indefinida (em andamento)
+    if (m.status === 'Abandonada') {
+      return 'Em andamento';
+    }
+
+    // Verifica se o período letivo já terminou
+    const hoje = new Date();
+    const dataTermino = new Date(m.dataTermino);
+    const periodoAtivo = hoje <= dataTermino;
+
+    // Se o período ainda está ativo, está em andamento
+    if (periodoAtivo) {
+      return 'Em andamento';
+    }
+
+    // Se não tem histórico, consideramos em andamento
+    if (!m.historico || m.historico.length === 0) {
+      return 'Em andamento';
+    }
+
+    // Procura o histórico do ano letivo atual da matrícula
+    const historicoAtual = m.historico.find(h => h.anoLetivo === m.anoLetivo);
+    
+    if (!historicoAtual) {
+      return 'Em andamento';
+    }
+
+    // Se o histórico já tem uma situação definida, usa ela
+    if (historicoAtual.situacao === 'Aprovado' || historicoAtual.situacao === 'Reprovado') {
+      return historicoAtual.situacao;
+    }
+
+    // Se não tem disciplinas, considera em andamento
+    if (!historicoAtual.disciplinas || historicoAtual.disciplinas.length === 0) {
+      return 'Em andamento';
+    }
+
+    // Verifica se todas as disciplinas têm situação definida
+    const todasDefinidas = historicoAtual.disciplinas.every(d => 
+      d.situacao === 'Aprovado' || d.situacao === 'Reprovado'
+    );
+
+    if (!todasDefinidas) {
+      return 'Em andamento';
+    }
+
+    // Se alguma disciplina foi reprovada, o educando foi reprovado
+    const temReprovacao = historicoAtual.disciplinas.some(d => d.situacao === 'Reprovado');
+    
+    return temReprovacao ? 'Reprovado' : 'Aprovado';
+  }
+
+  situacaoClass(situacao: 'Aprovado' | 'Reprovado' | 'Em andamento' | 'Transferido'): string {
+    const map = {
+      'Aprovado': 'situacao-aprovado',
+      'Reprovado': 'situacao-reprovado',
+      'Em andamento': 'situacao-andamento',
+      'Transferido': 'situacao-transferido',
+    };
+    return map[situacao] ?? '';
   }
 
   // SeleÃ§Ã£o em lote
@@ -551,11 +822,289 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
     this.matriculaStatusEdit = null;
   }
 
-  situacaoClass(s: string): string {
-    if (s === 'Aprovado') return 'situacao-aprovado';
-    if (s === 'Reprovado') return 'situacao-reprovado';
-    if (s === 'Em andamento') return 'situacao-andamento';
-    return 'situacao-transferido';
+  // Exclusão de matrícula
+  modalExclusaoVisible = false;
+  matriculaExclusao: MatriculaRegistro | null = null;
+
+  abrirModalExclusao(m: MatriculaRegistro, event: Event): void {
+    event.stopPropagation();
+    this.matriculaExclusao = m;
+    this.modalExclusaoVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  confirmarExclusao(): void {
+    if (!this.matriculaExclusao) return;
+    const id = this.matriculaExclusao.idMatricula;
+    this.modalExclusaoVisible = false;
+    
+    this.http.delete(`${environment.apiUrl}/matricula/${id}`).subscribe({
+      next: () => {
+        // Remove da lista local
+        const idx = this.matriculas.findIndex(m => m.idMatricula === id);
+        if (idx !== -1) {
+          this.matriculas.splice(idx, 1);
+        }
+        // Remove da seleção se estava selecionada
+        if (this.matriculaExclusao) {
+          this.selecionados.delete(this.matriculaExclusao.id);
+        }
+        this.matriculaExclusao = null;
+        this.recalcularTudo();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Erro ao excluir matrícula:', err);
+        this.matriculaExclusao = null;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  cancelarExclusao(): void {
+    this.modalExclusaoVisible = false;
+    this.matriculaExclusao = null;
+    this.cdr.markForCheck();
+  }
+
+  // Gênero (edição)
+  onAlunoGeneroChange(valor: string): void {
+    this.alunoGeneroOutro = valor === 'outro';
+    if (!this.alunoGeneroOutro) {
+      this.alunoGeneroCustom = '';
+    }
+    if (this.edicao) {
+      this.edicao.alunoGenero = valor;
+    }
+    this.cdr.markForCheck();
+  }
+
+  onRespGeneroChange(valor: string): void {
+    this.respGeneroOutro = valor === 'outro';
+    if (!this.respGeneroOutro) {
+      this.respGeneroCustom = '';
+    }
+    if (this.edicao) {
+      this.edicao.respGenero = valor;
+    }
+    this.cdr.markForCheck();
+  }
+
+  // Cascata de turmas (edição)
+  private computarSeries(): void {
+    if (!this.edicao?.anoLetivo) { 
+      this.seriesDisponiveis = []; 
+      return; 
+    }
+    this.http.get<string[]>(`${environment.apiUrl}/matricula/series?anoLetivo=${this.edicao.anoLetivo}`)
+      .subscribe({ 
+        next: (series) => { 
+          this.seriesDisponiveis = series;
+          this.cdr.markForCheck();
+        } 
+      });
+  }
+
+  private computarPeriodos(): void {
+    if (!this.edicao?.anoLetivo || !this.edicao?.serie) { 
+      this.periodosDisponiveis = []; 
+      return; 
+    }
+    const params = `anoLetivo=${encodeURIComponent(this.edicao.anoLetivo)}&serie=${encodeURIComponent(this.edicao.serie)}`;
+    this.http.get<string[]>(`${environment.apiUrl}/matricula/periodos?${params}`)
+      .subscribe({
+        next: (periodos) => {
+          this.periodosDisponiveis = periodos.map(p => ({ 
+            value: p, 
+            label: this.periodosLabel[p] ?? p 
+          }));
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  private carregarTurmasEdicao(): void {
+    if (!this.edicao?.anoLetivo || !this.edicao?.serie || !this.edicao?.periodo) { 
+      this.turmasDisponiveis = []; 
+      return; 
+    }
+    this.turmasCarregando = true;
+    const params = `anoLetivo=${encodeURIComponent(this.edicao.anoLetivo)}&serie=${encodeURIComponent(this.edicao.serie)}&periodo=${encodeURIComponent(this.edicao.periodo)}`;
+    this.http.get<TurmaBackend[]>(`${environment.apiUrl}/matricula/turmas?${params}`)
+      .subscribe({
+        next: (turmasBackend) => {
+          this.turmasDisponiveis = turmasBackend.map(t => ({
+            codigo:       t.codTurma,
+            nome:         t.nomeTurma,
+            anoLetivo:    String(t.anoLetivo),
+            serie:        t.serie,
+            periodo:      t.periodo,
+            sala:         t.nomeSala ?? '',
+            dataInicio:   t.dataInicio ?? '',
+            dataTermino:  t.dataFim ?? '',
+            vagasOcupadas: t.vagasOcupadas ?? [],
+          }));
+          this.turmasCarregando = false;
+          this.cdr.markForCheck();
+        },
+        error: () => { 
+          this.turmasCarregando = false; 
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  onAnoLetivoChange(): void {
+    if (!this.edicao) return;
+    this.edicao.serie = '';
+    this.edicao.periodo = '';
+    this.edicao.codigoTurma = '';
+    this.edicao.turma = '';
+    this.edicao.dataInicio = '';
+    this.edicao.dataTermino = '';
+    this.edicao.sala = '';
+    this.turmasDisponiveis = [];
+    this.periodosDisponiveis = [];
+    this.computarSeries();
+  }
+
+  onSerieChange(): void {
+    if (!this.edicao) return;
+    this.edicao.periodo = '';
+    this.edicao.codigoTurma = '';
+    this.edicao.turma = '';
+    this.edicao.dataInicio = '';
+    this.edicao.dataTermino = '';
+    this.edicao.sala = '';
+    this.turmasDisponiveis = [];
+    this.computarPeriodos();
+  }
+
+  onPeriodoChange(): void {
+    if (!this.edicao) return;
+    this.edicao.codigoTurma = '';
+    this.edicao.turma = '';
+    this.edicao.dataInicio = '';
+    this.edicao.dataTermino = '';
+    this.edicao.sala = '';
+    this.carregarTurmasEdicao();
+  }
+
+  onTurmaChange(): void {
+    if (!this.edicao || !this.edicao.codigoTurma) return;
+    const turma = this.turmasDisponiveis.find(t => t.codigo === this.edicao!.codigoTurma);
+    if (turma) {
+      this.edicao.turma = turma.nome;
+      this.edicao.sala = turma.sala;
+      this.edicao.dataInicio = turma.dataInicio;
+      this.edicao.dataTermino = turma.dataTermino;
+      this.cdr.markForCheck();
+    }
+  }
+
+  getPeriodoLabel(periodo: string): string {
+    if (!periodo) return '-';
+    return this.periodosLabel[periodo] || periodo;
+  }
+
+  // Busca de CEP
+  buscarCepAluno(): void {
+    if (!this.edicao) return;
+    const cep = this.edicao.alunoEndereco.cep.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    this.cepLoadingAluno = true;
+    this.cepErroAluno = false;
+    this.http.get<ViaCepResponse>(`https://viacep.com.br/ws/${cep}/json/`).subscribe({
+      next: (data) => {
+        this.cepLoadingAluno = false;
+        if (data.erro) { 
+          this.cepErroAluno = true; 
+          return; 
+        }
+        if (this.edicao) {
+          this.edicao.alunoEndereco.logradouro = data.logradouro;
+          this.edicao.alunoEndereco.bairro = data.bairro;
+          this.edicao.alunoEndereco.uf = data.uf;
+          this.edicao.alunoEndereco.cidade = data.localidade;
+          if (!this.edicao.alunoEndereco.complemento) {
+            this.edicao.alunoEndereco.complemento = data.complemento;
+          }
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => { 
+        this.cepLoadingAluno = false; 
+        this.cepErroAluno = true;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  buscarCepResp(): void {
+    if (!this.edicao) return;
+    const cep = this.edicao.respEndereco.cep.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    this.cepLoadingResp = true;
+    this.cepErroResp = false;
+    this.http.get<ViaCepResponse>(`https://viacep.com.br/ws/${cep}/json/`).subscribe({
+      next: (data) => {
+        this.cepLoadingResp = false;
+        if (data.erro) { 
+          this.cepErroResp = true; 
+          return; 
+        }
+        if (this.edicao) {
+          this.edicao.respEndereco.logradouro = data.logradouro;
+          this.edicao.respEndereco.bairro = data.bairro;
+          this.edicao.respEndereco.uf = data.uf;
+          this.edicao.respEndereco.cidade = data.localidade;
+          if (!this.edicao.respEndereco.complemento) {
+            this.edicao.respEndereco.complemento = data.complemento;
+          }
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => { 
+        this.cepLoadingResp = false; 
+        this.cepErroResp = true;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  toggleSameAddress(): void {
+    if (!this.edicao) return;
+    if (this.useSameAddress) {
+      this.edicao.respEndereco = { ...this.edicao.alunoEndereco };
+      this.cepErroResp = false;
+      this.cepLoadingResp = false;
+    } else {
+      this.edicao.respEndereco = { 
+        cep: '', 
+        logradouro: '', 
+        numero: '', 
+        complemento: '', 
+        bairro: '', 
+        uf: '', 
+        cidade: '' 
+      };
+    }
+    this.cdr.markForCheck();
+  }
+
+  mascaraCep(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    let v = el.value.replace(/\D/g, '').slice(0, 8);
+    if (v.length > 5) v = v.replace(/(\d{5})(\d{0,3})/, '$1-$2');
+    el.value = v;
+    if (this.edicao) {
+      const campo = el.name as 'alunoCep' | 'respCep';
+      if (campo === 'alunoCep') {
+        this.edicao.alunoEndereco.cep = v;
+      } else if (campo === 'respCep') {
+        this.edicao.respEndereco.cep = v;
+      }
+    }
   }
 
   notaClass(nota: number | null): string {
@@ -577,6 +1126,7 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
     this.filtroTurma = '';
     this.filtroAno = '';
     this.filtroStatus = '';
+    this.filtroSituacao = '';
     this.filtroPeriodo = '';
     this.paginaAtual = 1;
     this.recalcularTudo();
@@ -596,4 +1146,43 @@ export class ListaMatriculasComponent implements OnInit, AfterViewInit {
     this.recalcularTudo();
     this.cdr.markForCheck();
   }
+
+  onItensPorPaginaChange(): void {
+    this.paginaAtual = 1;
+    this.recalcularTudo();
+    this.cdr.markForCheck();
+  }
+
+  get paginasVisiveis(): number[] {
+    if (this.totalPaginas <= 7) {
+      return this.paginas;
+    }
+
+    const atual = this.paginaAtual;
+    const total = this.totalPaginas;
+    const resultado: number[] = [];
+
+    if (atual <= 4) {
+      // Início: 1 2 3 4 5 ... 10
+      for (let i = 1; i <= 5; i++) resultado.push(i);
+      resultado.push(-1); // reticências
+      resultado.push(total);
+    } else if (atual >= total - 3) {
+      // Fim: 1 ... 6 7 8 9 10
+      resultado.push(1);
+      resultado.push(-1);
+      for (let i = total - 4; i <= total; i++) resultado.push(i);
+    } else {
+      // Meio: 1 ... 4 5 6 ... 10
+      resultado.push(1);
+      resultado.push(-1);
+      for (let i = atual - 1; i <= atual + 1; i++) resultado.push(i);
+      resultado.push(-1);
+      resultado.push(total);
+    }
+
+    return resultado;
+  }
+
+  readonly Math = Math;
 }

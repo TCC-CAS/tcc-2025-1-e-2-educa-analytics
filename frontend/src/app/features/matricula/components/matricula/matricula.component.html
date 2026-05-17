@@ -111,12 +111,26 @@
       </div>
 
       <div class="field-group">
+        <h3 class="group-title">Contato</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>Telefone</span>
+            <input type="tel" name="alunoTelefone" [(ngModel)]="alunoTelefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="tel" (input)="mascaraTelefone($event)" required />
+          </label>
+          <label class="field required col-2">
+            <span>Email</span>
+            <input type="email" name="alunoEmail" [(ngModel)]="alunoEmail" placeholder="email@exemplo.com" autocomplete="email" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
         <h3 class="group-title">Endereço</h3>
         <div class="field-grid" [class.address-loading]="cepLoadingAluno">
           <label class="field required">
             <span>CEP</span>
             <div class="cep-wrapper" [class.searching]="cepLoadingAluno">
-              <input type="text" name="alunoCep" [(ngModel)]="alunoEndereco.cep" placeholder="00000-000" maxlength="9" inputmode="numeric" (blur)="buscarCepAluno()" required />
+              <input type="text" name="alunoCep" [(ngModel)]="alunoEndereco.cep" placeholder="00000-000" maxlength="9" inputmode="numeric" (input)="mascaraCep($event)" (blur)="buscarCepAluno()" required />
             </div>
             <span class="cep-erro" *ngIf="cepErroAluno">CEP não encontrado</span>
           </label>
@@ -143,20 +157,6 @@
           <label class="field required">
             <span>Cidade</span>
             <input type="text" name="alunoCidade" [(ngModel)]="alunoEndereco.cidade" placeholder="Nome da cidade" autocomplete="address-level2" required />
-          </label>
-        </div>
-      </div>
-
-      <div class="field-group">
-        <h3 class="group-title">Contato</h3>
-        <div class="field-grid">
-          <label class="field required">
-            <span>Telefone</span>
-            <input type="tel" name="alunoTelefone" [(ngModel)]="alunoTelefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="tel" (input)="mascaraTelefone($event)" required />
-          </label>
-          <label class="field required">
-            <span>Email</span>
-            <input type="email" name="alunoEmail" [(ngModel)]="alunoEmail" placeholder="email@exemplo.com" autocomplete="email" required />
           </label>
         </div>
       </div>
@@ -254,6 +254,20 @@
       </div>
 
       <div class="field-group">
+        <h3 class="group-title">Contato</h3>
+        <div class="field-grid">
+          <label class="field required">
+            <span>Telefone</span>
+            <input type="tel" name="respTelefone" [(ngModel)]="respTelefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="tel" (input)="mascaraTelefone($event)" required />
+          </label>
+          <label class="field required col-2">
+            <span>Email</span>
+            <input type="email" name="respEmail" [(ngModel)]="respEmail" placeholder="email@exemplo.com" autocomplete="email" required />
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
         <h3 class="group-title">Endereço</h3>
         <label class="same-address-check">
           <input type="checkbox" [(ngModel)]="useSameAddress" (change)="toggleSameAddress()" name="useSameAddress" />
@@ -263,7 +277,7 @@
           <label class="field required">
             <span>CEP</span>
             <div class="cep-wrapper" [class.searching]="cepLoadingResp">
-              <input type="text" name="respCep" [(ngModel)]="respEndereco.cep" placeholder="00000-000" maxlength="9" inputmode="numeric" [disabled]="useSameAddress" (blur)="buscarCepResp()" required />
+              <input type="text" name="respCep" [(ngModel)]="respEndereco.cep" placeholder="00000-000" maxlength="9" inputmode="numeric" [disabled]="useSameAddress" (input)="mascaraCep($event)" (blur)="buscarCepResp()" required />
             </div>
             <span class="cep-erro" *ngIf="cepErroResp">CEP não encontrado</span>
           </label>
@@ -290,20 +304,6 @@
           <label class="field required">
             <span>Cidade</span>
             <input type="text" name="respCidade" [(ngModel)]="respEndereco.cidade" placeholder="Nome da cidade" autocomplete="address-level2" [disabled]="useSameAddress" required />
-          </label>
-        </div>
-      </div>
-
-      <div class="field-group">
-        <h3 class="group-title">Contato</h3>
-        <div class="field-grid">
-          <label class="field required">
-            <span>Telefone</span>
-            <input type="tel" name="respTelefone" [(ngModel)]="respTelefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="tel" (input)="mascaraTelefone($event)" required />
-          </label>
-          <label class="field required">
-            <span>Email</span>
-            <input type="email" name="respEmail" [(ngModel)]="respEmail" placeholder="email@exemplo.com" autocomplete="email" required />
           </label>
         </div>
       </div>
