@@ -73,13 +73,22 @@ export class EducadorFormComponent implements OnInit {
   disciplinasSelecionadas: number[] = [];
   periodosSelecionados: string[] = [];
 
-  // Catálogo de disciplinas da API
-  disciplinasDisponiveis: Disciplina[] = [];
+  // Disciplinas disponíveis (fixas)
+  readonly disciplinasDisponiveis = [
+    { idDisciplina: 1, codDisciplina: 'LP', nomeDisciplina: 'LÍNGUA PORTUGUESA', areaConhecimento: 'Linguagens' },
+    { idDisciplina: 2, codDisciplina: 'ART', nomeDisciplina: 'ARTE', areaConhecimento: 'Linguagens' },
+    { idDisciplina: 3, codDisciplina: 'EF', nomeDisciplina: 'EDUCAÇÃO FÍSICA', areaConhecimento: 'Linguagens' },
+    { idDisciplina: 4, codDisciplina: 'LI', nomeDisciplina: 'LÍNGUA INGLESA', areaConhecimento: 'Linguagens' },
+    { idDisciplina: 5, codDisciplina: 'MAT', nomeDisciplina: 'MATEMÁTICA', areaConhecimento: 'Matemática' },
+    { idDisciplina: 6, codDisciplina: 'CN', nomeDisciplina: 'CIÊNCIAS DA NATUREZA', areaConhecimento: 'Ciências da Natureza' },
+    { idDisciplina: 7, codDisciplina: 'GEO', nomeDisciplina: 'GEOGRAFIA', areaConhecimento: 'Ciências Humanas' },
+    { idDisciplina: 8, codDisciplina: 'HIS', nomeDisciplina: 'HISTÓRIA', areaConhecimento: 'Ciências Humanas' },
+  ];
   readonly periodosDisponiveis = [
-    { value: 'matutino',   label: 'Matutino' },
-    { value: 'vespertino', label: 'Vespertino' },
-    { value: 'noturno',    label: 'Noturno' },
-    { value: 'integral',   label: 'Integral' },
+    { value: 'manha',   label: 'Manhã' },
+    { value: 'tarde',   label: 'Tarde' },
+    { value: 'noite',   label: 'Noite' },
+    { value: 'integral', label: 'Integral' },
   ];
 
   // Formacoes
@@ -102,20 +111,25 @@ export class EducadorFormComponent implements OnInit {
   constructor(private route: ActivatedRoute, private router: Router, private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.carregarDisciplinas();
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEdicao = true;
       this.carregarEducador(id);
     } else {
-      this.matriculaFuncional = 'EDU-' + Math.floor(10000 + Math.random() * 90000);
+      this.gerarMatriculaFuncional();
     }
   }
 
-  carregarDisciplinas(): void {
-    this.http.get<Disciplina[]>(`${environment.apiUrl}/disciplinas`).subscribe({
-      next: (lista) => { this.disciplinasDisponiveis = lista; },
-      error: () => {} // silencioso — não bloqueia o form
+  gerarMatriculaFuncional(): void {
+    // Buscar última matrícula do backend
+    this.http.get<any>(`${environment.apiUrl}/educadores/proxima-matricula`).subscribe({
+      next: (res) => {
+        this.matriculaFuncional = res.proximaMatricula || ('EDU' + new Date().getFullYear() + String(Math.floor(Math.random() * 10000)).padStart(4, '0'));
+      },
+      error: () => {
+        // Fallback: gerar localmente
+        this.matriculaFuncional = 'EDU' + new Date().getFullYear() + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+      }
     });
   }
 
@@ -146,6 +160,13 @@ export class EducadorFormComponent implements OnInit {
   }
 
   // ── Máscaras ──────────────────────────────────────────────────────────────
+
+  onCepInput(event: Event): void {
+    let v = (event.target as HTMLInputElement).value.replace(/\D/g, '');
+    if (v.length > 8) v = v.slice(0, 8);
+    if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
+    this.endereco.cep = v;
+  }
 
   onRgInput(event: Event): void {
     let v = (event.target as HTMLInputElement).value.replace(/\D/g, '');
@@ -236,6 +257,8 @@ export class EducadorFormComponent implements OnInit {
         this.endereco.bairro = res.bairro;
         this.endereco.uf = res.uf;
         this.endereco.cidade = res.localidade;
+        // Reaplica formatação
+        this.endereco.cep = cep.slice(0, 5) + '-' + cep.slice(5);
       },
       error: () => { this.cepLoading = false; this.cepErro = true; }
     });
@@ -334,6 +357,6 @@ export class EducadorFormComponent implements OnInit {
     });
   }
 
-  voltar(): void { this.router.navigate(['/colaboradores']); }
-  voltarParaLista(): void { this.router.navigate(['/colaboradores']); }
+  voltar(): void { this.router.navigate(['/educadores']); }
+  voltarParaLista(): void { this.router.navigate(['/educadores']); }
 }

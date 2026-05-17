@@ -294,6 +294,7 @@ def criar_matricula(body: str | dict) -> dict:
         token=token_educando,
         id_matricula=id_educando,
         tipo="educando",
+        matricula_funcional=id_educando,
     )
 
     id_resp_final = id_resp if not resp_existente else resp_existente["idMatricula"]
@@ -305,6 +306,7 @@ def criar_matricula(body: str | dict) -> dict:
         token=token_resp,
         id_matricula=id_resp_final,
         tipo="responsavel",
+        matricula_funcional=id_resp_final,
     )
     # ─────────────────────────────────────────────────────────────────────────
 
