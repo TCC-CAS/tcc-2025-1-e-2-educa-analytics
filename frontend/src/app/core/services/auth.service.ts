@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export type UserType = 'educador' | 'educando' | 'tutor' | 'administrativo';
 
@@ -46,7 +47,7 @@ export class AuthService {
   }
 
   login(credentials: { email: string; password: string }): Observable<any> {
-    return this.http.post('/api/auth/login', credentials);
+    return this.http.post(`${environment.apiUrl}/auth/login`, credentials);
   }
 
   loginMock(tipo: UserType): void {
@@ -88,5 +89,13 @@ export class AuthService {
 
   getMockUser(tipo: UserType): User {
     return this.mockUsers[tipo];
+  }
+
+  validarTokenSenha(token: string, id: string): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/auth/validar-token`, { params: { token, id } });
+  }
+
+  criarSenha(token: string, id: string, senha: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/auth/criar-senha`, { token, id, senha });
   }
 }
