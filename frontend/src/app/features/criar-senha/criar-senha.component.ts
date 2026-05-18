@@ -48,7 +48,7 @@ export class CriarSenhaComponent implements OnInit {
 
     this.auth.validarTokenSenha(this.token, this.id).subscribe({
       next: () => { this.state = 'ready'; },
-      error: (err) => {
+      error: (err: any) => {
         const status = err?.status ?? err?.error?.code;
         this.state = status === 'EXPIRED' || err?.error?.expired ? 'expired-token' : 'invalid-token';
       }
@@ -110,7 +110,7 @@ export class CriarSenhaComponent implements OnInit {
         this.loading = false;
         this.state = 'success';
       },
-      error: (err) => {
+      error: (err: any) => {
         this.loading = false;
         this.submitted = false;
         const msg = err?.error?.message || 'Não foi possível definir a senha. Tente novamente.';
