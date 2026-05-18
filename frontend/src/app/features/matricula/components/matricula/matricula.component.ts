@@ -33,6 +33,7 @@ interface TurmaDetalhe {
   dataInicio: string;
   dataTermino: string;
   vagasOcupadas: number[];
+  totalVagas: number;
 }
 
 interface TurmaBackend {
@@ -287,9 +288,8 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
   modalAberto = false;
   turmaModalTemp = '';
   vagasModal: Vaga[] = [];
-  readonly TOTAL_VAGAS = 30;
-  readonly COLUNAS = 6;
-  readonly LINHAS = ['A', 'B', 'C', 'D', 'E'];
+  COLUNAS = 6;
+  LINHAS: string[] = [];
 
   turmas: TurmaDetalhe[] = [];
   turmasCarregando = false;
@@ -339,6 +339,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
             dataInicio:   t.dataInicio ?? '',
             dataTermino:  t.dataFim ?? '',
             vagasOcupadas: t.vagasOcupadas ?? [],
+            totalVagas:   t.qldVagas || 30,
           }));
           this.turmasCarregando = false;
         },
@@ -350,8 +351,12 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     return this.turmas;
   }
 
+  get TOTAL_VAGAS(): number {
+    return this.turmaAtual?.totalVagas ?? 30;
+  }
+
   vagasLivres(turma: TurmaDetalhe): number {
-    return this.TOTAL_VAGAS - turma.vagasOcupadas.length;
+    return turma.totalVagas - turma.vagasOcupadas.length;
   }
 
   get turmaModalNome(): string {
@@ -367,11 +372,13 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
   }
 
   get vagasDisponiveis(): number {
-    return this.TOTAL_VAGAS - (this.turmaAtual?.vagasOcupadas.length ?? 0);
+    const turma = this.turmaAtual;
+    return turma ? turma.totalVagas - turma.vagasOcupadas.length : 0;
   }
 
   get vagasDisponiveisConfirmadas(): number {
-    return this.TOTAL_VAGAS - (this.turmaConfirmada?.vagasOcupadas.length ?? 0);
+    const turma = this.turmaConfirmada;
+    return turma ? turma.totalVagas - turma.vagasOcupadas.length : 0;
   }
 
   onAnoLetivoChange(_: string): void {
@@ -409,11 +416,19 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
     this.turmaModalTemp = codigo;
     this.vagasModal = [];
     this.vagasPorLinhaMap = new Map();
+    
+    // Calcular layout baseado na capacidade real da sala
+    const totalVagas = turma.totalVagas;
+    this.COLUNAS = 6; // Mantém 6 colunas
+    const numLinhas = Math.ceil(totalVagas / this.COLUNAS);
+    const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    this.LINHAS = Array.from({ length: numLinhas }, (_, i) => letras[i] || `L${i+1}`);
+    
     const ocupadasSet = new Set(turma.vagasOcupadas);
     let num = 1;
     for (const linha of this.LINHAS) {
       const linhaVagas: Vaga[] = [];
-      for (let col = 1; col <= this.COLUNAS; col++) {
+      for (let col = 1; col <= this.COLUNAS && num <= totalVagas; col++) {
         const vaga: Vaga = { numero: num, linha, coluna: col, ocupada: ocupadasSet.has(num) };
         this.vagasModal.push(vaga);
         linhaVagas.push(vaga);

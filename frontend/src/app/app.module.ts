@@ -11,11 +11,13 @@ import { AppComponent } from './app.component';
 import { CoreModule } from './core/core.module';
 import { SharedModule } from './shared/shared.module';
 import { LoginComponent } from './features/login/login.component';
+import { CriarSenhaComponent } from './features/criar-senha/criar-senha.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    LoginComponent
+    LoginComponent,
+    CriarSenhaComponent
   ],
   imports: [
     BrowserModule,

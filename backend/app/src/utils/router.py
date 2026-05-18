@@ -34,7 +34,13 @@ class Router:
         method = event.get("httpMethod") or event.get("requestContext", {}).get(
             "http", {}
         ).get("method", "GET")
-        path = event.get("path") or event.get("rawPath", "/")
+        raw_path = event.get("path") or event.get("rawPath", "/")
+        
+        # Remover query parameters do path para matching de rotas
+        path = raw_path.split('?')[0] if '?' in raw_path else raw_path
+
+        print(f"[Router] Recebeu: {method} {path}")
+        print(f"[Router] Rotas disponíveis: {len(self._routes)}")
 
         # Pré-flight CORS
         if method == "OPTIONS":
@@ -47,6 +53,7 @@ class Router:
             # Suporte a path params: /alunos/{id}
             pattern = re.sub(r"\{(\w+)\}", r"(?P<\1>[^/]+)", route_path)
             match = re.fullmatch(pattern, path)
+            print(f"[Router] Testando {route_method} {route_path} (pattern: {pattern}) -> match: {match is not None}")
             if match:
                 event["pathParameters"] = {
                     **(event.get("pathParameters") or {}),

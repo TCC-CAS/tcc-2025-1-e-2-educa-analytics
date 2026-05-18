@@ -28,6 +28,9 @@ def get_connection() -> pymysql.Connection:
     try:
         if _connection and _connection.open:
             _connection.ping(reconnect=True)
+            # FORÇAR database correto mesmo em conexões reusadas
+            with _connection.cursor() as cur:
+                cur.execute(f"USE `{Config.DB_NAME()}`")
             return _connection
     except Exception:
         _connection = None
@@ -43,6 +46,10 @@ def get_connection() -> pymysql.Connection:
         connect_timeout=5,
         autocommit=False,
     )
+    
+    # FORÇAR o database correto (caso tenha um default diferente)
+    with _connection.cursor() as cur:
+        cur.execute(f"USE `{Config.DB_NAME()}`")
 
     return _connection
 

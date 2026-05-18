@@ -10,7 +10,6 @@ import { AuthService } from '../../core/services/auth.service';
 export class ShellComponent {
   title = 'EducaAnalytics';
   menuRecolhido = false;
-  submenusAbertos: { [key: string]: boolean } = {};
 
   constructor(
     private authService: AuthService,
@@ -23,17 +22,6 @@ export class ShellComponent {
 
   toggleSidebar(): void {
     this.menuRecolhido = !this.menuRecolhido;
-    if (this.menuRecolhido) {
-      this.submenusAbertos = {};
-    }
-  }
-
-  toggleSubmenu(key: string): void {
-    this.submenusAbertos[key] = !this.submenusAbertos[key];
-  }
-
-  isSubmenuAberto(key: string): boolean {
-    return !!this.submenusAbertos[key];
   }
 
   logout(): void {

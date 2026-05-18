@@ -46,6 +46,13 @@ class Config:
     @staticmethod
     def APP_URL() -> str: return os.environ.get("APP_URL", "http://localhost:4200")
 
+    # ── reCAPTCHA ──────────────────────────────────────────────
+    @staticmethod
+    def RECAPTCHA_SECRET_KEY() -> str: return os.environ.get("RECAPTCHA_SECRET_KEY", "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe")
+    
+    @staticmethod
+    def RECAPTCHA_ENABLED() -> bool: return os.environ.get("RECAPTCHA_ENABLED", "true").lower() == "true"
+
     # ── Ambiente ───────────────────────────────────────────────
     @staticmethod
     def ENV() -> str: return os.environ.get("ENV", "development")

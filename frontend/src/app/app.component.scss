@@ -101,26 +101,27 @@ $ease:                cubic-bezier(0.4, 0, 0.2, 1);
 
 // ─── Seção label ────────────────────────────────────────────────────────────
 .nav-section-label {
-  height: 0;
+  max-height: 0;
   overflow: hidden;
   padding: 0 16px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
+  line-height: 1.9;
   text-transform: uppercase;
   color: $section-label-color;
   white-space: nowrap;
-  display: flex;
-  align-items: flex-end;
+  display: block;
   opacity: 0;
-  transition: height $speed $ease, padding $speed $ease, opacity $speed $ease;
+  transition: max-height $speed $ease, padding $speed $ease, opacity $speed $ease;
   margin-top: 0;
 
   .expandido & {
-    height: 34px;
-    padding: 0 16px;
+    max-height: 50px;
+    padding: 14px 16px 8px;
     opacity: 1;
-    margin-top: 6px;
+    margin-top: 10px;
+    overflow: visible;
   }
 }
 

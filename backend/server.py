@@ -9,14 +9,32 @@ A API fica disponível em http://localhost:3000/api
 """
 
 import json
+import os
+from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs, unquote_plus
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
+# Garante que o .env seja carregado da pasta backend
+dotenv_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path, override=True)
+
+# Debug: mostrar configuração do banco
+print(f"\n🔧 Configuração do Banco de Dados:")
+print(f"   DB_HOST: {os.environ.get('DB_HOST', 'NOT SET')}")
+print(f"   DB_PORT: {os.environ.get('DB_PORT', 'NOT SET')}")
+print(f"   DB_USER: {os.environ.get('DB_USER', 'NOT SET')}")
+print(f"   DB_NAME: {os.environ.get('DB_NAME', 'NOT SET')}")
+print()
 
 # Importa o router após carregar o .env
 import lambda_function  # noqa: E402 — registra todas as rotas via decorators
+
+# Debug: Print registered routes
+print("\n=== Rotas Registradas ===")
+for method, path, handler in lambda_function.router._routes:
+    print(f"{method:6} {path:40} -> {handler.__name__}")
+print("=" * 60 + "\n")
 
 HOST = "localhost"
 PORT = 3000
@@ -47,7 +65,7 @@ class LambdaHandler(BaseHTTPRequestHandler):
             "path": api_path,
             "headers": dict(self.headers),
             "queryStringParameters": query_params or None,
-            "body": body.decode("utf-8") if body else None,
+            "body": body.decode("utf-8", errors='replace') if body else None,
         }
 
     def _handle(self):

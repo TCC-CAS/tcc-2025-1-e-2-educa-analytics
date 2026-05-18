@@ -197,7 +197,8 @@
       <span>Ações</span>
     </div>
 
-    <div class="table-row" *ngFor="let turma of filteredTurmas" [class.selecionada]="isSelected(turma.id)">
+    <div class="table-body">
+    <div class="table-row" *ngFor="let turma of paginatedTurmas" [class.selecionada]="isSelected(turma.id)">
       <span>
         <input type="checkbox" [checked]="isSelected(turma.id)" (change)="toggleSelection(turma.id, $any($event.target).checked)" />
       </span>
@@ -233,10 +234,56 @@
       </span>
     </div>
 
-    <div class="empty" *ngIf="filteredTurmas.length === 0">
+    <div class="empty" *ngIf="paginatedTurmas.length === 0">
       Nenhuma turma encontrada.
     </div>
+    </div>
   </section>
+
+  <!-- Paginação -->
+  <div class="pagination" *ngIf="filteredTurmas.length > 0">
+    <div class="pagination-info">
+      <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> - <strong>{{ Math.min(currentPage * pageSize, filteredTurmas.length) }}</strong> de <strong>{{ filteredTurmas.length }}</strong> turma(s)
+    </div>
+    
+    <div class="pagination-controls">
+      <button type="button" class="pagination-btn" [disabled]="currentPage === 1" (click)="goToPage(1)" title="Primeira página">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+      </button>
+      <button type="button" class="pagination-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)" title="Página anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      
+      <div class="pagination-pages">
+        <button type="button" class="pagination-page" 
+          *ngFor="let page of getVisiblePages()" 
+          [class.active]="page === currentPage"
+          [class.dots]="page === -1"
+          [disabled]="page === -1"
+          (click)="page !== -1 && goToPage(page)">
+          {{ page === -1 ? '...' : page }}
+        </button>
+      </div>
+      
+      <button type="button" class="pagination-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)" title="Próxima página">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button type="button" class="pagination-btn" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)" title="Última página">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+      </button>
+    </div>
+
+    <div class="pagination-size">
+      <label>Por página:</label>
+      <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+        <option [value]="50">50</option>
+        <option [value]="100">100</option>
+      </select>
+    </div>
+  </div>
 
   </div><!-- /page-content -->
 </div>

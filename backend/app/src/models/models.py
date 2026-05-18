@@ -223,23 +223,42 @@ class LoginModel(BaseModel):
 
     @classmethod
     def save_token(cls, id_matricula: str, token: str, expiracao: str) -> None:
-        """Persiste o token de criaÃ§Ã£o de senha e sua expiraÃ§Ã£o."""
-        execute_write(
-            """
-            UPDATE Login
-               SET token_criacao_senha = %s,
-                   token_expiracao     = %s,
-                   senha_definida      = 0
-             WHERE idMatricula = %s
-            """,
-            (token, expiracao, id_matricula),
-        )
+        """Persiste o token de criação de senha e sua expiração."""
+        try:
+            execute_write(
+                """
+                UPDATE Login
+                   SET token_criacao_senha = %s,
+                       token_expiracao     = %s,
+                       senha_definida      = 0
+                 WHERE idMatricula = %s
+                """,
+                (token, expiracao, id_matricula),
+            )
+        except Exception as e:
+            # Se der erro, provavelmente as colunas não existem
+            print(f"[LoginModel] ERRO ao salvar token: {e}")
+            print(f"[LoginModel] Execute o script: python backend/scripts/add_token_columns.py")
+            raise Exception(
+                "Erro ao salvar token. Verifique se as colunas token_criacao_senha, "
+                "token_expiracao e senha_definida existem na tabela Login. "
+                "Execute: python backend/scripts/add_token_columns.py"
+            ) from e
 
     @classmethod
     def find_by_matricula(cls, id_matricula: str) -> dict | None:
         rows = execute_query(
             "SELECT idMatricula, email FROM Login WHERE idMatricula = %s LIMIT 1",
             (id_matricula,),
+        )
+        return rows[0] if rows else None
+
+    @classmethod
+    def find_by_email(cls, email: str) -> dict | None:
+        """Busca login por email."""
+        rows = execute_query(
+            "SELECT idMatricula, email, senha, senha_definida FROM Login WHERE email = %s LIMIT 1",
+            (email,),
         )
         return rows[0] if rows else None
 
@@ -319,6 +338,78 @@ class TurmaModel(BaseModel):
         return [r["periodo"] for r in rows]
 
     @classmethod
+    def find_all_with_sala(cls) -> list[dict]:
+        return execute_query(
+            """
+            SELECT t.*,
+                   s.nomeSala,
+                   DATE_FORMAT(t.dataInicio, '%%Y-%%m-%%d') AS dataInicioFmt,
+                   DATE_FORMAT(t.dataFim,    '%%Y-%%m-%%d') AS dataFimFmt,
+                   (SELECT COUNT(*) FROM HistoricoEscolar h
+                    WHERE h.idTurma = t.idTurma AND h.situacao = 'cursando') AS vagasOcupadas
+            FROM Turmas t
+            LEFT JOIN Salas s ON s.idSala = t.idSala
+            ORDER BY t.anoLetivo DESC, t.serie, t.codTurma
+            """
+        )
+
+    @classmethod
+    def update(cls, id_turma: int, data: dict) -> None:
+        execute_write(
+            """
+            UPDATE Turmas SET
+                codTurma   = %s, nomeTurma  = %s, periodo    = %s,
+                anoLetivo  = %s, serie      = %s, qldVagas   = %s,
+                dataInicio = %s, dataFim    = %s, status     = %s,
+                idSala     = %s
+            WHERE idTurma = %s
+            """,
+            (
+                data["codTurma"], data["nomeTurma"], data["periodo"],
+                data["anoLetivo"], data.get("serie"), data.get("qldVagas", 30),
+                data.get("dataInicio") or None, data.get("dataFim") or None,
+                data.get("status", "ativa"), data.get("idSala"),
+                id_turma,
+            ),
+        )
+
+    @classmethod
+    def delete(cls, id_turma: int) -> None:
+        execute_write("DELETE FROM Turmas WHERE idTurma = %s", (id_turma,))
+
+    @classmethod
+    def update_status(cls, id_turma: int, status: str) -> None:
+        execute_write(
+            "UPDATE Turmas SET status = %s WHERE idTurma = %s",
+            (status, id_turma),
+        )
+
+    @classmethod
+    def update_status_lote(cls, ids: list[int], status: str) -> int:
+        if not ids:
+            return 0
+        ph = ",".join(["%s"] * len(ids))
+        execute_write(
+            f"UPDATE Turmas SET status = %s WHERE idTurma IN ({ph})",
+            (status, *ids),
+        )
+        return len(ids)
+
+    @classmethod
+    def find_educandos(cls, id_turma: int) -> list[dict]:
+        return execute_query(
+            """
+            SELECT er.idMatricula, er.nomeCompleto AS nome,
+                   h.serie, er.idStatus AS status
+            FROM HistoricoEscolar h
+            JOIN EducandoResponsavel er ON er.idMatricula = h.idMatricula
+            WHERE h.idTurma = %s AND h.situacao = 'cursando'
+            ORDER BY er.nomeCompleto
+            """,
+            (id_turma,),
+        )
+
+    @classmethod
     def create(cls, data: dict) -> int:
         return execute_write(
             """
@@ -336,7 +427,131 @@ class TurmaModel(BaseModel):
         )
 
 
-# â”€â”€ HistÃ³rico Escolar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Salas ──────────────────────────────────────────────────────────────────────────────────────────
+
+class SalaModel(BaseModel):
+    TABLE = "Salas"
+
+    @classmethod
+    def find_all(cls) -> list[dict]:
+        return execute_query(
+            """
+            SELECT idSala, codSala, nomeSala, tipoSala, status,
+                   capacidade, bloco, andar, recursos, obsSala
+            FROM Salas
+            ORDER BY nomeSala
+            """
+        )
+
+    @classmethod
+    def find_by_id(cls, id_sala: int) -> dict | None:
+        rows = execute_query(
+            "SELECT * FROM Salas WHERE idSala = %s LIMIT 1", (id_sala,)
+        )
+        return rows[0] if rows else None
+
+    @classmethod
+    def find_by_nome(cls, nome_sala: str) -> dict | None:
+        rows = execute_query(
+            "SELECT * FROM Salas WHERE nomeSala = %s LIMIT 1", (nome_sala,)
+        )
+        return rows[0] if rows else None
+
+    @classmethod
+    def find_by_codigo(cls, cod_sala: str) -> dict | None:
+        rows = execute_query(
+            "SELECT * FROM Salas WHERE codSala = %s LIMIT 1", (cod_sala,)
+        )
+        return rows[0] if rows else None
+
+    @classmethod
+    def create(cls, data: dict) -> int:
+        import json as _json
+        recursos_json = _json.dumps(data.get("recursos") or {}, ensure_ascii=False)
+        status_value = data.get("status", "ativa")
+        
+        return execute_write(
+            """
+            INSERT INTO Salas
+                (codSala, nomeSala, tipoSala, status, capacidade, 
+                 bloco, andar, recursos, obsSala)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                data["codSala"],
+                data["nomeSala"],
+                data.get("tipoSala"),
+                status_value,
+                data.get("capacidade", 0),
+                data.get("bloco"),
+                data.get("andar"),
+                recursos_json,
+                data.get("obsSala"),
+            ),
+        )
+
+    @classmethod
+    def update(cls, id_sala: int, data: dict) -> int:
+        import json as _json
+        recursos_json = _json.dumps(data.get("recursos") or {}, ensure_ascii=False)
+        status_value = data.get("status", "ativa")
+        
+        return execute_write(
+            """
+            UPDATE Salas SET
+                codSala = %s,
+                nomeSala = %s,
+                tipoSala = %s,
+                status = %s,
+                capacidade = %s,
+                bloco = %s,
+                andar = %s,
+                recursos = %s,
+                obsSala = %s
+            WHERE idSala = %s
+            """,
+            (
+                data["codSala"],
+                data["nomeSala"],
+                data.get("tipoSala"),
+                status_value,
+                data.get("capacidade", 0),
+                data.get("bloco"),
+                data.get("andar"),
+                recursos_json,
+                data.get("obsSala"),
+                id_sala,
+            ),
+        )
+
+    @classmethod
+    def set_status(cls, id_sala: int, status: str) -> int:
+        print(f"[DEBUG set_status] Atualizando sala {id_sala} para status '{status}'")
+        result = execute_write(
+            "UPDATE Salas SET status = %s WHERE idSala = %s",
+            (status, id_sala),
+        )
+        print(f"[DEBUG set_status] Linhas afetadas: {result}")
+        
+        # Verificar se realmente foi atualizado
+        from app.src.adapters.db_adapter import execute_query
+        sala_verificacao = execute_query(
+            "SELECT idSala, codSala, status FROM Salas WHERE idSala = %s",
+            (id_sala,)
+        )
+        if sala_verificacao:
+            print(f"[DEBUG set_status] Status atual no banco: '{sala_verificacao[0]['status']}'")
+        
+        return result
+
+    @classmethod
+    def delete(cls, id_sala: int) -> int:
+        return execute_write(
+            "DELETE FROM Salas WHERE idSala = %s", (id_sala,)
+        )
+
+
+# ── Histórico Escolar ──────────────────────────────────────────────────────────────────────────────
 
 class HistoricoEscolarModel(BaseModel):
     TABLE = "HistoricoEscolar"
@@ -466,7 +681,8 @@ class EducadorDisciplinaModel(BaseModel):
     TABLE = "EducadorDisciplina"
 
     @classmethod
-    def find_by_matricula(cls, id_matricula: str) -> list[int]:
+    def find_by_id_educador(cls, id_matricula: str) -> list[int]:
+        """Busca IDs de disciplinas pela matrícula do educador."""
         rows = execute_query(
             "SELECT idDisciplina FROM EducadorDisciplina WHERE idMatricula = %s",
             (id_matricula,),
@@ -475,6 +691,7 @@ class EducadorDisciplinaModel(BaseModel):
 
     @classmethod
     def replace_all(cls, id_matricula: str, ids_disciplinas: list[int]) -> None:
+        """Substitui todas as disciplinas de um educador."""
         execute_write(
             "DELETE FROM EducadorDisciplina WHERE idMatricula = %s", (id_matricula,)
         )
@@ -492,78 +709,147 @@ class EducadorModel(BaseModel):
 
     @classmethod
     def find_all(cls) -> list[dict]:
-        return execute_query("SELECT * FROM Educador ORDER BY nomeCompleto")
+        """Lista todos os educadores com matrícula funcional."""
+        return execute_query(
+            """
+            SELECT idMatricula, nomeCompleto, 
+                   nacionalidade, genero, cor, dataNascimento, idade,
+                   email, telefone, cpf, rg, orgaoEmissor, estadoEmissor,
+                   cargo, departamento, tipoUsuario, idStatus
+            FROM Educador 
+            ORDER BY nomeCompleto
+            """
+        )
 
     @classmethod
-    def find_by_id(cls, id_matricula: str) -> dict | None:
+    def find_by_matricula(cls, matricula: str) -> dict | None:
+        """Busca educador pela matrícula funcional."""
         rows = execute_query(
-            "SELECT * FROM Educador WHERE idMatricula = %s LIMIT 1", (id_matricula,)
+            """
+            SELECT idMatricula, nomeCompleto, 
+                   nacionalidade, genero, cor, dataNascimento, idade,
+                   email, telefone, cpf, rg, orgaoEmissor, estadoEmissor,
+                   cargo, departamento, tipoUsuario, idStatus
+            FROM Educador 
+            WHERE idMatricula = %s 
+            LIMIT 1
+            """,
+            (matricula,)
         )
         return rows[0] if rows else None
 
     @classmethod
     def find_by_cpf(cls, cpf: str) -> dict | None:
+        """Busca educador pelo CPF."""
         rows = execute_query(
-            "SELECT * FROM Educador WHERE cpf = %s LIMIT 1", (cpf,)
+            """
+            SELECT idMatricula, nomeCompleto, 
+                   nacionalidade, genero, cor, dataNascimento, idade,
+                   email, telefone, cpf, rg, orgaoEmissor, estadoEmissor,
+                   cargo, departamento, tipoUsuario, idStatus
+            FROM Educador 
+            WHERE cpf = %s 
+            LIMIT 1
+            """,
+            (cpf,)
         )
         return rows[0] if rows else None
 
     @classmethod
-    def create(cls, data: dict) -> str:
+    def create(cls, data: dict) -> int:
+        """Cria um novo educador com todos os campos."""
         import json as _json
         periodos_json = _json.dumps(data.get("periodos") or [], ensure_ascii=False)
-        execute_write(
+        
+        return execute_write(
             """
-            INSERT INTO Educador
-                (idMatricula, nomeCompleto, nacionalidade, genero, cor,
-                 dataNascimento, idade, telefone, email, cpf,
-                 rg, orgaoEmissor, estadoEmissor, idStatus, tipoUsuario,
-                 cargo, departamento, periodos)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'Ativo','educador','educador',%s,%s)
+            INSERT INTO Educador (
+                idMatricula, nomeCompleto, nacionalidade, genero, cor,
+                dataNascimento, idade, telefone, email, cpf,
+                rg, orgaoEmissor, estadoEmissor, periodos,
+                tipoUsuario, cargo, departamento, idStatus
+            )
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'educador',%s,%s,'ativo')
             """,
             (
-                data["idMatricula"], data["nomeCompleto"], data.get("nacionalidade"),
-                data.get("genero"), data.get("cor"), data.get("dataNascimento") or None,
-                data.get("idade"), data.get("telefone"), data["email"],
-                data["cpf"], data.get("rg"), data.get("orgaoEmissor"),
-                data.get("estadoEmissor"), u"Educa\u00e7\u00e3o", periodos_json,
+                data.get("idMatricula") or data.get("matriculaFuncional"),
+                data.get("nomeCompleto"),
+                data.get("nacionalidade"),
+                data.get("genero"),
+                data.get("cor") or data.get("corRaca"),
+                data.get("dataNascimento") or None,
+                data.get("idade"),
+                data.get("telefone"),
+                data.get("email"),
+                data.get("cpf"),
+                data.get("rg"),
+                data.get("orgaoEmissor"),
+                data.get("estadoEmissor"),
+                periodos_json,
+                data.get("cargo") or "Professor",
+                data.get("departamento") or "Educação",
             ),
         )
-        return data["idMatricula"]
 
     @classmethod
-    def update(cls, id_matricula: str, data: dict) -> int:
+    def update(cls, matricula: str, data: dict) -> int:
+        """Atualiza dados do educador pela matrícula funcional."""
         import json as _json
         periodos_json = _json.dumps(data.get("periodos") or [], ensure_ascii=False)
+        
         return execute_write(
             """
             UPDATE Educador SET
-                nomeCompleto=%s, nacionalidade=%s, genero=%s, cor=%s,
-                dataNascimento=%s, idade=%s, telefone=%s, email=%s,
-                cpf=%s, rg=%s, orgaoEmissor=%s, estadoEmissor=%s,
-                periodos=%s
+                nomeCompleto = %s,
+                nacionalidade = %s,
+                genero = %s,
+                cor = %s,
+                dataNascimento = %s,
+                idade = %s,
+                telefone = %s,
+                email = %s,
+                cpf = %s,
+                rg = %s,
+                orgaoEmissor = %s,
+                estadoEmissor = %s,
+                cargo = %s,
+                departamento = %s,
+                periodos = %s
             WHERE idMatricula = %s
             """,
             (
-                data.get("nomeCompleto"), data.get("nacionalidade"), data.get("genero"),
-                data.get("cor"), data.get("dataNascimento") or None, data.get("idade"),
-                data.get("telefone"), data.get("email"), data.get("cpf"),
-                data.get("rg"), data.get("orgaoEmissor"), data.get("estadoEmissor"),
-                periodos_json, id_matricula,
+                data.get("nomeCompleto"),
+                data.get("nacionalidade"),
+                data.get("genero"),
+                data.get("cor") or data.get("corRaca"),
+                data.get("dataNascimento") or None,
+                data.get("idade"),
+                data.get("telefone"),
+                data.get("email"),
+                data.get("cpf"),
+                data.get("rg"),
+                data.get("orgaoEmissor"),
+                data.get("estadoEmissor"),
+                data.get("cargo") or "Professor",
+                data.get("departamento") or "Educação",
+                periodos_json,
+                matricula,
             ),
         )
 
     @classmethod
-    def set_status(cls, id_matricula: str, ativo: int) -> int:
+    def set_status(cls, matricula: str, status: str) -> int:
+        """Atualiza status do educador (ativo/inativo)."""
         return execute_write(
-            "UPDATE Educador SET idStatus = %s WHERE idMatricula = %s",
-            (ativo, id_matricula),
+            "UPDATE Educadores SET status = %s WHERE matricula = %s",
+            (status, matricula),
         )
 
     @classmethod
-    def delete_by_matricula(cls, id_matricula: str) -> int:
+    def delete_by_matricula(cls, matricula: str) -> int:
+        """Remove educador pela matrícula funcional."""
         return execute_write(
-            "DELETE FROM Educador WHERE idMatricula = %s", (id_matricula,)
+            "DELETE FROM Educador WHERE idMatricula = %s", (matricula,)
         )
 
 
@@ -645,7 +931,7 @@ class NotaModel(BaseModel):
             """
             SELECT n.*, d.nome AS disciplina_nome
             FROM notas n
-            JOIN disciplinas d ON d.id = n.disciplina_id
+            JOIN Disciplinas d ON d.id = n.disciplina_id
             WHERE n.aluno_id = %s
             """,
             (aluno_id,),
@@ -672,7 +958,7 @@ class FrequenciaModel(BaseModel):
             """
             SELECT f.*, d.nome AS disciplina_nome
             FROM frequencias f
-            JOIN disciplinas d ON d.id = f.disciplina_id
+            JOIN Disciplinas d ON d.id = f.disciplina_id
             WHERE f.aluno_id = %s
             """,
             (aluno_id,),
@@ -687,17 +973,6 @@ class FrequenciaModel(BaseModel):
             ON DUPLICATE KEY UPDATE presente = %s
             """,
             (aluno_id, disciplina_id, data_aula, presente, presente),
-        )
-
-
-class DisciplinaModel(BaseModel):
-    TABLE = "disciplinas"
-
-    @classmethod
-    def create(cls, nome: str, carga_horaria: int) -> int:
-        return execute_write(
-            "INSERT INTO disciplinas (nome, carga_horaria) VALUES (%s, %s)",
-            (nome, carga_horaria),
         )
 
 
@@ -740,7 +1015,7 @@ class NotaModel(BaseModel):
             """
             SELECT n.*, d.nome AS disciplina_nome
             FROM notas n
-            JOIN disciplinas d ON d.id = n.disciplina_id
+            JOIN Disciplinas d ON d.id = n.disciplina_id
             WHERE n.aluno_id = %s
             """,
             (aluno_id,),
@@ -767,7 +1042,7 @@ class FrequenciaModel(BaseModel):
             """
             SELECT f.*, d.nome AS disciplina_nome
             FROM frequencias f
-            JOIN disciplinas d ON d.id = f.disciplina_id
+            JOIN Disciplinas d ON d.id = f.disciplina_id
             WHERE f.aluno_id = %s
             """,
             (aluno_id,),
@@ -789,15 +1064,257 @@ class DisciplinaModel(BaseModel):
     TABLE = "Disciplinas"
 
     @classmethod
-    def find_all(cls) -> list[dict]:
+    def find_all(cls, status=None):
+        """Retorna todas as disciplinas, opcionalmente filtradas por status"""
+        if status:
+            return execute_query(
+                "SELECT * FROM Disciplinas WHERE status = %s ORDER BY nomeDisciplina",
+                (status,)
+            )
         return execute_query(
-            "SELECT idDisciplina, codDisciplina, nomeDisciplina, areaConhecimento "
-            "FROM Disciplinas ORDER BY nomeDisciplina"
+            "SELECT * FROM Disciplinas ORDER BY nomeDisciplina"
         )
 
     @classmethod
-    def create(cls, nome: str, carga_horaria: int) -> int:
+    def find_by_id(cls, id_disciplina: int):
+        """Retorna uma disciplina pelo ID"""
+        rows = execute_query(
+            "SELECT * FROM Disciplinas WHERE idDisciplina = %s LIMIT 1",
+            (id_disciplina,)
+        )
+        return rows[0] if rows else None
+
+    @classmethod
+    def find_by_codigo(cls, codigo: str):
+        """Retorna uma disciplina pelo código"""
+        rows = execute_query(
+            "SELECT * FROM Disciplinas WHERE codDisciplina = %s LIMIT 1",
+            (codigo,)
+        )
+        return rows[0] if rows else None
+
+    @classmethod
+    def create(cls, cod_disciplina: str, nome_disciplina: str, 
+               carga_horaria: int = 40, descricao=None,
+               status: str = 'ativa') -> int:
+        """Cria uma nova disciplina"""
         return execute_write(
-            "INSERT INTO disciplinas (nome, carga_horaria) VALUES (%s, %s)",
-            (nome, carga_horaria),
+            """INSERT INTO Disciplinas 
+               (codDisciplina, nomeDisciplina, cargaHoraria, descricao, status) 
+               VALUES (%s, %s, %s, %s, %s)""",
+            (cod_disciplina, nome_disciplina, carga_horaria, descricao, status)
+        )
+
+    @classmethod
+    def update(cls, id_disciplina: int, cod_disciplina: str, nome_disciplina: str,
+               carga_horaria: int, descricao=None, 
+               status: str = 'ativa') -> int:
+        """Atualiza uma disciplina existente"""
+        return execute_write(
+            """UPDATE Disciplinas 
+               SET codDisciplina = %s, nomeDisciplina = %s, cargaHoraria = %s,
+                   descricao = %s, status = %s
+               WHERE idDisciplina = %s""",
+            (cod_disciplina, nome_disciplina, carga_horaria, descricao, status, id_disciplina)
+        )
+
+    @classmethod
+    def delete(cls, id_disciplina: int) -> int:
+        """Deleta uma disciplina (soft delete - muda status para inativa)"""
+        return execute_write(
+            "UPDATE Disciplinas SET status = 'inativa' WHERE idDisciplina = %s",
+            (id_disciplina,)
+        )
+    
+    @classmethod
+    def delete_permanent(cls, id_disciplina: int) -> int:
+        """Deleta uma disciplina permanentemente (hard delete)"""
+        return execute_write(
+            "DELETE FROM Disciplinas WHERE idDisciplina = %s",
+            (id_disciplina,)
+        )
+
+
+# ── Educadores (novos) ───────────────────────────────────────────────────────────────
+
+class EducadorNovoModel(BaseModel):
+    """Model para a nova tabela Educadores (diferente da antiga Educador)"""
+    TABLE = "Educadores"
+
+    @classmethod
+    def find_all(cls, status: str = 'ativo') -> list[dict]:
+        """Retorna todos educadores, opcionalmente filtrados por status"""
+        if status:
+            return execute_query(
+                "SELECT * FROM Educadores WHERE status = %s ORDER BY nomeCompleto",
+                (status,)
+            )
+        return execute_query("SELECT * FROM Educadores ORDER BY nomeCompleto")
+
+    @classmethod
+    def find_by_id(cls, id_educador: int) -> dict | None:
+        """Retorna um educador pelo ID"""
+        rows = execute_query(
+            "SELECT * FROM Educadores WHERE idEducador = %s LIMIT 1",
+            (id_educador,)
+        )
+        return rows[0] if rows else None
+
+    @classmethod
+    def find_by_disciplina(cls, id_disciplina: int, status: str = 'ativo') -> list[dict]:
+        """Retorna educadores que lecionam uma disciplina específica"""
+        # EducadorDisciplina no AWS usa idMatricula (VARCHAR) em vez de idEducador
+        return execute_query(
+            """
+            SELECT DISTINCT e.*
+            FROM Educadores e
+            INNER JOIN EducadorDisciplina ed ON e.matricula = ed.idMatricula
+            WHERE ed.idDisciplina = %s AND e.status = %s
+            ORDER BY e.nomeCompleto
+            """,
+            (id_disciplina, status)
+        )
+
+
+# ── Cronograma ───────────────────────────────────────────────────────────────────────
+
+class CronogramaModel(BaseModel):
+    """Model para tabela Cronograma (agendamento de aulas)"""
+    TABLE = "Cronograma"
+
+    @classmethod
+    def find_by_turma(cls, id_turma: int) -> list[dict]:
+        """Retorna todos os horários de uma turma com informações completas"""
+        # A tabela Disciplinas no AWS RDS não tem cargaHoraria
+        return execute_query(
+            """
+            SELECT c.*,
+                   t.codTurma, t.nomeTurma, t.qldVagas,
+                   d.codDisciplina, d.nomeDisciplina, d.areaConhecimento,
+                   e.matricula AS educadorMatricula, e.nomeCompleto AS educadorNome,
+                   s.codSala, s.nomeSala, s.capacidade AS salaCapacidade,
+                   s.tipoSala, s.recursos AS salaRecursos
+            FROM Cronograma c
+            JOIN Turmas t ON c.idTurma = t.idTurma
+            JOIN Disciplinas d ON c.idDisciplina = d.idDisciplina
+            JOIN Educadores e ON c.idEducador = e.idEducador
+            LEFT JOIN Salas s ON c.idSala = s.idSala
+            WHERE c.idTurma = %s
+            ORDER BY 
+                FIELD(c.diaSemana, 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'),
+                c.horaInicio
+            """,
+            (id_turma,)
+        )
+
+    @classmethod
+    def find_conflitos_sala(
+        cls,
+        id_sala: int,
+        dia_semana: str,
+        hora_inicio: str,
+        hora_fim: str,
+        exclude_id: int | None = None
+    ) -> list[dict]:
+        """Verifica se há conflito de horário para uma sala"""
+        query = """
+            SELECT c.*, t.codTurma, t.nomeTurma
+            FROM Cronograma c
+            JOIN Turmas t ON c.idTurma = t.idTurma
+            WHERE c.idSala = %s
+              AND c.diaSemana = %s
+              AND (
+                  (c.horaInicio < %s AND c.horaFim > %s) OR
+                  (c.horaInicio >= %s AND c.horaInicio < %s) OR
+                  (c.horaFim > %s AND c.horaFim <= %s)
+              )
+        """
+        params = [id_sala, dia_semana, hora_fim, hora_inicio, hora_inicio, hora_fim, hora_inicio, hora_fim]
+        
+        if exclude_id:
+            query += " AND c.idCronograma != %s"
+            params.append(exclude_id)
+        
+        return execute_query(query, tuple(params))
+
+    @classmethod
+    def find_conflitos_educador(
+        cls,
+        id_educador: int,
+        dia_semana: str,
+        hora_inicio: str,
+        hora_fim: str,
+        exclude_id: int | None = None
+    ) -> list[dict]:
+        """Verifica se há conflito de horário para um educador"""
+        query = """
+            SELECT c.*, t.codTurma, t.nomeTurma
+            FROM Cronograma c
+            JOIN Turmas t ON c.idTurma = t.idTurma
+            WHERE c.idEducador = %s
+              AND c.diaSemana = %s
+              AND (
+                  (c.horaInicio < %s AND c.horaFim > %s) OR
+                  (c.horaInicio >= %s AND c.horaInicio < %s) OR
+                  (c.horaFim > %s AND c.horaFim <= %s)
+              )
+        """
+        params = [id_educador, dia_semana, hora_fim, hora_inicio, hora_inicio, hora_fim, hora_inicio, hora_fim]
+        
+        if exclude_id:
+            query += " AND c.idCronograma != %s"
+            params.append(exclude_id)
+        
+        return execute_query(query, tuple(params))
+
+    @classmethod
+    def create(cls, data: dict) -> int:
+        """Cria um novo horário no cronograma"""
+        return execute_write(
+            """
+            INSERT INTO Cronograma
+                (idTurma, idDisciplina, idEducador, idSala, diaSemana, horaInicio, horaFim, observacoes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                data["idTurma"],
+                data["idDisciplina"],
+                data["idEducador"],
+                data.get("idSala"),
+                data["diaSemana"],
+                data["horaInicio"],
+                data["horaFim"],
+                data.get("observacoes", "")
+            )
+        )
+
+    @classmethod
+    def update(cls, id_cronograma: int, data: dict) -> int:
+        """Atualiza um horário no cronograma"""
+        return execute_write(
+            """
+            UPDATE Cronograma
+            SET idTurma = %s, idDisciplina = %s, idEducador = %s, idSala = %s,
+                diaSemana = %s, horaInicio = %s, horaFim = %s, observacoes = %s
+            WHERE idCronograma = %s
+            """,
+            (
+                data["idTurma"],
+                data["idDisciplina"],
+                data["idEducador"],
+                data.get("idSala"),
+                data["diaSemana"],
+                data["horaInicio"],
+                data["horaFim"],
+                data.get("observacoes", ""),
+                id_cronograma
+            )
+        )
+
+    @classmethod
+    def delete(cls, id_cronograma: int) -> int:
+        """Remove um horário do cronograma"""
+        return execute_write(
+            "DELETE FROM Cronograma WHERE idCronograma = %s",
+            (id_cronograma,)
         )
