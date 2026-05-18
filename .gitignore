@@ -19,3 +19,11 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# Imagens (exceto assets do frontend)
+*.png
+!frontend/src/assets/**/*.png
+*.jpg
+!frontend/src/assets/**/*.jpg
+*.jpeg
+!frontend/src/assets/**/*.jpeg
