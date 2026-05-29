@@ -1,0 +1,281 @@
+<div class="cp-page">
+
+  <!-- Modal de Confirmação -->
+  <div class="modal-overlay" *ngIf="confirm.visible" (click)="cancelConfirm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon" [class.danger]="confirm.danger">
+        <svg *ngIf="!confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg *ngIf="confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="10.29 3.86 1.82 18 2 18 22 18 21.73 18 13.71 3.86 12 1 10.29 3.86"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h3 class="modal-title">{{ confirm.title }}</h3>
+      <p class="modal-message">{{ confirm.message }}</p>
+      <div class="modal-actions">
+        <button class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
+        <button class="modal-btn" [class.modal-confirm-danger]="confirm.danger" [class.modal-confirm]="!confirm.danger" (click)="confirmAction()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      </div>
+      <div>
+        <h1>Contas a Pagar</h1>
+        <span class="page-subtitle">Gerencie obrigações financeiras, pagamentos e recorrências.</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nova Conta
+      </button>
+    </div>
+  </div>
+
+  <!-- Mensagem -->
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+      <circle *ngIf="messageType === 'success'" cx="12" cy="12" r="10"/><polyline *ngIf="messageType === 'success'" points="9 12 11 14 15 10"/>
+    </svg>
+    {{ message }}
+  </div>
+
+  <!-- Cards de resumo -->
+  <div class="cards-row">
+    <div class="summary-card card-warning">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="card-info">
+        <span class="card-label">Pendente</span>
+        <span class="card-value">R$ {{ totalPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+        <span class="card-sub">{{ qtdPendentes }} conta(s)</span>
+      </div>
+    </div>
+
+    <div class="summary-card card-danger">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="10.29 3.86 1.82 18 2 18 22 18 21.73 18 13.71 3.86 12 1 10.29 3.86"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="card-info">
+        <span class="card-label">Vencidas</span>
+        <span class="card-value">R$ {{ totalVencido.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+        <span class="card-sub">{{ qtdVencidas }} conta(s)</span>
+      </div>
+    </div>
+
+    <div class="summary-card card-success">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="card-info">
+        <span class="card-label">Pago no Mês</span>
+        <span class="card-value">R$ {{ totalPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+        <span class="card-sub">{{ qtdPagas }} pagamento(s)</span>
+      </div>
+    </div>
+
+    <div class="summary-card card-alert" [class.card-alert-active]="qtdVencendoBreve > 0">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      </div>
+      <div class="card-info">
+        <span class="card-label">Vencendo em 7 dias</span>
+        <span class="card-value">{{ qtdVencendoBreve }}</span>
+        <span class="card-sub">conta(s) com atenção</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros-card">
+    <div class="filtros-header">
+      <div class="filtros-titulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        <span>Filtros</span>
+        <span class="filtros-badge" *ngIf="filtrosAtivos > 0">{{ filtrosAtivos }}</span>
+      </div>
+      <div class="filtros-resultado">
+        <span class="resultado-count"><strong>{{ contasFiltradas.length }}</strong> resultado(s)</span>
+        <button class="btn-limpar" (click)="limparFiltros()" *ngIf="filtrosAtivos > 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Limpar filtros
+        </button>
+      </div>
+    </div>
+
+    <div class="filtros-grid">
+      <div class="filtro-field">
+        <label>Status</label>
+        <div class="select-wrapper">
+          <select [(ngModel)]="filtroStatus" (ngModelChange)="aplicarFiltros()" [class.active]="filtroStatus">
+            <option value="">Todos os status</option>
+            <option value="pendente">Pendente</option>
+            <option value="vencido">Vencido</option>
+            <option value="pago">Pago</option>
+            <option value="parcial">Parcial</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filtro-field">
+        <label>Centro de Custo</label>
+        <div class="select-wrapper">
+          <select [(ngModel)]="filtroCentroCusto" (ngModelChange)="aplicarFiltros()" [class.active]="filtroCentroCusto">
+            <option value="">Todos</option>
+            <option value="Pedagógico">Pedagógico</option>
+            <option value="Administrativo">Administrativo</option>
+            <option value="Infraestrutura">Infraestrutura</option>
+            <option value="Tecnologia">Tecnologia</option>
+            <option value="Alimentação">Alimentação</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Eventos">Eventos</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filtro-field">
+        <label>Fornecedor / Descrição</label>
+        <div class="input-wrapper">
+          <input type="text" placeholder="Buscar..." [(ngModel)]="filtroFornecedor" (input)="aplicarFiltros()" [class.active]="filtroFornecedor">
+        </div>
+      </div>
+
+      <div class="filtro-field">
+        <label>Mês de Vencimento</label>
+        <div class="input-wrapper">
+          <input type="month" [(ngModel)]="filtroMesVencimento" (input)="aplicarFiltros()" [class.active]="filtroMesVencimento">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="tabela-card">
+    <div class="tabela-wrapper">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th><div class="th-content">Descrição</div></th>
+            <th><div class="th-content">Fornecedor</div></th>
+            <th><div class="th-content">Centro de Custo</div></th>
+            <th><div class="th-content th-right">Valor</div></th>
+            <th><div class="th-content">Vencimento</div></th>
+            <th><div class="th-content">Pagamento</div></th>
+            <th><div class="th-content">Status</div></th>
+            <th><div class="th-content">Recorrência</div></th>
+            <th><div class="th-content">Ações</div></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="tabela-row" *ngFor="let conta of contasPaginadas" [class.row-vencida]="conta.status === 'vencido'" [class.row-vencendo]="isVencendo(conta)">
+            <td>
+              <div class="td-desc">
+                <span class="td-bold">{{ conta.descricao }}</span>
+                <div class="vencendo-alert" *ngIf="isVencendo(conta)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                  Vencendo em breve
+                </div>
+              </div>
+            </td>
+            <td><span class="td-text">{{ conta.fornecedor }}</span></td>
+            <td>
+              <span class="badge-cc">{{ conta.centroCusto }}</span>
+            </td>
+            <td class="td-right">
+              <span class="td-valor">R$ {{ conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+            </td>
+            <td>
+              <span class="td-text" [class.td-danger]="conta.status === 'vencido'">
+                {{ conta.dataVencimento | date:'dd/MM/yyyy' }}
+              </span>
+            </td>
+            <td>
+              <div *ngIf="conta.dataPagamento" class="td-pago">
+                <span class="td-text">{{ conta.dataPagamento | date:'dd/MM/yyyy' }}</span>
+                <span class="td-forma">{{ getFormaPagamentoLabel(conta.formaPagamento) }}</span>
+              </div>
+              <span *ngIf="!conta.dataPagamento" class="td-muted">—</span>
+            </td>
+            <td>
+              <span class="status-badge"
+                [class.status-pendente]="conta.status === 'pendente'"
+                [class.status-pago]="conta.status === 'pago'"
+                [class.status-vencido]="conta.status === 'vencido'"
+                [class.status-parcial]="conta.status === 'parcial'">
+                {{ getStatusLabel(conta.status) }}
+              </span>
+            </td>
+            <td>
+              <div *ngIf="conta.recorrente" class="td-recorrente">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+                {{ getPeriodicidadeLabel(conta.periodicidade) }}
+              </div>
+              <span *ngIf="!conta.recorrente" class="td-muted">Único</span>
+            </td>
+            <td>
+              <div class="row-actions">
+                <button class="btn-icone btn-pagar" title="Registrar pagamento"
+                  *ngIf="conta.status === 'pendente' || conta.status === 'vencido'"
+                  (click)="registrarPagamento(conta)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+                <button class="btn-icone" title="Editar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="btn-icone btn-icone-excluir" title="Excluir" (click)="excluir(conta)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tabela-empty" *ngIf="contasFiltradas.length === 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <span>Nenhuma conta encontrada</span>
+      </div>
+    </div>
+
+    <!-- Paginação -->
+    <div class="pagination" *ngIf="contasFiltradas.length > 0">
+      <div class="pagination-info">
+        <strong>{{ (paginaAtual - 1) * itensPorPagina + 1 }}</strong> – <strong>{{ Math.min(paginaAtual * itensPorPagina, contasFiltradas.length) }}</strong> de <strong>{{ contasFiltradas.length }}</strong>
+      </div>
+      <div class="pagination-controls">
+        <button class="pagination-btn" [disabled]="paginaAtual === 1" (click)="irParaPagina(1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+        </button>
+        <button class="pagination-btn" [disabled]="paginaAtual === 1" (click)="irParaPagina(paginaAtual - 1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="pagination-pages">
+          <button class="pagination-page" *ngFor="let page of paginasVisiveis; trackBy: trackByIndex"
+            [class.active]="page === paginaAtual" [class.dots]="page === -1"
+            [disabled]="page === -1" (click)="page !== -1 && irParaPagina(page)">
+            {{ page === -1 ? '...' : page }}
+          </button>
+        </div>
+        <button class="pagination-btn" [disabled]="paginaAtual === totalPaginas" (click)="irParaPagina(paginaAtual + 1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="pagination-btn" [disabled]="paginaAtual === totalPaginas" (click)="irParaPagina(totalPaginas)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+        </button>
+      </div>
+      <div class="pagination-size">
+        <label>Por página:</label>
+        <select [(ngModel)]="itensPorPagina" (change)="onItensPorPaginaChange()">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,515 @@
+<div class="sk-wrapper" *ngIf="isLoading">
+  <div class="sk-page-header">
+    <div class="sk-header-text">
+      <div class="sk sk-h22 sk-w40p"></div>
+      <div class="sk sk-h14 sk-w60p"></div>
+    </div>
+    <div class="sk sk-btn"></div>
+  </div>
+  <div class="sk-card">
+    <div class="sk-card-header">
+      <div class="sk sk-h16 sk-w25p"></div>
+      <div class="sk sk-h16 sk-w12p"></div>
+    </div>
+    <div class="sk-filter-body">
+      <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+      <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+      <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+    </div>
+  </div>
+  <div class="sk-card">
+    <div class="sk-table-head">
+      <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+      <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+    </div>
+    <div class="sk-table-row" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+      <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+      <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+    </div>
+  </div>
+</div>
+
+<div class="matriz-page" *ngIf="!isLoading">
+
+  <!-- ── Modal: Confirmar exclusão ──────────────────────────── -->
+  <div class="modal-overlay" *ngIf="confirm.visible" (click)="cancelarConfirmacao()">
+    <div class="modal modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-icon modal-icon-danger">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+      </div>
+      <h3 class="modal-title">{{ confirm.title }}</h3>
+      <p class="modal-msg">{{ confirm.message }}</p>
+      <div class="modal-actions">
+        <button class="modal-btn" (click)="cancelarConfirmacao()">Cancelar</button>
+        <button class="modal-btn btn-danger" (click)="confirm.callback(); confirm.visible = false">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Copiar para Ano ──────────────────────────────── -->
+  <div class="modal-overlay" *ngIf="copiarModal.visible" (click)="fecharCopiarModal()">
+    <div class="modal modal-md" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-header-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="modal-title">Copiar Matriz para Outro Ano</h3>
+          <p class="modal-subtitle">Replica todas as disciplinas e cargas horárias para o ano destino</p>
+        </div>
+        <button class="modal-close" (click)="fecharCopiarModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Resultado da cópia -->
+      <div class="copy-result" *ngIf="copiarModal.resultado">
+        <div class="copy-result-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="copy-result-text">
+          <strong>Cópia realizada com sucesso!</strong>
+          <p>{{ copiarModal.resultado.copiadas }} entrada(s) copiada(s)
+            <span *ngIf="copiarModal.resultado.ignoradas > 0">&nbsp;· {{ copiarModal.resultado.ignoradas }} já existiam e foram mantidas</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Formulário de cópia -->
+      <div class="copy-form" *ngIf="!copiarModal.resultado">
+        <div class="copy-form-row">
+          <div class="form-field-sm">
+            <label>Ano de origem</label>
+            <div class="select-wrapper">
+              <select [(ngModel)]="copiarModal.anoOrigem" [disabled]="copiarModal.isLoading">
+                <option *ngFor="let ano of anosLetivos" [value]="ano">{{ ano }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="copy-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+          <div class="form-field-sm">
+            <label>Ano de destino</label>
+            <div class="select-wrapper">
+              <select [(ngModel)]="copiarModal.anoDestino" [disabled]="copiarModal.isLoading">
+                <option *ngFor="let ano of anosDestinoDisponiveis" [value]="ano">{{ ano }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <p class="copy-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Entradas que já existem no ano destino não serão sobrescritas.
+        </p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn" (click)="fecharCopiarModal()" [disabled]="copiarModal.isLoading">
+          {{ copiarModal.resultado ? 'Fechar' : 'Cancelar' }}
+        </button>
+        <button class="modal-btn btn-primary"
+                *ngIf="!copiarModal.resultado"
+                (click)="executarCopia()"
+                [disabled]="copiarModal.isLoading || copiarModal.anoOrigem === copiarModal.anoDestino">
+          <span *ngIf="!copiarModal.isLoading">Copiar Matriz</span>
+          <span *ngIf="copiarModal.isLoading">Copiando...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Histórico ────────────────────────────────────── -->
+  <div class="modal-overlay" *ngIf="historicoModal.visible" (click)="fecharHistorico()">
+    <div class="modal modal-lg" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-header-icon modal-header-icon-info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="modal-title">Histórico de Alterações</h3>
+          <p class="modal-subtitle">
+            Ano letivo {{ filtroAnosLetivos[0] || anoAtual }}
+            <span *ngIf="historicoModal.serieFiltro"> · {{ historicoModal.serieFiltro }}</span>
+          </p>
+        </div>
+        <button class="modal-close" (click)="fecharHistorico()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="historico-body">
+        <div class="historico-loading" *ngIf="historicoModal.isLoading">
+          <div class="spinner-sm"></div>
+          <span>Carregando histórico...</span>
+        </div>
+
+        <div class="historico-empty" *ngIf="!historicoModal.isLoading && historicoModal.registros.length === 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <p>Nenhuma alteração registrada para este período.</p>
+        </div>
+
+        <div class="historico-table-wrap" *ngIf="!historicoModal.isLoading && historicoModal.registros.length > 0">
+          <table class="historico-table">
+            <thead>
+              <tr>
+                <th>Quando</th>
+                <th>Série</th>
+                <th>Disciplina</th>
+                <th class="text-right">Aulas/sem</th>
+                <th class="text-right">CH/ano</th>
+                <th>Ação</th>
+                <th>Motivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of historicoModal.registros">
+                <td class="td-date">{{ r.registradoEm | date:'dd/MM/yy HH:mm' }}</td>
+                <td>{{ r.serie }}</td>
+                <td>
+                  <span class="disc-nome">{{ r.nomeDisciplina }}</span>
+                  <span class="disc-cod" *ngIf="r.codDisciplina">({{ r.codDisciplina }})</span>
+                </td>
+                <td class="text-right mono">{{ r.cargaHorariaSemanal }} aulas</td>
+                <td class="text-right mono">{{ r.cargaHorariaAnual }}h</td>
+                <td>
+                  <span class="action-tag" [class]="acaoCls(r.acao)">{{ acaoLabel(r.acao) }}</span>
+                </td>
+                <td class="td-motivo">{{ r.motivoAlteracao || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn btn-primary" (click)="fecharHistorico()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Cabeçalho ───────────────────────────────────────────── -->
+  <header class="page-header">
+    <div class="header-top">
+      <div class="header-title-group">
+        <h1>Matriz Curricular</h1>
+        <div class="ano-badge-group">
+          <span class="ano-badge-label">Anos Letivos:</span>
+          <div class="anos-chips">
+            <div class="ano-chip" *ngFor="let ano of filtroAnosLetivos">
+              <span>{{ ano }}</span>
+              <button class="ano-chip-remove" (click)="removerAno(ano)" [disabled]="filtroAnosLetivos.length === 1">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="12" height="12">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <div class="ano-add-group" *ngIf="anosDisponiveis.length > 0">
+              <select class="ano-select" [(ngModel)]="anoParaAdicionar">
+                <option *ngFor="let ano of anosDisponiveis" [value]="ano">{{ ano }}</option>
+              </select>
+              <button class="ano-add-btn" (click)="adicionarAno()" title="Adicionar ano">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="header-subtitle">
+        Grade de disciplinas por série do Ensino Fundamental
+      </p>
+      <div class="header-actions">
+        <button class="btn-secondary" (click)="abrirHistorico()" title="Ver histórico de alterações">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Histórico
+        </button>
+        <button class="btn-secondary" (click)="abrirCopiarModal()" title="Copiar matriz para outro ano letivo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          Copiar para Ano
+        </button>
+        <button class="btn-primary" (click)="novaGrade()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Configurar Nova Grade
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Banner de mensagem ──────────────────────────────────── -->
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+
+  <!-- ── Filtros ─────────────────────────────────────────────── -->
+  <div class="filtros-card">
+    <div class="filtros-header">
+      <div class="filtros-titulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+        <span>Filtros</span>
+        <span class="badge" *ngIf="filtrosAtivos > 0">{{ filtrosAtivos }}</span>
+      </div>
+      <div class="filtros-resultado">
+        <span><strong>{{ totalEntradas }}</strong> disciplina{{ totalEntradas !== 1 ? 's' : '' }}</span>
+        <button class="btn-limpar" *ngIf="filtrosAtivos > 0" (click)="limparFiltros()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Limpar
+        </button>
+      </div>
+    </div>
+
+    <div class="filtros-grid">
+      <div class="filtro-field">
+        <label>Série/Ano</label>
+        <div class="select-wrapper">
+          <select [(ngModel)]="filtroSerie">
+            <option value="">Todas as séries</option>
+            <option *ngFor="let s of seriesDisponiveis" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="filtro-field">
+        <label>Buscar disciplina</label>
+        <div class="search-input">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="Nome ou código..." [(ngModel)]="filtroDisciplina">
+        </div>
+      </div>
+      <div class="filtro-field filtro-btn-col">
+        <button class="btn-historico-filtro" (click)="abrirHistorico(filtroSerie || undefined)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Ver Histórico
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Conteúdo principal ──────────────────────────────────── -->
+  <section class="matriz-content">
+
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="gruposAno.length === 0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+        <rect x="9" y="3" width="6" height="4" rx="1" ry="1"/>
+      </svg>
+      <h3>Nenhuma disciplina encontrada</h3>
+      <p>Não há disciplinas cadastradas na matriz para os filtros selecionados.</p>
+      <button class="btn-primary" (click)="novaGrade()">+ Configurar Nova Grade</button>
+    </div>
+
+    <!-- Grupos por ano -->
+    <div class="ano-section" *ngFor="let grupoAno of gruposAno">
+      
+      <!-- Cabeçalho do ano -->
+      <div class="ano-header">
+        <div class="ano-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <h2>Ano Letivo {{ grupoAno.ano }}</h2>
+        </div>
+        <span class="ano-count">{{ grupoAno.totalEntradas }} disciplina{{ grupoAno.totalEntradas !== 1 ? 's' : '' }}</span>
+      </div>
+
+      <!-- Series groups dentro do ano -->
+      <div class="serie-group" *ngFor="let grupo of grupoAno.series">
+
+        <!-- ── Cabeçalho do grupo (sempre visível, clicável para expandir) ── -->
+        <div class="serie-header" 
+             [class.expandida]="serieExpandida[grupoAno.ano + '-' + grupo.serie]" 
+             (click)="toggleSerieExpanded(grupoAno.ano + '-' + grupo.serie)">
+          <div class="serie-header-left">
+            <svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+            <h3>{{ grupo.serie }}</h3>
+          </div>
+          <div class="serie-totals" (click)="$event.stopPropagation()">
+            <ng-container *ngIf="!historicoView[grupoAno.ano + '-' + grupo.serie]">
+              <span class="total-chip">Total semanal: <strong>{{ grupo.totalQAS }} aulas</strong></span>
+              <span class="total-chip">Carga anual: <strong>{{ grupo.totalCH }}h</strong></span>
+              <button class="btn-serie-edit" (click)="editarSerie(grupo.serie, grupoAno.ano)" title="Editar grade desta série">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                </svg>
+                Editar Grade
+              </button>
+            </ng-container>
+            <button
+              class="btn-historico-serie"
+              [class.active]="historicoView[grupoAno.ano + '-' + grupo.serie]"
+              (click)="toggleHistoricoView(grupo.serie, grupoAno.ano)"
+              [title]="historicoView[grupoAno.ano + '-' + grupo.serie] ? 'Voltar à grade' : 'Ver histórico'">
+              <svg *ngIf="!historicoView[grupoAno.ano + '-' + grupo.serie]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <svg *ngIf="historicoView[grupoAno.ano + '-' + grupo.serie]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Conteúdo expandido (grade ou histórico) ── -->
+        <div class="serie-content" *ngIf="serieExpandida[grupoAno.ano + '-' + grupo.serie]">
+
+        <!-- ── VIEW GRADE (padrão) ── -->
+        <ng-container *ngIf="!historicoView[grupoAno.ano + '-' + grupo.serie]">
+
+          <!-- Table head -->
+          <div class="table-head">
+            <span>Disciplina</span>
+            <span>Área de Conhecimento</span>
+            <span class="text-right">Aulas/sem</span>
+            <span class="text-right">CH Anual</span>
+            <span></span>
+          </div>
+
+          <!-- Table rows -->
+          <div class="table-row" *ngFor="let m of grupo.entradas">
+            <span class="disc-cell">
+              <span class="disc-nome">{{ m.disciplina?.nome || '—' }}</span>
+              <span class="disc-cod" *ngIf="m.disciplina?.codigo">{{ m.disciplina!.codigo }}</span>
+            </span>
+            <span class="area-cell">{{ m.disciplina?.areaConhecimento || '—' }}</span>
+            <span class="text-right mono">{{ m.cargaHorariaSemanal }} aulas</span>
+            <span class="text-right mono">{{ ch(m) }}h</span>
+            <span class="actions">
+              <button class="icon-btn icon-btn-danger" (click)="confirmarExclusao(m)" title="Remover desta série">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
+            </span>
+          </div>
+
+          <!-- Totals row -->
+          <div class="totals-row">
+            <span class="totals-label">Total — {{ grupo.entradas.length }} disciplina{{ grupo.entradas.length !== 1 ? 's' : '' }}</span>
+            <span></span>
+            <span class="text-right mono totals-value">{{ grupo.totalQAS }} aulas</span>
+            <span class="text-right mono totals-value">{{ grupo.totalCH }}h</span>
+            <span></span>
+          </div>
+
+        </ng-container><!-- /view grade -->
+
+        <!-- ── VIEW HISTÓRICO ── -->
+        <div class="historico-view" *ngIf="historicoView[grupoAno.ano + '-' + grupo.serie]">
+
+          <!-- Toolbar: ano select -->
+          <div class="historico-view-toolbar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span class="historico-view-title">Histórico de alterações</span>
+            <div class="historico-ano-field">
+              <label>Ano letivo</label>
+              <select
+                [value]="historicoViewAno[grupoAno.ano + '-' + grupo.serie]"
+                (change)="onHistoricoViewAnoChange(grupoAno.ano + '-' + grupo.serie, grupo.serie, $any($event.target).value)">
+                <option *ngFor="let ano of anosHistorico" [value]="ano">{{ ano }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          <div class="historico-view-loading" *ngIf="historicoViewData[grupoAno.ano + '-' + grupo.serie]?.loading">
+            <div class="spinner-sm"></div>
+            <span>Carregando histórico...</span>
+          </div>
+
+          <!-- Vazio -->
+          <div class="historico-view-empty"
+               *ngIf="!historicoViewData[grupoAno.ano + '-' + grupo.serie]?.loading && !historicoViewData[grupoAno.ano + '-' + grupo.serie]?.registros?.length">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <p>Nenhuma alteração registrada para <strong>{{ grupo.serie }}</strong> em <strong>{{ historicoViewAno[grupoAno.ano + '-' + grupo.serie] }}</strong>.</p>
+          </div>
+
+          <!-- Tabela -->
+          <div class="historico-view-table-wrap"
+               *ngIf="!historicoViewData[grupoAno.ano + '-' + grupo.serie]?.loading && !!historicoViewData[grupoAno.ano + '-' + grupo.serie]?.registros?.length">
+            <table class="historico-view-table">
+              <thead>
+                <tr>
+                  <th>Quando</th>
+                  <th>Disciplina</th>
+                  <th class="text-right">Aulas/sem</th>
+                  <th class="text-right">CH/ano</th>
+                  <th>Ação</th>
+                  <th>Motivo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of historicoViewData[grupoAno.ano + '-' + grupo.serie].registros">
+                  <td class="td-date">{{ r.registradoEm | date:'dd/MM/yy HH:mm' }}</td>
+                  <td>
+                    <span class="disc-nome">{{ r.nomeDisciplina }}</span>
+                    <span class="disc-cod" *ngIf="r.codDisciplina">&nbsp;({{ r.codDisciplina }})</span>
+                  </td>
+                  <td class="text-right mono">{{ r.cargaHorariaSemanal }} aulas</td>
+                  <td class="text-right mono">{{ r.cargaHorariaAnual }}h</td>
+                  <td><span class="action-tag" [class]="acaoCls(r.acao)">{{ acaoLabel(r.acao) }}</span></td>
+                  <td class="td-motivo">{{ r.motivoAlteracao || '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div><!-- /historico-view -->
+
+        </div><!-- /serie-content -->
+
+      </div><!-- /serie-group -->
+
+    </div><!-- /ano-section -->
+
+  </section>
+
+</div><!-- /matriz-page -->

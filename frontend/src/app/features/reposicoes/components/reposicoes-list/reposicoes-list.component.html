@@ -1,0 +1,152 @@
+<div class="reposicoes-container">
+  <div class="page-header">
+    <h1>Reposições de Aulas</h1>
+    <p class="subtitle">Controle de cancelamentos e reposições</p>
+  </div>
+
+  <!-- Estatísticas -->
+  <div class="stats-cards" *ngIf="estatisticas">
+    <div class="stat-card">
+      <div class="stat-icon total">📊</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ estatisticas.total }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon pendente">⏳</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ estatisticas.pendentes }}</span>
+        <span class="stat-label">Pendentes</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon agendada">📅</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ estatisticas.agendadas }}</span>
+        <span class="stat-label">Agendadas</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon realizada">✅</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ estatisticas.realizadas }}</span>
+        <span class="stat-label">Realizadas</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon atrasada">⚠️</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ estatisticas.atrasadas }}</span>
+        <span class="stat-label">Atrasadas</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label>Status:</label>
+      <select [(ngModel)]="filtroStatus" (change)="onFiltroStatusChange()">
+        <option value="todas">Todas</option>
+        <option value="pendente">Pendentes</option>
+        <option value="agendada">Agendadas</option>
+        <option value="realizada">Realizadas</option>
+        <option value="dispensada">Dispensadas</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Turma:</label>
+      <input type="text" [(ngModel)]="filtroTurma" (input)="onFiltroChange()" placeholder="Filtrar por turma">
+    </div>
+
+    <div class="filter-group">
+      <label>Educador:</label>
+      <input type="text" [(ngModel)]="filtroEducador" (input)="onFiltroChange()" placeholder="Filtrar por educador">
+    </div>
+
+    <button class="btn-export" (click)="exportarCSV()">
+      📥 Exportar CSV
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="carregando">
+    <div class="spinner"></div>
+    <p>Carregando reposições...</p>
+  </div>
+
+  <!-- Erro -->
+  <div class="error-message" *ngIf="erro">
+    {{ erro }}
+  </div>
+
+  <!-- Lista de Reposições -->
+  <div class="reposicoes-list" *ngIf="!carregando && !erro">
+    <div class="reposicao-card" *ngFor="let reposicao of reposicoesFiltradas" 
+         [class.atrasada]="isAtrasada(reposicao)">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="turma-badge">{{ reposicao.turma }}</span>
+          <span class="disciplina-text">{{ reposicao.disciplina }}</span>
+        </div>
+        <div class="status-badge" [ngClass]="getStatusClass(reposicao.status)">
+          {{ formatarStatus(reposicao.status) }}
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="info-row">
+          <span class="label">👨‍🏫 Educador:</span>
+          <span class="value">{{ reposicao.educador }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">📅 Data Cancelamento:</span>
+          <span class="value">{{ reposicao.dataCancelamento | date:'dd/MM/yyyy' }}</span>
+          <span class="days-badge" *ngIf="reposicao.status === 'pendente'">
+            {{ diasDesdeCancel(reposicao.dataCancelamento) }} dias atrás
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">❓ Motivo:</span>
+          <span class="value">{{ reposicao.motivoCancelamento }}</span>
+        </div>
+
+        <div class="info-row" *ngIf="reposicao.dataReposicao">
+          <span class="label">🔄 Reposição:</span>
+          <span class="value">
+            {{ reposicao.dataReposicao | date:'dd/MM/yyyy' }} às 
+            {{ reposicao.horaInicio }} - {{ reposicao.horaFim }}
+          </span>
+          <span class="sala-badge" *ngIf="reposicao.sala">
+            📍 {{ reposicao.sala }}
+          </span>
+        </div>
+
+        <div class="alert-atrasada" *ngIf="isAtrasada(reposicao)">
+          ⚠️ Reposição pendente há mais de 30 dias!
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-primary" 
+                *ngIf="reposicao.status === 'agendada'"
+                (click)="marcarRealizada(reposicao.idReposicao)">
+          ✅ Marcar como Realizada
+        </button>
+        <button class="btn-secondary" 
+                *ngIf="reposicao.status === 'pendente'"
+                [routerLink]="['/reposicoes', reposicao.idReposicao, 'agendar']">
+          📅 Agendar Reposição
+        </button>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="reposicoesFiltradas.length === 0">
+      <p>Nenhuma reposição encontrada</p>
+    </div>
+  </div>
+</div>

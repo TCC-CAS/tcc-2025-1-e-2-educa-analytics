@@ -1,0 +1,588 @@
+$primary:    #2563eb;
+$danger:     #dc2626;
+$success:    #16a34a;
+$border:     #e2e8f0;
+$text:       #1e293b;
+$text-muted: #64748b;
+$surface:    #ffffff;
+$bg:         #f0f4f8;
+$radius:     10px;
+
+// ── Host ──────────────────────────────────────────────────────
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: $bg;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px);
+  background-size: 50px 50px;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  color: $text;
+}
+
+// ── Page wrapper ──────────────────────────────────────────────
+.form-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  @media (max-width: 768px) { padding: 1.5rem 1rem 2rem; }
+}
+
+// ── Page header ───────────────────────────────────────────────
+.page-header {
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(37,99,235,.15);
+  border-left: 4px solid $primary;
+  border-radius: $radius;
+  padding: 1.1rem 1.5rem;
+
+  h1 {
+    margin: 0 0 .2rem;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: $text;
+    letter-spacing: -.3px;
+  }
+
+  p { margin: 0; color: $text-muted; font-size: .875rem; }
+}
+
+// ── Message banner ────────────────────────────────────────────
+.message {
+  padding: .85rem 1.2rem;
+  border-radius: 8px;
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  font-size: .875rem;
+  font-weight: 500;
+
+  &.error { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+}
+
+// ── Config card (série + ano) ─────────────────────────────────
+.config-card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  padding: 1.25rem 1.5rem;
+}
+
+.config-row {
+  display: grid;
+  grid-template-columns: 200px 220px 1fr;
+  gap: 1.25rem;
+  align-items: end;
+
+  @media (max-width: 900px) { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+
+  label {
+    font-size: .78rem;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+}
+
+.required { color: $danger; }
+
+.select-wrapper {
+  select {
+    width: 100%;
+    padding: .6rem .85rem;
+    border: 1.5px solid $border;
+    border-radius: 7px;
+    font-size: .875rem;
+    background: $surface;
+    color: $text;
+    box-sizing: border-box;
+
+    &:focus { outline: none; border-color: $primary; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+    &:disabled { opacity: .55; }
+  }
+}
+
+// ── Summary chips ─────────────────────────────────────────────
+.serie-summary {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+
+  @media (max-width: 900px) { grid-column: 1 / -1; }
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: .4rem .9rem;
+  min-width: 80px;
+  text-align: center;
+}
+
+.summary-label {
+  font-size: .7rem;
+  font-weight: 600;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  white-space: nowrap;
+}
+
+.summary-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: $text;
+  font-variant-numeric: tabular-nums;
+
+  &.primary { color: $primary; }
+}
+
+// ── Disciplinas card (main table) ─────────────────────────────
+.disciplinas-card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  overflow: hidden;
+}
+
+.table-loading {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 2rem 1.5rem;
+  color: $text-muted;
+  font-size: .875rem;
+}
+
+// ── Table columns: checkbox | discipline | area | QAS | CH | obs ──
+$cols: 36px 2.5fr 1.8fr 120px 100px 1fr;
+
+.disc-table-head {
+  display: grid;
+  grid-template-columns: $cols;
+  gap: .75rem;
+  align-items: center;
+  padding: .7rem 1.25rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1.5px solid rgba(37,99,235,.1);
+  font-size: .72rem;
+  font-weight: 700;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+
+  .check-all-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: $primary;
+      cursor: pointer;
+    }
+  }
+}
+
+.disc-row {
+  display: grid;
+  grid-template-columns: $cols;
+  gap: .75rem;
+  align-items: center;
+  padding: .6rem 1.25rem;
+  border-bottom: 1px solid rgba(226,232,240,.6);
+  transition: background .1s;
+
+  &:last-child { border-bottom: none; }
+
+  &.active {
+    background: $surface;
+    &:hover { background: #f8fafc; }
+  }
+
+  &.inactive {
+    opacity: .55;
+    background: #fafafa;
+    &:hover { background: #f5f5f5; }
+  }
+}
+
+.disc-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: $primary;
+    cursor: pointer;
+  }
+}
+
+.disc-nome-cell {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+}
+
+.disc-nome {
+  font-weight: 500;
+  font-size: .9rem;
+  color: $text;
+}
+
+.disc-cod {
+  font-size: .75rem;
+  color: $text-muted;
+}
+
+.disc-area {
+  font-size: .82rem;
+  color: $text-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ── QAS input ─────────────────────────────────────────────────
+.qas-cell {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  justify-content: flex-end;
+}
+
+.qas-input {
+  width: 64px;
+  padding: .45rem .6rem;
+  border: 1.5px solid $border;
+  border-radius: 7px;
+  font-size: .9rem;
+  font-weight: 600;
+  text-align: right;
+  color: $text;
+  background: $surface;
+  box-sizing: border-box;
+  font-variant-numeric: tabular-nums;
+  transition: border-color .15s, box-shadow .15s;
+
+  &:focus { outline: none; border-color: $primary; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+
+  &.disabled {
+    background: #f8fafc;
+    color: $text-muted;
+    border-color: $border;
+    cursor: not-allowed;
+  }
+
+  &:disabled { background: #f8fafc; color: $text-muted; cursor: not-allowed; }
+}
+
+.qas-unit {
+  font-size: .8rem;
+  color: $text-muted;
+  font-weight: 500;
+}
+
+// ── CH cell ───────────────────────────────────────────────────
+.ch-cell {
+  display: flex;
+  align-items: center;
+  gap: .2rem;
+  justify-content: flex-end;
+}
+
+.ch-value {
+  font-weight: 700;
+  font-size: .9rem;
+  color: $primary;
+  font-variant-numeric: tabular-nums;
+
+  &.zero { color: $text-muted; font-weight: 400; }
+}
+
+.ch-unit {
+  font-size: .8rem;
+  color: $text-muted;
+}
+
+// ── Obs input ─────────────────────────────────────────────────
+.obs-input {
+  width: 100%;
+  padding: .45rem .75rem;
+  border: 1.5px solid $border;
+  border-radius: 7px;
+  font-size: .82rem;
+  color: $text;
+  background: $surface;
+  box-sizing: border-box;
+  transition: border-color .15s;
+
+  &:focus { outline: none; border-color: $primary; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+
+  &.disabled, &:disabled {
+    background: #f8fafc;
+    color: $text-muted;
+    cursor: not-allowed;
+    border-color: $border;
+  }
+
+  &::placeholder { color: #c0cad8; }
+}
+
+// ── Totals row ────────────────────────────────────────────────
+.disc-totals {
+  display: grid;
+  grid-template-columns: $cols;
+  gap: .75rem;
+  align-items: center;
+  padding: .75rem 1.25rem;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-top: 1.5px solid rgba(37,99,235,.15);
+}
+
+.totals-label {
+  font-size: .82rem;
+  color: $text-muted;
+  font-style: italic;
+}
+
+.totals-qas {
+  font-weight: 700;
+  color: $text;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.totals-ch {
+  font-weight: 700;
+  color: $primary;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.text-right { text-align: right; }
+
+// ── Empty disciplines ─────────────────────────────────────────
+.empty-disciplines {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: $text-muted;
+  font-size: .875rem;
+}
+
+// ── No-serie hint ─────────────────────────────────────────────
+.no-serie-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .75rem;
+  padding: 3rem 2rem;
+  background: $surface;
+  border: 1px dashed $border;
+  border-radius: $radius;
+  text-align: center;
+  color: $text-muted;
+
+  svg { width: 48px; height: 48px; opacity: .35; }
+
+  p { margin: 0; font-size: .9rem; strong { color: $text; } }
+}
+
+// ── Form footer ───────────────────────────────────────────────
+.form-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.motivo-field {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+
+  label {
+    font-size: .78rem;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+
+  input {
+    padding: .6rem .85rem;
+    border: 1.5px solid $border;
+    border-radius: 7px;
+    font-size: .875rem;
+    color: $text;
+    background: $surface;
+
+    &:focus { outline: none; border-color: $primary; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+    &:disabled { opacity: .55; }
+  }
+
+  small { font-size: .78rem; color: $text-muted; }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .75rem;
+}
+
+// ── Buttons ───────────────────────────────────────────────────
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .65rem 1.5rem;
+  background: $primary;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: .875rem;
+  cursor: pointer;
+  transition: background .18s, transform .15s, box-shadow .18s;
+
+  &:hover:not(:disabled) {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37,99,235,.35);
+  }
+
+  &:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+}
+
+.btn-secondary {
+  padding: .65rem 1.5rem;
+  border: 1.5px solid $border;
+  border-radius: 8px;
+  background: $surface;
+  color: $text-muted;
+  font-weight: 600;
+  font-size: .875rem;
+  cursor: pointer;
+  transition: all .15s;
+
+  &:hover:not(:disabled) { background: #f1f5f9; border-color: #94a3b8; color: $text; }
+  &:disabled { opacity: .45; cursor: not-allowed; }
+}
+
+// ── Spinner ───────────────────────────────────────────────────
+.spinner {
+  width: 22px; height: 22px;
+  border: 2.5px solid $border;
+  border-top-color: $primary;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// ── Modal ─────────────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  background: $surface;
+  border-radius: 14px;
+  padding: 2rem;
+  width: min(460px, 90vw);
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  text-align: center;
+}
+
+.modal-icon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: $primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto .75rem;
+
+  svg { width: 26px; height: 26px; }
+}
+
+.modal-title {
+  margin: 0 0 .5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: $text;
+}
+
+.modal-msg {
+  margin: 0 0 1.5rem;
+  font-size: .875rem;
+  color: $text-muted;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  gap: .75rem;
+  justify-content: center;
+}
+
+.modal-btn {
+  padding: .6rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: .875rem;
+  cursor: pointer;
+  border: 1.5px solid $border;
+  background: $surface;
+  color: $text-muted;
+  transition: all .15s;
+
+  &:hover { background: #f1f5f9; }
+}
+
+.modal-confirm {
+  background: $primary;
+  color: #fff;
+  border-color: $primary;
+
+  &:hover { background: #1d4ed8; }
+}
