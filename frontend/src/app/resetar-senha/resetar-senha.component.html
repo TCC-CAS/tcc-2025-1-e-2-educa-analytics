@@ -1,0 +1,138 @@
+<div class="container-resetar-senha">
+  <!-- Loading State -->
+  <div *ngIf="validando" class="loading-state">
+    <div class="spinner"></div>
+    <p>Validando link...</p>
+  </div>
+  
+  <!-- Token Inválido ou Expirado -->
+  <div *ngIf="!validando && !tokenValido" class="invalid-state">
+    <div class="icon-error">
+      <i class="icon-x-circle"></i>
+    </div>
+    
+    <h2>Link Inválido</h2>
+    <p class="error-message">{{ erro }}</p>
+    
+    <button 
+      *ngIf="tokenExpirado" 
+      (click)="solicitarNovoLink()" 
+      class="btn-primary"
+    >
+      Solicitar Novo Link
+    </button>
+    
+    <a routerLink="/login" class="link-voltar">Voltar para login</a>
+  </div>
+  
+  <!-- Formulário de Reset -->
+  <div *ngIf="!validando && tokenValido && !sucesso" class="form-container">
+    <div class="header">
+      <div class="icon-success">
+        <i class="icon-check-circle"></i>
+      </div>
+      <h2>Redefinir Senha</h2>
+      <p class="subtitle">Escolha uma nova senha forte</p>
+    </div>
+    
+    <form (ngSubmit)="onSubmit()">
+      <!-- Nova Senha -->
+      <div class="form-group">
+        <label for="novaSenha">Nova Senha</label>
+        <div class="input-wrapper">
+          <input
+            id="novaSenha"
+            [type]="mostrarSenha ? 'text' : 'password'"
+            [(ngModel)]="novaSenha"
+            name="novaSenha"
+            placeholder="Mínimo 8 caracteres"
+            required
+          />
+          <button
+            type="button"
+            (click)="toggleMostrarSenha()"
+            class="toggle-password"
+            [attr.aria-label]="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'"
+          >
+            <i [class]="mostrarSenha ? 'icon-eye-off' : 'icon-eye'"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Confirmar Senha -->
+      <div class="form-group">
+        <label for="confirmarSenha">Confirmar Senha</label>
+        <div class="input-wrapper">
+          <input
+            id="confirmarSenha"
+            [type]="mostrarConfirmar ? 'text' : 'password'"
+            [(ngModel)]="confirmarSenha"
+            name="confirmarSenha"
+            placeholder="Digite a senha novamente"
+            required
+          />
+          <button
+            type="button"
+            (click)="toggleMostrarConfirmar()"
+            class="toggle-password"
+            [attr.aria-label]="mostrarConfirmar ? 'Ocultar senha' : 'Mostrar senha'"
+          >
+            <i [class]="mostrarConfirmar ? 'icon-eye-off' : 'icon-eye'"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Erro -->
+      <div *ngIf="erro" class="alert alert-error">
+        <i class="icon-alert-circle"></i>
+        <span>{{ erro }}</span>
+      </div>
+      
+      <!-- Requisitos de Senha -->
+      <div class="password-requirements">
+        <p class="requirements-title">
+          <i class="icon-info"></i>
+          Sua senha deve conter:
+        </p>
+        <ul>
+          <li [class.met]="novaSenha.length >= 8">
+            Mínimo 8 caracteres
+          </li>
+          <li [class.met]="novaSenha === confirmarSenha && novaSenha.length > 0">
+            Senhas devem coincidir
+          </li>
+        </ul>
+      </div>
+      
+      <!-- Submit -->
+      <button
+        type="submit"
+        class="btn-submit"
+        [disabled]="salvando || !novaSenha || !confirmarSenha"
+      >
+        <span *ngIf="!salvando">Redefinir Senha</span>
+        <span *ngIf="salvando">
+          <span class="spinner-sm"></span>
+          Salvando...
+        </span>
+      </button>
+    </form>
+  </div>
+  
+  <!-- Sucesso -->
+  <div *ngIf="sucesso" class="success-state">
+    <div class="icon-success animated">
+      <i class="icon-check-circle"></i>
+    </div>
+    
+    <h2>Senha Redefinida!</h2>
+    <p class="success-message">
+      Sua senha foi alterada com sucesso.
+    </p>
+    <p class="redirect-message">
+      Redirecionando para o login...
+    </p>
+    
+    <div class="spinner"></div>
+  </div>
+</div>

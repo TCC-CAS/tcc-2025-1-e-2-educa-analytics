@@ -3,13 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-export type UserType = 'educador' | 'educando' | 'tutor' | 'administrativo';
+export type UserType = 'educador' | 'educando' | 'responsavel' | 'colaborador' | 'gestor' | 'administrativo';
 
 export interface User {
   id: string;
   nome: string;
   email: string;
   tipo: UserType;
+  matricula?: string;
 }
 
 @Injectable({
@@ -23,14 +24,53 @@ export class AuthService {
   public user$ = this.userSubject.asObservable();
 
   private mockUsers: { [key: string]: User } = {
-    educador: { id: '1', nome: 'Maria Santos', email: 'maria@educa.com', tipo: 'educador' },
-    educando: { id: '2', nome: 'João Silva', email: 'joao@educa.com', tipo: 'educando' },
-    tutor: { id: '3', nome: 'Ana Costa', email: 'ana@educa.com', tipo: 'tutor' },
-    administrativo: { id: '4', nome: 'Pedro Oliveira', email: 'pedro@educa.com', tipo: 'administrativo' }
+    educador: { 
+      id: '1', 
+      matricula: 'EDU001', 
+      nome: 'Maria Santos', 
+      email: 'maria.santos@educa.com', 
+      tipo: 'educador' 
+    },
+    educando: { 
+      id: '2', 
+      matricula: 'ALU001', 
+      nome: 'João Silva', 
+      email: 'joao.silva@educa.com', 
+      tipo: 'educando' 
+    },
+    responsavel: { 
+      id: '3', 
+      matricula: 'RESP001', 
+      nome: 'Ana Costa', 
+      email: 'ana.costa@educa.com', 
+      tipo: 'responsavel' 
+    },
+    colaborador: { 
+      id: '4', 
+      matricula: 'COL001', 
+      nome: 'Carlos Mendes', 
+      email: 'carlos.mendes@educa.com', 
+      tipo: 'colaborador' 
+    },
+    gestor: { 
+      id: '5', 
+      matricula: 'GEST001', 
+      nome: 'Patricia Lima', 
+      email: 'patricia.lima@educa.com', 
+      tipo: 'gestor' 
+    },
+    administrativo: { 
+      id: '6', 
+      matricula: 'ADM001', 
+      nome: 'Pedro Oliveira', 
+      email: 'pedro.oliveira@educa.com', 
+      tipo: 'administrativo' 
+    }
   };
 
   constructor(private http: HttpClient) {
-    this.checkAuthentication();
+    // Não faz checkAuthentication automático
+    // O usuário deve fazer login explicitamente
   }
 
   private checkAuthentication(): void {
@@ -59,8 +99,12 @@ export class AuthService {
   }
 
   logout(): void {
+    // Remove do localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('usuarioAtual');
+    localStorage.clear(); // Limpa tudo para garantir
+    
+    // Atualiza subjects
     this.userSubject.next(null);
     this.isAuthenticatedSubject.next(false);
   }
@@ -74,12 +118,68 @@ export class AuthService {
     this.isAuthenticatedSubject.next(true);
   }
 
+  setUser(usuario: any): void {
+    // Mapear resposta do backend para formato User
+    const user: User = {
+      id: usuario.id,
+      nome: usuario.nome,
+      email: usuario.email,
+      tipo: usuario.tipo,
+      matricula: usuario.id
+    };
+    
+    localStorage.setItem('usuarioAtual', JSON.stringify(user));
+    this.userSubject.next(user);
+  }
+
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    // Primeiro verifica o subject (fonte da verdade)
+    const isAuth = this.isAuthenticatedSubject.getValue();
+    
+    // Se o subject diz que está autenticado, verifica se realmente tem token
+    if (isAuth) {
+      const token = this.getToken();
+      if (!token) {
+        // Inconsistência: subject diz autenticado mas não tem token
+        // Corrige o estado
+        this.isAuthenticatedSubject.next(false);
+        this.userSubject.next(null);
+        return false;
+      }
+      return true;
+    }
+    
+    // Se o subject diz que não está autenticado, mas tem token
+    const token = this.getToken();
+    if (token) {
+      const usuarioAtual = localStorage.getItem('usuarioAtual');
+      if (usuarioAtual) {
+        const user = JSON.parse(usuarioAtual) as User;
+        this.userSubject.next(user);
+        this.isAuthenticatedSubject.next(true);
+        return true;
+      }
+    }
+    
+    return false;
   }
 
   getCurrentUser(): User | null {
-    return this.userSubject.getValue();
+    // Primeiro verifica o subject
+    let user = this.userSubject.getValue();
+    
+    // Se não tem no subject, tenta buscar do localStorage
+    if (!user) {
+      const usuarioAtual = localStorage.getItem('usuarioAtual');
+      const token = localStorage.getItem('token');
+      if (usuarioAtual && token) {
+        user = JSON.parse(usuarioAtual) as User;
+        this.userSubject.next(user);
+        this.isAuthenticatedSubject.next(true);
+      }
+    }
+    
+    return user;
   }
 
   getUserType(): UserType | null {
