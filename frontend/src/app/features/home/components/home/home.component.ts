@@ -74,7 +74,7 @@ export class HomeComponent implements OnInit {
         { titulo: 'Dashboard', icone: '📊', rota: '/dashboard-escolar', cor: 'azul', descricao: 'Indicadores gerais' }
       ]
     },
-    tutor: {
+    responsavel: {
       titulo: 'Bem-vindo, Responsável!',
       subtitulo: 'Acompanhe o desenvolvimento e desempenho do seu educando',
       icone: '👨‍👩‍👧',
@@ -85,12 +85,48 @@ export class HomeComponent implements OnInit {
         { titulo: 'Comunicados Pendentes', valor: 1, icone: '📢', cor: 'amarelo' }
       ],
       atalhos: [
-        { titulo: 'Acompanhar Notas', icone: '📋', rota: '/notas', cor: 'azul', descricao: 'Ver boletim' },
-        { titulo: 'Frequência Educandos', icone: '✅', rota: '/frequencia', cor: 'verde', descricao: 'Presença registrada' },
-        { titulo: 'Dados Matrículas', icone: '📝', rota: '/matricula', cor: 'laranja', descricao: 'Informações escolares' },
+        { titulo: 'Acompanhar Notas', icone: '📋', rota: '/educandos', cor: 'azul', descricao: 'Ver boletim' },
+        { titulo: 'Frequência Educandos', icone: '✅', rota: '/educandos', cor: 'verde', descricao: 'Presença registrada' },
         { titulo: 'Comunicados', icone: '📬', rota: '/eventos', cor: 'vermelho', descricao: 'Mensagens da escola' },
         { titulo: 'Dashboard Educandos', icone: '📊', rota: '/dashboard-escolar', cor: 'azul', descricao: 'Desempenho escolar' },
-        { titulo: 'Responder Avaliações', icone: '📋', rota: '/avaliacoes', cor: 'roxo', descricao: 'Feedback institucional' }
+        { titulo: 'Responder Avaliações', icone: '📋', rota: '/avaliacoes', cor: 'roxo', descricao: 'Feedback institucional' },
+        { titulo: 'Área do Responsável', icone: '👨‍👩‍👧', rota: '/responsaveis', cor: 'amarelo', descricao: 'Minha área' }
+      ]
+    },
+    colaborador: {
+      titulo: 'Bem-vindo, Colaborador!',
+      subtitulo: 'Gerencie atividades administrativas e financeiras',
+      icone: '💼',
+      stats: [
+        { titulo: 'Fornecedores Ativos', valor: 12, icone: '🏢', cor: 'azul' },
+        { titulo: 'Movimentações Hoje', valor: 45, icone: '💳', cor: 'verde' },
+        { titulo: 'Pendências', valor: 3, icone: '⏰', cor: 'amarelo' },
+        { titulo: 'Eventos Programados', valor: 8, icone: '📅', cor: 'roxo' }
+      ],
+      atalhos: [
+        { titulo: 'Gestão de Caixa', icone: '🏦', rota: '/caixa', cor: 'verde', descricao: 'Movimentação financeira' },
+        { titulo: 'Fornecedores', icone: '🏭', rota: '/fornecedores', cor: 'azul', descricao: 'Gerenciar fornecedores' },
+        { titulo: 'Eventos', icone: '📅', rota: '/eventos', cor: 'amarelo', descricao: 'Calendário institucional' },
+        { titulo: 'Dashboard Financeiro', icone: '💰', rota: '/dashboard-financeiro', cor: 'verde', descricao: 'Análise financeira' }
+      ]
+    },
+    gestor: {
+      titulo: 'Bem-vindo, Gestor!',
+      subtitulo: 'Visão completa da instituição com acesso total ao sistema',
+      icone: '👔',
+      stats: [
+        { titulo: 'Total de Matrículas', valor: 1250, icone: '📚', cor: 'azul' },
+        { titulo: 'Turmas Ativas', valor: 45, icone: '👥', cor: 'verde' },
+        { titulo: 'Receita Mensal', valor: 320, icone: '💰', cor: 'verde' },
+        { titulo: 'Colaboradores', valor: 98, icone: '🧑‍💼', cor: 'laranja' }
+      ],
+      atalhos: [
+        { titulo: 'Dashboard Financeiro', icone: '💰', rota: '/dashboard-financeiro', cor: 'verde', descricao: 'Análise financeira' },
+        { titulo: 'Dashboard Escolar', icone: '📊', rota: '/dashboard-escolar', cor: 'azul', descricao: 'Indicadores educacionais' },
+        { titulo: 'Gerenciar Matrículas', icone: '📝', rota: '/matricula', cor: 'laranja', descricao: 'Matrícula de educandos' },
+        { titulo: 'Turmas', icone: '👥', rota: '/turmas', cor: 'azul', descricao: 'Gestão de turmas' },
+        { titulo: 'Educadores', icone: '👨‍🏫', rota: '/educadores', cor: 'roxo', descricao: 'Equipe docente' },
+        { titulo: 'Cronograma', icone: '📅', rota: '/cronograma', cor: 'amarelo', descricao: 'Grade de horários' }
       ]
     },
     administrativo: {
@@ -114,7 +150,7 @@ export class HomeComponent implements OnInit {
     }
   };
 
-  userTypes: UserType[] = ['educador', 'educando', 'tutor', 'administrativo'];
+  userTypes: UserType[] = ['educador', 'educando', 'responsavel', 'colaborador', 'gestor', 'administrativo'];
 
   infoCards = [
     { icone: '🎯', titulo: 'Gestão Integrada', descricao: 'Toda a informação da instituição em um único lugar' },
@@ -125,13 +161,6 @@ export class HomeComponent implements OnInit {
   constructor(private authService: AuthService) {
     this.usuarioAtual = this.authService.getCurrentUser();
     this.tipoUsuario = this.authService.getUserType();
-    
-    // Se não tem usuário logado, usa mock educador
-    if (!this.usuarioAtual) {
-      this.authService.loginMock('educador');
-      this.usuarioAtual = this.authService.getCurrentUser();
-      this.tipoUsuario = this.authService.getUserType();
-    }
   }
 
   ngOnInit(): void {
