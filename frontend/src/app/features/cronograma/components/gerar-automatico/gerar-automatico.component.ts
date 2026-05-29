@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
-import { CronogramaService, GerarGradeResponse } from '../../../../../services/cronograma.service';
+import { CronogramaService, GerarGradeResponse } from '../../services/cronograma.service';
 
 interface DadosGeracaoAutomatica {
   anoLetivo: number;
@@ -261,8 +261,8 @@ export class GerarAutomaticoComponent implements OnInit {
 
     requests.forEach((request, index) => {
       request!.subscribe({
-        next: (response) => processarResultado(response, index),
-        error: (err) => {
+        next: (response: any) => processarResultado(response, index),
+        error: (err: any) => {
           errosTotal++;
           console.error('Erro ao gerar grade:', err);
           if (index === requests.length - 1) {
