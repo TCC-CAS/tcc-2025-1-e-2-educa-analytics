@@ -209,6 +209,7 @@ export class MatriculaComponent implements OnInit, AfterViewInit {
         genero:        this.alunoGeneroOutro ? this.alunoGeneroCustom : this.alunoGeneroSelecionado,
         cor:           this.alunoCorRaca,
         dataNascimento: this.alunoNascimento,
+        // idade: NÃO enviada - o backend calcula automaticamente a partir de dataNascimento
         telefone:      this.alunoTelefone,
         rg:            this.alunoRg,
         orgaoEmissor:  this.alunoOrgaoEmissor,

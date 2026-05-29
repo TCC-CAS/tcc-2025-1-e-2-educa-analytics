@@ -29,64 +29,19 @@
   <form #form="ngForm" class="form" (ngSubmit)="submit(form.valid === true)">
     <div class="field-grid">
       <label class="field">
+        <span>Disciplina</span>
+        <select name="nome" [(ngModel)]="model.nome" (ngModelChange)="onNomeChange()" required>
+          <option value="">Selecione</option>
+          <option *ngFor="let d of disciplinasOpcoes" [value]="d.nome">{{ d.nome }}</option>
+        </select>
+      </label>
+      <label class="field">
         <span>Código</span>
-        <input type="text" name="abreviatura" [(ngModel)]="model.abreviatura" required />
+        <input type="text" name="codigo" [(ngModel)]="model.codigo" required maxlength="20" />
       </label>
-      <label class="field">
-        <span>Nome da disciplina</span>
-        <input type="text" name="nome" [(ngModel)]="model.nome" required />
-      </label>
-      <label class="field">
-        <span>Série</span>
-        <select name="serie" [(ngModel)]="model.serie" required>
-          <option value="">Selecione</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
-        </select>
-      </label>
-      <label class="field">
-        <span>Ano Letivo</span>
-        <input type="number" name="periodoLetivo" [(ngModel)]="model.periodoLetivo" placeholder="Ex: 2025" required />
-      </label>
-      <label class="field">
-        <span>Período</span>
-        <select name="turno" [(ngModel)]="model.turno" required>
-          <option value="">Selecione</option>
-          <option value="Manha">Manhã</option>
-          <option value="Tarde">Tarde</option>
-          <option value="Noite">Noite</option>
-          <option value="Integral">Integral</option>
-        </select>
-      </label>
-      <label class="field">
-        <span>Aulas semanais</span>
-        <input type="number" name="aulasSemanais" [(ngModel)]="model.aulasSemanais" required />
-      </label>
-      <label class="field">
-        <span>Horas semanais</span>
-        <input type="number" name="horasSemanais" [(ngModel)]="model.horasSemanais" required />
-      </label>
-      <label class="field">
-        <span>Horas anuais</span>
-        <input type="number" name="horasAnuais" [(ngModel)]="model.horasAnuais" required />
-      </label>
-      <label class="field">
-        <span>Área de conhecimento</span>
-        <select name="areaConhecimento" [(ngModel)]="model.areaConhecimento" required>
-          <option value="">Selecione</option>
-          <option value="Linguagens">Linguagens</option>
-          <option value="Matematica">Matemática</option>
-          <option value="Ciencias Humanas">Ciências Humanas</option>
-          <option value="Ciencias da Natureza">Ciências da Natureza</option>
-        </select>
-      </label>
+    </div>
+
+    <div class="field-grid">
       <label class="field">
         <span>Status</span>
         <select name="status" [(ngModel)]="model.status" required>
@@ -97,9 +52,18 @@
       </label>
     </div>
 
+    <div class="field-grid">
+      <label class="field full-width">
+        <span>Descrição (opcional)</span>
+        <textarea name="descricao" [(ngModel)]="model.descricao" rows="3" placeholder="Informações adicionais sobre a disciplina..."></textarea>
+      </label>
+    </div>
+
     <div class="form-actions">
-      <button type="button" class="ghost" (click)="cancel()">Voltar</button>
-      <button type="submit" class="primary">{{ disciplinaId ? 'Salvar Alterações' : 'Cadastrar disciplina' }}</button>
+      <button type="button" class="ghost" (click)="cancel()" [disabled]="isLoading">Voltar</button>
+      <button type="submit" class="primary" [disabled]="isLoading">
+        {{ isLoading ? 'Salvando...' : (disciplinaId ? 'Salvar Alterações' : 'Cadastrar disciplina') }}
+      </button>
     </div>
   </form>
   </div>

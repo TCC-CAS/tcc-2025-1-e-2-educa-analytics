@@ -1,0 +1,154 @@
+<div class="cron-page">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header class="page-header">
+    <div class="header-info">
+      <div class="avatar">{{ educador.nome[0] }}</div>
+      <div class="header-text">
+        <h1>Meu Cronograma</h1>
+        <p class="header-sub">{{ educador.nome }}</p>
+        <span class="badge educador-badge">Educador</span>
+      </div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-card">
+        <span class="stat-num">{{ totalAulas }}</span>
+        <span class="stat-label">aulas/sem.</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ turmasCount }}</span>
+        <span class="stat-label">turmas</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ disciplinas.length }}</span>
+        <span class="stat-label">disciplinas</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Filtros ────────────────────────────────────────────── -->
+  <div class="filters-bar">
+    <div class="filters-left">
+      <span class="filters-label">Filtrar por:</span>
+
+      <div class="filter-group">
+        <button class="filter-btn"
+                [class.ativo]="filtroTurmaId === ''"
+                (click)="filtroTurmaId = ''">
+          Todas as turmas
+        </button>
+        <button class="filter-btn turma-btn"
+                *ngFor="let t of turmas"
+                [class.ativo]="filtroTurmaId === t.id"
+                [style.--cor-bg]="t.cor.bg"
+                [style.--cor-text]="t.cor.text"
+                [style.--cor-border]="t.cor.border"
+                (click)="filtroTurmaId = filtroTurmaId === t.id ? '' : t.id">
+          <span class="turma-dot" [style.background]="t.cor.bg" [style.border-color]="t.cor.border"></span>
+          {{ t.codigo }}
+          <small>{{ t.serie }}</small>
+        </button>
+      </div>
+
+      <div class="filter-sep"></div>
+
+      <div class="filter-group">
+        <button class="filter-btn"
+                [class.ativo]="filtroDisciplinaId === ''"
+                (click)="filtroDisciplinaId = ''">
+          Todas as disciplinas
+        </button>
+        <button class="filter-btn"
+                *ngFor="let d of disciplinas"
+                [class.ativo]="filtroDisciplinaId === d.id"
+                (click)="filtroDisciplinaId = filtroDisciplinaId === d.id ? '' : d.id">
+          {{ d.nome }}
+        </button>
+      </div>
+    </div>
+
+    <button class="btn-clear"
+            *ngIf="filtroTurmaId || filtroDisciplinaId"
+            (click)="limparFiltros()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      Limpar filtros
+    </button>
+  </div>
+
+  <!-- ── Legenda de turmas ──────────────────────────────────── -->
+  <div class="legenda-bar">
+    <span class="legenda-titulo">Turmas:</span>
+    <span class="legenda-item" *ngFor="let t of turmas">
+      <span class="legenda-dot"
+            [style.background]="t.cor.bg"
+            [style.border-color]="t.cor.border"></span>
+      <span class="legenda-text">
+        <strong>{{ t.codigo }}</strong> {{ t.serie }}
+      </span>
+    </span>
+  </div>
+
+  <!-- ── Grade semanal ─────────────────────────────────────── -->
+  <div class="grade-container">
+    <div class="grade">
+
+      <div class="grade-header">
+        <div class="hora-col-header"></div>
+        <div class="dia-header"
+             *ngFor="let dia of dias; trackBy: trackByDia"
+             [class.hoje]="isHoje(dia.key)">
+          <span class="dia-nome">{{ dia.label }}</span>
+          <span class="dia-abrev">{{ dia.abrev }}</span>
+          <span class="hoje-tag" *ngIf="isHoje(dia.key)">Hoje</span>
+        </div>
+      </div>
+
+      <div class="grade-row" *ngFor="let hora of horasFiltradas; trackBy: trackByHora">
+
+        <div class="hora-label">
+          <span>{{ hora }}</span>
+        </div>
+
+        <div class="celula"
+             *ngFor="let dia of dias; trackBy: trackByDia"
+             [class.hoje-col]="isHoje(dia.key)">
+
+          <!-- O educador pode ter mais de uma aula na mesma hora (turmas diferentes) -->
+          <ng-container *ngFor="let slot of getSlots(dia.key, hora); trackBy: trackBySlot">
+            <div class="slot"
+                 [style.background]="slot.corBg"
+                 [style.border-left-color]="slot.corBorder"
+                 [style.color]="slot.corText">
+
+              <span class="slot-disciplina">{{ slot.disciplina }}</span>
+
+              <span class="slot-turma">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                </svg>
+                <strong>{{ slot.turmaCodigo }}</strong> · {{ slot.turmaSerie }}
+              </span>
+
+              <span class="slot-info" *ngIf="slot.sala">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11">
+                  <rect x="2" y="7" width="20" height="14" rx="2"/>
+                  <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+                </svg>
+                {{ slot.sala }}
+              </span>
+
+              <span class="slot-hora">{{ slot.horaInicio }} – {{ slot.horaFim }}</span>
+            </div>
+          </ng-container>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

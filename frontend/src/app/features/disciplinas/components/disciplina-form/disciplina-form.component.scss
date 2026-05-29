@@ -16,11 +16,11 @@ $radius:     10px;
   height: 100%;
   overflow: hidden;
   flex-shrink: 1;
-  background-color: #ffffff;
+  background-color: #f0f4f8;
   background-image:
-    linear-gradient(rgba(0,0,0,0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,0.07) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px);
+  background-size: 50px 50px;
   font-family: 'Inter', 'Segoe UI', sans-serif;
   color: $text;
 }
@@ -159,6 +159,13 @@ $radius:     10px;
     resize: vertical;
     min-height: 90px;
   }
+}
+
+.readonly-field {
+  background: #f1f5f9 !important;
+  color: $text-muted !important;
+  cursor: default !important;
+  pointer-events: none;
 }
 
 .required-legend {
@@ -313,3 +320,63 @@ button.ghost,
 }
 @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
+
+// ── Field Section (Cálculo de Carga Horária) ─────────────────
+.field-section {
+  background: linear-gradient(135deg, rgba(37,99,235,0.04) 0%, rgba(124,58,237,0.04) 100%);
+  border: 1.5px solid rgba(37,99,235,0.15);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: $primary;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+    stroke: $primary;
+  }
+}
+
+.section-description {
+  margin: 0 0 1rem 0;
+  font-size: 0.875rem;
+  color: $text-muted;
+  line-height: 1.5;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: $text-muted;
+  font-style: italic;
+}
+
+.calculated-hint {
+  color: $success;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.calculated-field {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: $text;
+  font-weight: 700;
+  cursor: not-allowed;
+  
+  &:focus {
+    outline: none;
+    border-color: #cbd5e1;
+    box-shadow: none;
+  }
+}

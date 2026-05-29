@@ -26,18 +26,59 @@
       <p>{{ isEdicao ? 'Atualize os dados do lançamento.' : 'Preencha os dados para registrar um novo lançamento.' }}</p>
     </header>
 
+    <!-- Mensagem inline de erro/sucesso -->
+    <div *ngIf="message" class="message-banner" [class.error]="messageType === 'error'">
+      <svg *ngIf="messageType === 'error'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      <svg *ngIf="messageType === 'success'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      {{ message }}
+    </div>
+
     <form #lancamentoForm="ngForm" (ngSubmit)="salvar(lancamentoForm)" class="form">
-      <div class="section-label">Informações do Lançamento</div>
+
+      <!-- ── Tipo de Registro ────────────────────────────── -->
+      <div class="section-label">Tipo de Registro</div>
+      <div class="tipo-registro-row">
+        <button type="button" class="tipo-btn"
+                [class.active]="!isProjetado"
+                (click)="setProjetado(false)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Lançamento Efetivo
+        </button>
+        <button type="button" class="tipo-btn tipo-btn-proj"
+                [class.active]="isProjetado"
+                (click)="setProjetado(true)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Projeção Futura
+        </button>
+      </div>
+      <div class="tipo-hint" *ngIf="isProjetado">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Este lançamento aparecerá no <strong>Fluxo Projetado</strong> até a data prevista chegar.
+      </div>
+
+      <!-- ── Informações ─────────────────────────────────── -->
+      <div class="section-label" style="margin-top:.75rem">Informações do Lançamento</div>
       <div class="field-grid">
 
         <div class="field">
-          <label for="data">Data da Movimentação *</label>
+          <label for="data">{{ isProjetado ? 'Data Prevista *' : 'Data da Movimentação *' }}</label>
           <input type="date" id="data" name="data" [(ngModel)]="lancamento.data" required>
         </div>
 
         <div class="field">
           <label for="tipoConta">Tipo de Operação *</label>
-          <select id="tipoConta" name="tipoConta" [(ngModel)]="lancamento.tipoConta" required>
+          <select id="tipoConta" name="tipoConta"
+            [(ngModel)]="lancamento.tipoConta"
+            (ngModelChange)="onTipoContaChange()"
+            required>
             <option value="">Selecione</option>
             <option value="entrada">Entrada (Recebimento)</option>
             <option value="saida">Saída (Pagamento)</option>
@@ -56,32 +97,48 @@
         </div>
 
         <div class="field">
-          <label for="tipoDespesa">Tipo de Despesa</label>
-          <select id="tipoDespesa" name="tipoDespesa" [(ngModel)]="lancamento.tipoDespesa">
+          <label for="centroCusto">Centro de Custo</label>
+          <select id="centroCusto" name="centroCusto" [(ngModel)]="lancamento.centroCusto">
             <option value="">Selecione</option>
-            <option value="Material Escolar">Material Escolar</option>
+            <option value="Pedagógico">Pedagógico</option>
+            <option value="Administrativo">Administrativo</option>
+            <option value="Infraestrutura">Infraestrutura</option>
+            <option value="Tecnologia">Tecnologia</option>
             <option value="Alimentação">Alimentação</option>
-            <option value="Manutenção">Manutenção</option>
-            <option value="Energia / Água / Telefone">Energia / Água / Telefone</option>
             <option value="Transporte">Transporte</option>
-            <option value="Uniforme">Uniforme</option>
-            <option value="Outros">Outros</option>
-            <option value="N/A">N/A</option>
+            <option value="Eventos">Eventos</option>
           </select>
         </div>
+
+        <!-- Campos exclusivos de Saída -->
+        <ng-container *ngIf="isSaida">
+          <div class="field">
+            <label for="tipoDespesa">Tipo de Despesa</label>
+            <select id="tipoDespesa" name="tipoDespesa" [(ngModel)]="lancamento.tipoDespesa">
+              <option value="">Selecione</option>
+              <option value="Material Escolar">Material Escolar</option>
+              <option value="Alimentação">Alimentação</option>
+              <option value="Manutenção">Manutenção</option>
+              <option value="Energia / Água / Telefone">Energia / Água / Telefone</option>
+              <option value="Transporte">Transporte</option>
+              <option value="Uniforme">Uniforme</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="fornecedor">Fornecedor *</label>
+            <select id="fornecedor" name="fornecedor" [(ngModel)]="lancamento.fornecedor" required>
+              <option value="">Selecione</option>
+              <option *ngFor="let f of fornecedores" [value]="f">{{ f }}</option>
+            </select>
+          </div>
+        </ng-container>
 
         <div class="field full">
           <label for="descricao">Descrição *</label>
           <input type="text" id="descricao" name="descricao" [(ngModel)]="lancamento.descricao" required
-            placeholder="Ex: Mensalidade Fevereiro, Pagamento Fornecedor">
-        </div>
-
-        <div class="field">
-          <label for="fornecedor">Fornecedor *</label>
-          <select id="fornecedor" name="fornecedor" [(ngModel)]="lancamento.fornecedor" required>
-            <option value="">Selecione</option>
-            <option *ngFor="let fornecedor of fornecedores" [value]="fornecedor">{{ fornecedor }}</option>
-          </select>
+            placeholder="Ex: Mensalidade Maio, Pagamento Fornecedor, Matrícula">
         </div>
 
         <div class="field">
@@ -90,11 +147,20 @@
             min="0.01" step="0.01" placeholder="0,00">
         </div>
 
+        <div class="field">
+          <label for="usuario">Responsável</label>
+          <input type="text" id="usuario" name="usuario" [(ngModel)]="lancamento.usuario"
+            placeholder="Nome do responsável">
+        </div>
+
       </div>
 
       <div class="form-actions">
-        <button type="button" class="ghost" (click)="voltar()">Cancelar</button>
-        <button type="submit" class="primary">{{ isEdicao ? 'Atualizar' : 'Registrar' }}</button>
+        <button type="button" class="ghost" (click)="voltar()" [disabled]="salvando">Cancelar</button>
+        <button type="submit" class="primary" [disabled]="salvando">
+          <svg *ngIf="salvando" class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          {{ salvando ? 'Salvando...' : (isEdicao ? 'Atualizar' : 'Registrar') }}
+        </button>
       </div>
     </form>
 

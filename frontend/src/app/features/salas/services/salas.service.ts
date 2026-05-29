@@ -16,7 +16,7 @@ export interface Sala {
   ventilador: boolean;
   computadores: boolean;
   acessibilidade: boolean;
-  status: 'ativa' | 'inativa';
+  status: 'disponivel' | 'em-manutencao' | 'reservada' | 'interditada' | 'ativa' | 'inativa'; // Inclui legacy
   observacoes?: string;
 }
 
@@ -62,13 +62,13 @@ export class SalasService {
     );
   }
 
-  atualizarStatus(id: number, status: 'ativa' | 'inativa'): Observable<{ data: { id: number; status: string } }> {
+  atualizarStatus(id: number, status: 'disponivel' | 'em-manutencao' | 'reservada' | 'interditada'): Observable<{ data: { id: number; status: string } }> {
     return this.api.patch<{ id: number; status: string }>(`${this.endpoint}/${id}/status`, { status }).pipe(
       map(result => ({ data: result }))
     );
   }
 
-  atualizarStatusLote(ids: number[], status: 'ativa' | 'inativa'): Observable<{ data: { atualizados: number } }> {
+  atualizarStatusLote(ids: number[], status: 'disponivel' | 'em-manutencao' | 'reservada' | 'interditada'): Observable<{ data: { atualizados: number } }> {
     return this.api.patch<{ atualizados: number }>(`${this.endpoint}/lote/status`, { ids, status }).pipe(
       map(result => ({ data: result }))
     );

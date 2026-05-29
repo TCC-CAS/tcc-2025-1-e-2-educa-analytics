@@ -2,7 +2,7 @@
 import { ActivatedRoute, Router } from '@angular/router';
 import { SalasService, Sala } from '../../services/salas.service';
 
-type StatusSala = 'ativa' | 'inativa';
+type StatusSala = 'disponivel' | 'em-manutencao' | 'reservada' | 'interditada';
 type TipoSala = 'sala-de-aula' | 'laboratorio' | 'auditorio' | 'biblioteca' | 'quadra' | 'outro';
 
 interface SalaFormModel {
@@ -77,6 +77,16 @@ export class SalaFormComponent implements OnInit {
     this.salasService.buscarSala(id).subscribe({
       next: (response) => {
         const sala = response.data;
+        // Mapear valores legados para novos status
+        let statusMapeado: StatusSala | '' = '';
+        if (sala.status === 'ativa') {
+          statusMapeado = 'disponivel';
+        } else if (sala.status === 'inativa') {
+          statusMapeado = 'interditada';
+        } else {
+          statusMapeado = sala.status as StatusSala;
+        }
+
         this.model = {
           codigo: sala.codigo,
           nome: sala.nome,
@@ -89,7 +99,7 @@ export class SalaFormComponent implements OnInit {
           ventilador: sala.ventilador,
           computadores: sala.computadores,
           acessibilidade: sala.acessibilidade,
-          status: sala.status,
+          status: statusMapeado,
           observacoes: sala.observacoes || ''
         };
         this.loading = false;
@@ -115,8 +125,8 @@ export class SalaFormComponent implements OnInit {
     }
 
     // Validar que o status foi selecionado
-    if (!this.model.status || (this.model.status !== 'ativa' && this.model.status !== 'inativa')) {
-      this.showMessage('Selecione um status válido (Ativa ou Inativa).', 'error');
+    if (!this.model.status) {
+      this.showMessage('Selecione um status válido.', 'error');
       return;
     }
 
@@ -132,7 +142,7 @@ export class SalaFormComponent implements OnInit {
       ventilador: this.model.ventilador,
       computadores: this.model.computadores,
       acessibilidade: this.model.acessibilidade,
-      status: this.model.status as 'ativa' | 'inativa',
+      status: this.model.status as any,
       observacoes: this.model.observacoes
     };
 

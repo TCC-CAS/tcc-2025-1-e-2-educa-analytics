@@ -9,9 +9,10 @@ from __future__ import annotations
 import hashlib
 import json
 import secrets
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from app.src.adapters.db_adapter import execute_query, execute_write
+from app.src.services import email_service
 from app.src.models.models import (
     ColaboradorModel,
     EducadorModel,
@@ -33,14 +34,19 @@ def _add_col_if_missing(table: str, col: str, definition: str) -> None:
         execute_write(f"ALTER TABLE `{table}` ADD COLUMN `{col}` {definition}")
 
 
-_add_col_if_missing("Colaborador",       "rg",           "VARCHAR(20) DEFAULT NULL")
-_add_col_if_missing("Colaborador",       "orgaoEmissor", "VARCHAR(20) DEFAULT NULL")
-_add_col_if_missing("Colaborador",       "estadoEmissor","CHAR(2)     DEFAULT NULL")
-_add_col_if_missing("Educador",          "rg",           "VARCHAR(20) DEFAULT NULL")
-_add_col_if_missing("Educador",          "orgaoEmissor", "VARCHAR(20) DEFAULT NULL")
-_add_col_if_missing("Educador",          "estadoEmissor","CHAR(2)     DEFAULT NULL")
-_add_col_if_missing("FormacaoAcademica", "grau",         "VARCHAR(30) DEFAULT NULL")
-_add_col_if_missing("Educador",          "periodos",     "TEXT        DEFAULT NULL")
+# Tentar aplicar migrações, mas não travar o servidor se o banco estiver offline
+try:
+    _add_col_if_missing("Colaborador",       "rg",           "VARCHAR(20) DEFAULT NULL")
+    _add_col_if_missing("Colaborador",       "orgaoEmissor", "VARCHAR(20) DEFAULT NULL")
+    _add_col_if_missing("Colaborador",       "estadoEmissor","CHAR(2)     DEFAULT NULL")
+    _add_col_if_missing("Educador",          "rg",           "VARCHAR(20) DEFAULT NULL")
+    _add_col_if_missing("Educador",          "orgaoEmissor", "VARCHAR(20) DEFAULT NULL")
+    _add_col_if_missing("Educador",          "estadoEmissor","CHAR(2)     DEFAULT NULL")
+    _add_col_if_missing("FormacaoAcademica", "grau",         "VARCHAR(30) DEFAULT NULL")
+    _add_col_if_missing("Educador",          "periodos",     "TEXT        DEFAULT NULL")
+    print("[OK] [STARTUP] Migracoes de schema verificadas")
+except Exception as e:
+    print(f"[WARN] [STARTUP] Banco indisponivel - migracoes de schema ignoradas: {type(e).__name__}")
 
 # Garante que idStatus da tabela Educador seja VARCHAR para suportar 'Ativo'/'Inativo'
 try:
@@ -55,17 +61,20 @@ except Exception as _e:
     print(f"[colaborador_service] AVISO: migração idStatus Educador — {_e}")
 
 # Tabela de vínculo educador ↔ disciplinas (M:N)
-execute_write(
-    """
-    CREATE TABLE IF NOT EXISTS EducadorDisciplina (
-        id          INT          NOT NULL AUTO_INCREMENT,
-        idMatricula VARCHAR(30)  NOT NULL,
-        idDisciplina INT         NOT NULL,
-        PRIMARY KEY (id),
-        UNIQUE KEY uq_edu_disc (idMatricula, idDisciplina)
+try:
+    execute_write(
+        """
+        CREATE TABLE IF NOT EXISTS EducadorDisciplina (
+            id          INT          NOT NULL AUTO_INCREMENT,
+            idMatricula VARCHAR(30)  NOT NULL,
+            idDisciplina INT         NOT NULL,
+            PRIMARY KEY (id),
+            UNIQUE KEY uq_edu_disc (idMatricula, idDisciplina)
+        )
+        """
     )
-    """
-)
+except Exception as _e:
+    print(f"[colaborador_service] AVISO: não foi possível criar tabela EducadorDisciplina — {type(_e).__name__}")
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -88,19 +97,29 @@ def _senha_placeholder(id_matricula: str) -> str:
 
 
 def _format_list_item(row: dict, idx: int) -> dict:
+    """Formata item da lista considerando cargo para determinar tipo."""
+    cargo = row.get("cargo") or ""
+    # Se o cargo é "Gestor", o tipo é gestor, senão é colaborador
+    tipo_usuario = "gestor" if cargo.lower() == "gestor" else "colaborador"
+    
     return {
         "id": idx,
         "idMatricula": row["idMatricula"],
         "matriculaFuncional": row["idMatricula"],
         "nomeCompleto": row.get("nomeCompleto") or "",
-        "cargo": row.get("cargo") or "",
-        "tipo": row.get("tipoUsuario") or "colaborador",
+        "cargo": cargo,
+        "tipo": tipo_usuario,
         "status": "ativo" if str(row.get("idStatus", "")).lower() in ("1", "ativo") else "inativo",
         "email": row.get("email") or "",
     }
 
 
 def _format_detail(row: dict, formacoes: list[dict], end: dict, tipo: str) -> dict:
+    """Formata detalhes considerando cargo para determinar tipo."""
+    cargo = row.get("cargo") or ""
+    # Se o cargo é "Gestor", o tipo é gestor, senão é colaborador
+    tipo_calculado = "gestor" if cargo.lower() == "gestor" else "colaborador"
+    
     return {
         "idMatricula": row["idMatricula"],
         "matriculaFuncional": row["idMatricula"],
@@ -116,12 +135,12 @@ def _format_detail(row: dict, formacoes: list[dict], end: dict, tipo: str) -> di
         "orgaoEmissor": row.get("orgaoEmissor"),
         "estadoEmissor": row.get("estadoEmissor"),
         "cpf": row.get("cpf"),
-        # Colaborador usa cargo/departamento; educador mapeia disciplina/turno
-        "cargo": row.get("cargo"),
+        # Colaborador usa cargo/departamento
+        "cargo": cargo,
         "departamento": row.get("departamento"),
         "disciplinaLecionada": row.get("cargo") if tipo == "educador" else None,
         "turno": row.get("departamento") if tipo == "educador" else None,
-        "tipo": tipo,
+        "tipo": tipo_calculado,
         "status": "ativo" if str(row.get("idStatus", "")).lower() in ("1", "ativo") else "inativo",
         "endereco": {
             "cep": end.get("cep", ""),
@@ -171,12 +190,10 @@ def _upsert_endereco(id_matricula: str, tipo_usuario: str, end: dict) -> None:
 # ── endpoints ─────────────────────────────────────────────────────────────────
 
 def listar_colaboradores() -> list[dict]:
-    """Retorna colaboradores e educadores combinados, ordenados por nome."""
+    """Retorna apenas colaboradores e gestores cadastrados (exclui educadores)."""
     cols = list(ColaboradorModel.find_all())
-    edus = list(EducadorModel.find_all())
-    todos = cols + edus
-    todos.sort(key=lambda r: (r.get("nomeCompleto") or "").upper())
-    return [_format_list_item(r, i + 1) for i, r in enumerate(todos)]
+    cols.sort(key=lambda r: (r.get("nomeCompleto") or "").upper())
+    return [_format_list_item(r, i + 1) for i, r in enumerate(cols)]
 
 
 def buscar_colaborador(id_matricula: str) -> dict | None:
@@ -193,6 +210,40 @@ def buscar_colaborador(id_matricula: str) -> dict | None:
     return _format_detail(row, formacoes, end, tipo)
 
 
+def gerar_proxima_matricula() -> dict:
+    """
+    Gera a próxima matrícula funcional sequencial no formato COLAAAA#### 
+    onde AAAA = ano atual e #### = sequencial de 4 dígitos.
+    """
+    ano_atual = datetime.now().year
+    prefixo = f"COL{ano_atual}"
+    
+    # Busca a última matrícula com o prefixo do ano atual
+    query = """
+        SELECT idMatricula FROM Colaborador 
+        WHERE idMatricula LIKE %s 
+        ORDER BY idMatricula DESC 
+        LIMIT 1
+    """
+    resultado = execute_query(query, (f"{prefixo}%",))
+    
+    if resultado and len(resultado) > 0:
+        ultima = resultado[0].get("idMatricula", "")
+        # Extrai o número sequencial
+        try:
+            sequencial = int(ultima.replace(prefixo, ""))
+            proximo = sequencial + 1
+        except (ValueError, IndexError):
+            proximo = 1
+    else:
+        proximo = 1
+    
+    # Formata com 4 dígitos
+    proxima_matricula = f"{prefixo}{proximo:04d}"
+    
+    return {"proximaMatricula": proxima_matricula}
+
+
 def criar_colaborador(body: str | dict) -> dict:
     data = json.loads(body) if isinstance(body, str) else body
 
@@ -205,6 +256,10 @@ def criar_colaborador(body: str | dict) -> dict:
         raise ValueError("email é obrigatório")
     if not data.get("cpf"):
         raise ValueError("cpf é obrigatório")
+    if not data.get("cargo"):
+        raise ValueError("cargo é obrigatório")
+    if not data.get("departamento"):
+        raise ValueError("departamento é obrigatório")
 
     data["idMatricula"] = id_matricula
     data["cor"] = data.get("corRaca") or data.get("cor")
@@ -221,6 +276,22 @@ def criar_colaborador(body: str | dict) -> dict:
 
     FormacaoAcademicaModel.replace_all(id_matricula, "colaborador", data.get("formacoes") or [])
     LoginModel.create(id_matricula, data["email"], _senha_placeholder(id_matricula))
+
+    # Token + e-mail de boas-vindas
+    try:
+        token = secrets.token_urlsafe(32)
+        expiracao = (datetime.utcnow() + timedelta(hours=48)).strftime("%Y-%m-%d %H:%M:%S")
+        LoginModel.save_token(id_matricula, token, expiracao)
+        email_service.enviar_boas_vindas(
+            destinatario=data["email"],
+            nome=data["nomeCompleto"],
+            token=token,
+            id_matricula=id_matricula,
+            tipo="colaborador",
+            matricula_funcional=id_matricula,
+        )
+    except Exception as exc:
+        print(f"[colaborador_service] AVISO: e-mail não enviado — {exc}")
 
     return buscar_colaborador(id_matricula)
 

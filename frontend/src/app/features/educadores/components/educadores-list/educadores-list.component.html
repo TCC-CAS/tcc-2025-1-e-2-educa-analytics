@@ -31,7 +31,7 @@
 <div class="lista-page">
 
   <!-- Cabeçalho -->
-  <div class="page-header">
+  <div class="page-header" *ngIf="!isLoading">
     <div class="page-title">
       <h1>Educadores</h1>
       <span class="page-subtitle">Gerencie o quadro de educadores da instituição</span>
@@ -43,7 +43,7 @@
   </div>
 
   <!-- Filtros -->
-  <div class="filtros-card">
+  <div class="filtros-card" *ngIf="!isLoading">
     <div class="filtros-header">
       <div class="filtros-titulo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -117,7 +117,7 @@
   </div>
 
   <!-- Barra de ações em lote -->
-  <div class="lote-bar" *ngIf="algumSelecionado">
+  <div class="lote-bar" *ngIf="algumSelecionado && !isLoading">
     <span class="lote-info">{{ quantidadeSelecionados }} educador{{ quantidadeSelecionados !== 1 ? 'es' : '' }} selecionado{{ quantidadeSelecionados !== 1 ? 's' : '' }}</span>
     <div class="lote-acoes">
       <select [(ngModel)]="acaoLote" class="lote-select">
@@ -131,8 +131,41 @@
     </div>
   </div>
 
+  <!-- Skeleton Loading -->
+  <div class="sk-wrapper sk-inner" *ngIf="isLoading">
+    <div class="sk-page-header">
+      <div class="sk-header-text">
+        <div class="sk sk-h22 sk-w40p"></div>
+        <div class="sk sk-h14 sk-w60p"></div>
+      </div>
+      <div class="sk sk-btn"></div>
+    </div>
+    <div class="sk-card">
+      <div class="sk-card-header">
+        <div class="sk sk-h16 sk-w25p"></div>
+        <div class="sk sk-h16 sk-w12p"></div>
+      </div>
+      <div class="sk-filter-body">
+        <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+        <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+        <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+        <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+      </div>
+    </div>
+    <div class="sk-card">
+      <div class="sk-table-head">
+        <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+        <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+      </div>
+      <div class="sk-table-row" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+        <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+        <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Tabela -->
-  <div class="tabela-card">
+  <div class="tabela-card" *ngIf="!isLoading">
     <div class="tabela-wrapper">
       <table class="tabela">
         <thead>

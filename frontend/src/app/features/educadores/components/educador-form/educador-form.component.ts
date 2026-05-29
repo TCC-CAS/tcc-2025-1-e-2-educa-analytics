@@ -72,6 +72,8 @@ export class EducadorFormComponent implements OnInit {
   // Dados Profissionais
   disciplinasSelecionadas: number[] = [];
   periodosSelecionados: string[] = [];
+  cargo = '';
+  departamento = '';
 
   // Disciplinas disponíveis (fixas)
   readonly disciplinasDisponiveis = [
@@ -95,6 +97,8 @@ export class EducadorFormComponent implements OnInit {
   formacoes: FormacaoAcademica[] = [];
   novaFormacao: FormacaoAcademica = { grau: '', instituicao: '', areaEstudo: '', dataInicio: '', dataTermino: '', situacao: 'concluido' };
   mostrarFormFormacao = false;
+  instituicoesSugeridas: string[] = [];
+  private buscaInstituicoesTimeout: any;
 
   // Validacao
   mostrarErros = false;
@@ -218,6 +222,8 @@ export class EducadorFormComponent implements OnInit {
         this.orgaoEmissor          = dados.orgaoEmissor || '';
         this.estadoEmissor         = dados.estadoEmissor || '';
         this.cpf                   = dados.cpf || '';
+        this.cargo                 = dados.cargo || '';
+        this.departamento          = dados.departamento || '';
         this.disciplinasSelecionadas = dados.disciplinas || [];
         this.periodosSelecionados    = dados.periodos || [];
         if (dados.endereco) { this.endereco = { ...dados.endereco }; }
@@ -264,6 +270,36 @@ export class EducadorFormComponent implements OnInit {
     });
   }
 
+  buscarInstituicoes(event: any): void {
+    const termo = event.target.value;
+    
+    // Limpa timeout anterior
+    if (this.buscaInstituicoesTimeout) {
+      clearTimeout(this.buscaInstituicoesTimeout);
+    }
+    
+    // Se o termo for muito curto, limpa sugestões
+    if (!termo || termo.trim().length < 2) {
+      this.instituicoesSugeridas = [];
+      return;
+    }
+    
+    // Debounce: aguarda 300ms após usuário parar de digitar
+    this.buscaInstituicoesTimeout = setTimeout(() => {
+      this.http.get<string[]>(`${environment.apiUrl}/instituicoes/buscar`, {
+        params: { q: termo.trim(), limite: '15' }
+      }).subscribe({
+        next: (instituicoes) => {
+          this.instituicoesSugeridas = instituicoes;
+        },
+        error: (err) => {
+          console.error('Erro ao buscar instituições:', err);
+          this.instituicoesSugeridas = [];
+        }
+      });
+    }, 300);
+  }
+
   abrirFormFormacao(): void {
     this.novaFormacao = { grau: '', instituicao: '', areaEstudo: '', dataInicio: '', dataTermino: '', situacao: 'concluido' };
     this.mostrarFormFormacao = true;
@@ -280,6 +316,8 @@ export class EducadorFormComponent implements OnInit {
   removerFormacao(id: number | undefined): void {
     this.formacoes = this.formacoes.filter(f => f.id !== id);
   }
+
+  // ── Validação ──────────────────────────────────────────────────────────────
 
   validar(): boolean {
     this.errosValidacao = [];
@@ -330,6 +368,8 @@ export class EducadorFormComponent implements OnInit {
       orgaoEmissor:              this.orgaoEmissor,
       estadoEmissor:             this.estadoEmissor,
       cpf:                       this.cpf,
+      cargo:                     this.cargo || 'Professor(a)', // Padrão se não informado
+      departamento:              this.departamento || 'Ensino', // Padrão se não informado
       disciplinas:               this.disciplinasSelecionadas,
       periodos:                  this.periodosSelecionados,
       endereco:                  this.endereco,

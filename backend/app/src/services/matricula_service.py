@@ -21,7 +21,7 @@ import os
 import secrets
 from datetime import datetime, timedelta
 
-from app.src.adapters.db_adapter import execute_query, execute_transaction
+from app.src.adapters.db_adapter import execute_query, execute_write, execute_transaction
 from app.src.models.models import (
     EducandoResponsavelModel,
     EnderecoModel,
@@ -701,6 +701,11 @@ def atualizar_matricula(id_matricula: str, body: str | dict) -> dict:
     responsavel = data.get("responsavel") or {}
     dados_escolares = data.get("dadosEscolares") or {}
 
+    # Atualiza status se presente no payload (nível raiz ou dentro de educando)
+    novo_status = data.get("status") or educando.get("status")
+    if novo_status:
+        atualizar_status(id_matricula, novo_status)
+
     if educando:
         EducandoResponsavelModel.update_data(id_matricula, educando)
         if educando.get("endereco"):
@@ -714,6 +719,12 @@ def atualizar_matricula(id_matricula: str, body: str | dict) -> dict:
 
     # Atualiza dados escolares no HistoricoEscolar
     if dados_escolares:
+        # Verifica se já existe registro em HistoricoEscolar
+        historico_existe = execute_query(
+            "SELECT idHistorico FROM HistoricoEscolar WHERE idMatricula = %s LIMIT 1",
+            (id_matricula,)
+        )
+        
         campos_atualizar = []
         valores = []
         
@@ -725,30 +736,66 @@ def atualizar_matricula(id_matricula: str, body: str | dict) -> dict:
             campos_atualizar.append("serie = %s")
             valores.append(dados_escolares["serie"])
         
-        if dados_escolares.get("periodo"):
-            campos_atualizar.append("periodo = %s")
-            valores.append(dados_escolares["periodo"])
+        # Período não é salvo em HistoricoEscolar, vem da tabela Turmas
         
-        if dados_escolares.get("codigoTurma"):
-            campos_atualizar.append("idTurma = %s")
-            valores.append(dados_escolares["codigoTurma"])
+        # Busca idTurma pelo código da turma e ano letivo
+        if dados_escolares.get("codTurma") or dados_escolares.get("codigoTurma"):
+            cod_turma = dados_escolares.get("codTurma") or dados_escolares.get("codigoTurma")
+            ano_letivo = dados_escolares.get("anoLetivo")
+            
+            if ano_letivo:
+                turma = execute_query(
+                    "SELECT idTurma FROM Turmas WHERE codTurma = %s AND anoLetivo = %s LIMIT 1",
+                    (cod_turma, ano_letivo)
+                )
+                if turma and len(turma) > 0:
+                    campos_atualizar.append("idTurma = %s")
+                    valores.append(turma[0]["idTurma"])
         
-        if dados_escolares.get("dataInicio"):
-            campos_atualizar.append("dataInicio = %s")
-            valores.append(dados_escolares["dataInicio"])
-        
-        if dados_escolares.get("dataTermino"):
-            campos_atualizar.append("dataTermino = %s")
-            valores.append(dados_escolares["dataTermino"])
+        # dataInicio e dataTermino não existem em HistoricoEscolar
         
         if campos_atualizar:
-            valores.append(id_matricula)
-            query = f"""
-                UPDATE HistoricoEscolar 
-                SET {', '.join(campos_atualizar)}
-                WHERE idMatricula = %s
-            """
-            execute_query(query, tuple(valores))
+            if historico_existe and len(historico_existe) > 0:
+                # UPDATE se já existe
+                valores.append(id_matricula)
+                query = f"""
+                    UPDATE HistoricoEscolar 
+                    SET {', '.join(campos_atualizar)}
+                    WHERE idMatricula = %s
+                """
+                execute_write(query, tuple(valores))
+            else:
+                # INSERT se não existe
+                # Busca o responsável (se houver)
+                resp_id = None
+                resp_rows = execute_query(
+                    "SELECT idMatricula FROM EducandoResponsavel WHERE idMatricula != %s LIMIT 1",
+                    (id_matricula,)
+                )
+                if resp_rows and len(resp_rows) > 0:
+                    resp_id = resp_rows[0].get("idMatricula")
+                
+                insert_query = """
+                    INSERT INTO HistoricoEscolar (
+                        idMatricula, serie, anoLetivo, situacao, idTurma, idResponsavel
+                    ) VALUES (%s, %s, %s, 'Cursando', %s, %s)
+                """
+                serie = dados_escolares.get("serie")
+                ano = dados_escolares.get("anoLetivo")
+                id_turma = None
+                
+                # Busca idTurma
+                if dados_escolares.get("codTurma") or dados_escolares.get("codigoTurma"):
+                    cod_turma = dados_escolares.get("codTurma") or dados_escolares.get("codigoTurma")
+                    if ano:
+                        turma = execute_query(
+                            "SELECT idTurma FROM Turmas WHERE codTurma = %s AND anoLetivo = %s LIMIT 1",
+                            (cod_turma, ano)
+                        )
+                        if turma and len(turma) > 0:
+                            id_turma = turma[0]["idTurma"]
+                
+                execute_write(insert_query, (id_matricula, serie, ano, id_turma, resp_id))
 
     result = buscar_matricula(id_matricula)
     return result or {"idMatricula": id_matricula}

@@ -1,26 +1,12 @@
-﻿import { Component, AfterViewInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { DisciplinasService, Disciplina } from '../../services/disciplinas.service';
 
 type StatusDisciplina = 'ativa' | 'inativa';
 
-type Serie = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
-
-interface Disciplina {
-  id: number;
-  abreviatura: string;
-  nome: string;
-  serie: Serie;
-  aulasSemanais: number;
-  horasSemanais: number;
-  status: StatusDisciplina;
-}
-
 interface DisciplinaFiltro {
-  abreviatura: string;
+  codigo: string;
   nome: string;
-  serie: string;
-  aulasSemanais: string;
-  horasSemanais: string;
   status: string;
 }
 
@@ -30,46 +16,93 @@ interface DisciplinaFiltro {
   styleUrls: ['./disciplinas-list.component.scss'],
   host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
-export class DisciplinasListComponent implements AfterViewInit {
-  disciplinas: Disciplina[] = [
-    {
-      id: 1,
-      abreviatura: 'MAT',
-      nome: 'Matematica',
-      serie: '1',
-      aulasSemanais: 5,
-      horasSemanais: 4,
-      status: 'ativa'
-    },
-    {
-      id: 2,
-      abreviatura: 'POR',
-      nome: 'Portugues',
-      serie: '2',
-      aulasSemanais: 4,
-      horasSemanais: 3,
-      status: 'inativa'
-    },
-    {
-      id: 3,
-      abreviatura: 'HIS',
-      nome: 'Historia',
-      serie: '3',
-      aulasSemanais: 3,
-      horasSemanais: 2,
-      status: 'ativa'
-    }
-  ];
-
-  filteredDisciplinas: Disciplina[] = [...this.disciplinas];
+export class DisciplinasListComponent implements OnInit {
+  disciplinas: Disciplina[] = [];
+  filteredDisciplinas: Disciplina[] = [];
+  isLoading = true;
+  
   filtro: DisciplinaFiltro = {
-    abreviatura: '',
+    codigo: '',
     nome: '',
-    serie: '',
-    aulasSemanais: '',
-    horasSemanais: '',
     status: ''
   };
+
+  // Paginação
+  currentPage = 1;
+  pageSize = 10;
+  Math = Math;
+
+  // Contagem de filtros ativos
+  get filtrosAtivos(): number {
+    let count = 0;
+    if (this.filtro.codigo) count++;
+    if (this.filtro.nome) count++;
+    if (this.filtro.status) count++;
+    return count;
+  }
+
+  onFiltroChange(): void {
+    this.applyFilters();
+  }
+
+  limparFiltros(): void {
+    this.resetFilters();
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredDisciplinas.length / this.pageSize);
+  }
+
+  get paginatedDisciplinas(): Disciplina[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.filteredDisciplinas.slice(start, end);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+  }
+
+  getVisiblePages(): number[] {
+    const total = this.totalPages;
+    const current = this.currentPage;
+    const delta = 2;
+    const pages: number[] = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
+      return pages;
+    }
+
+    pages.push(1);
+
+    if (current - delta > 2) {
+      pages.push(-1); // dots
+    }
+
+    const start = Math.max(2, current - delta);
+    const end = Math.min(total - 1, current + delta);
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    if (current + delta < total - 1) {
+      pages.push(-1); // dots
+    }
+
+    pages.push(total);
+
+    return pages;
+  }
 
   selectedIds = new Set<number>();
   bulkAction = '';
@@ -88,11 +121,26 @@ export class DisciplinasListComponent implements AfterViewInit {
 
   confirmarLote(): void {
     this.modalLoteVisible = false;
-    this.disciplinas = this.disciplinas.map(d =>
-      this.selectedIds.has(d.id) ? { ...d, status: this.statusLote } : d
-    );
-    this.selectedIds.clear();
-    this.applyFilters();
+    // Atualizar cada disciplina selecionada via API
+    const promises = Array.from(this.selectedIds).map(id => {
+      const disc = this.disciplinas.find(d => d.id === id);
+      if (disc) {
+        return this.disciplinasService.atualizar(id, {
+          ...disc,
+          status: this.statusLote
+        }).toPromise();
+      }
+      return Promise.resolve();
+    });
+
+    Promise.all(promises).then(() => {
+      this.showMessage('Status atualizado com sucesso', 'success');
+      this.selectedIds.clear();
+      this.carregarDisciplinas();
+    }).catch((error) => {
+      console.error('Erro ao atualizar disciplinas:', error);
+      this.showMessage('Erro ao atualizar disciplinas', 'error');
+    });
   }
 
   cancelarLote(): void {
@@ -110,79 +158,51 @@ export class DisciplinasListComponent implements AfterViewInit {
     callback: () => {}
   };
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private disciplinasService: DisciplinasService
+  ) { }
 
-  ngAfterViewInit(): void {
-    this.forceLeftAlignmentStyles();
-    const startTime = performance.now();
-    const frameLoop = () => {
-      this.forceLeftAlignmentStyles();
-      if (performance.now() - startTime < 1200) requestAnimationFrame(frameLoop);
-    };
-    requestAnimationFrame(frameLoop);
-    const observer = new MutationObserver(() => this.forceLeftAlignmentStyles());
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
-    setTimeout(() => observer.disconnect(), 2000);
+  ngOnInit(): void {
+    this.carregarDisciplinas();
   }
 
-  private forceLeftAlignmentStyles(): void {
-    const host = document.querySelector('app-disciplinas-list') as HTMLElement;
-    if (host) { host.style.setProperty('text-align', 'left', 'important'); host.style.setProperty('display', 'block', 'important'); host.style.setProperty('width', '100%', 'important'); }
-    const page = document.querySelector('.disciplinas-page') as HTMLElement;
-    if (page) { page.style.setProperty('text-align', 'left', 'important'); page.style.setProperty('width', '100%', 'important'); }
-    const pageHeader = document.querySelector('.disciplinas-page .page-header') as HTMLElement;
-    if (pageHeader) {
-      pageHeader.style.setProperty('text-align', 'left', 'important');
-      pageHeader.style.setProperty('align-items', 'flex-start', 'important');
-      pageHeader.style.setProperty('justify-content', 'flex-start', 'important');
-    }
-    (document.querySelectorAll('.disciplinas-page .page-header h1, .disciplinas-page .page-header p') as NodeListOf<HTMLElement>).forEach(el => {
-      el.style.setProperty('text-align', 'left', 'important');
+  carregarDisciplinas(): void {
+    this.isLoading = true;
+    const statusFilter = this.filtro.status as 'ativa' | 'inativa' | undefined;
+    
+    this.disciplinasService.listar(statusFilter || undefined).subscribe({
+      next: (disciplinas) => {
+        this.disciplinas = disciplinas;
+        this.applyFilters();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar disciplinas:', error);
+        this.showMessage('Erro ao carregar disciplinas', 'error');
+        this.isLoading = false;
+      }
     });
-    (document.querySelectorAll('.disciplinas-page .filters .field') as NodeListOf<HTMLElement>).forEach(el => {
-      el.style.setProperty('text-align', 'left', 'important');
-      el.style.setProperty('align-items', 'flex-start', 'important');
-    });
-    const toolbar = document.querySelector('.disciplinas-page .toolbar') as HTMLElement;
-    if (toolbar) { toolbar.style.setProperty('text-align', 'left', 'important'); toolbar.style.setProperty('justify-content', 'flex-start', 'important'); }
   }
 
   applyFilters(): void {
-    const abreviatura = this.filtro.abreviatura.trim().toLowerCase();
+    const codigo = this.filtro.codigo.trim().toLowerCase();
     const nome = this.filtro.nome.trim().toLowerCase();
-    const aulas = this.filtro.aulasSemanais.trim();
-    const horas = this.filtro.horasSemanais.trim();
 
     this.filteredDisciplinas = this.disciplinas.filter((disciplina) => {
-      const matchesAbreviatura = !abreviatura || disciplina.abreviatura.toLowerCase().includes(abreviatura);
+      const matchesCodigo = !codigo || disciplina.codigo.toLowerCase().includes(codigo);
       const matchesNome = !nome || disciplina.nome.toLowerCase().includes(nome);
-      const matchesSerie = !this.filtro.serie || disciplina.serie === this.filtro.serie;
-      const matchesAulas = !aulas || disciplina.aulasSemanais === Number(aulas);
-      const matchesHoras = !horas || disciplina.horasSemanais === Number(horas);
       const matchesStatus = !this.filtro.status || disciplina.status === this.filtro.status;
 
-      return (
-        matchesAbreviatura &&
-        matchesNome &&
-        matchesSerie &&
-        matchesAulas &&
-        matchesHoras &&
-        matchesStatus
-      );
+      return matchesCodigo && matchesNome && matchesStatus;
     });
 
+    this.currentPage = 1;
     this.syncSelection();
   }
 
   resetFilters(): void {
-    this.filtro = {
-      abreviatura: '',
-      nome: '',
-      serie: '',
-      aulasSemanais: '',
-      horasSemanais: '',
-      status: ''
-    };
+    this.filtro = { codigo: '', nome: '', status: '' };
     this.applyFilters();
   }
 
@@ -200,14 +220,21 @@ export class DisciplinasListComponent implements AfterViewInit {
 
   toggleAll(checked: boolean): void {
     if (checked) {
-      this.filteredDisciplinas.forEach((disciplina) => this.selectedIds.add(disciplina.id));
+      this.filteredDisciplinas.forEach((disciplina) => {
+        if (disciplina.id !== undefined) {
+          this.selectedIds.add(disciplina.id);
+        }
+      });
     } else {
       this.selectedIds.clear();
     }
   }
 
   allSelected(): boolean {
-    return this.filteredDisciplinas.length > 0 && this.filteredDisciplinas.every((disciplina) => this.selectedIds.has(disciplina.id));
+    return this.filteredDisciplinas.length > 0 && 
+           this.filteredDisciplinas.every((disciplina) => 
+             disciplina.id !== undefined && this.selectedIds.has(disciplina.id)
+           );
   }
 
   syncSelection(): void {
@@ -222,27 +249,51 @@ export class DisciplinasListComponent implements AfterViewInit {
   }
 
   toggleStatus(disciplina: Disciplina): void {
-    const acao = disciplina.status === 'ativa' ? 'desativar' : 'ativar';
+    const acao = disciplina.status === 'ativa' ? 'inativar' : 'ativar';
+    const novoStatus: 'ativa' | 'inativa' = disciplina.status === 'ativa' ? 'inativa' : 'ativa';
+    
     this.openConfirm(
       `${acao.charAt(0).toUpperCase() + acao.slice(1)} disciplina`,
-      `Deseja ${acao} a disciplina ${disciplina.abreviatura}?`,
-      acao === 'desativar',
+      `Deseja ${acao} a disciplina ${disciplina.nome}?`,
+      acao === 'inativar',
       () => {
-        disciplina.status = disciplina.status === 'ativa' ? 'inativa' : 'ativa';
-        this.showMessage(`Disciplina ${disciplina.abreviatura} ${disciplina.status === 'ativa' ? 'ativada' : 'desativada'} com sucesso.`, 'success');
+        if (!disciplina.id) return;
+        
+        this.disciplinasService.atualizar(disciplina.id, {
+          ...disciplina,
+          status: novoStatus
+        }).subscribe({
+          next: () => {
+            this.showMessage(`Disciplina ${disciplina.nome} ${novoStatus === 'ativa' ? 'ativada' : 'inativada'} com sucesso.`, 'success');
+            this.carregarDisciplinas();
+          },
+          error: (error) => {
+            console.error('Erro ao atualizar status:', error);
+            this.showMessage('Erro ao atualizar status da disciplina', 'error');
+          }
+        });
       }
     );
   }
 
   deleteDisciplina(disciplina: Disciplina): void {
     this.openConfirm(
-      'Excluir disciplina',
-      `Tem certeza que deseja excluir a disciplina ${disciplina.abreviatura}? Esta ação não pode ser desfeita.`,
+      'Excluir disciplina permanentemente',
+      `Tem certeza que deseja EXCLUIR PERMANENTEMENTE a disciplina ${disciplina.nome}? Esta ação não pode ser desfeita.`,
       true,
       () => {
-        this.disciplinas = this.disciplinas.filter((item) => item.id !== disciplina.id);
-        this.applyFilters();
-        this.showMessage(`Disciplina ${disciplina.abreviatura} excluída com sucesso.`, 'success');
+        if (!disciplina.id) return;
+        
+        this.disciplinasService.deletar(disciplina.id).subscribe({
+          next: () => {
+            this.showMessage(`Disciplina ${disciplina.nome} excluída com sucesso.`, 'success');
+            this.carregarDisciplinas();
+          },
+          error: (error) => {
+            console.error('Erro ao deletar disciplina:', error);
+            this.showMessage('Erro ao excluir disciplina', 'error');
+          }
+        });
       }
     );
   }
@@ -251,7 +302,7 @@ export class DisciplinasListComponent implements AfterViewInit {
     if (!this.bulkAction) { this.showMessage('Selecione uma ação em lote.', 'error'); return; }
     if (this.selectedIds.size === 0) { this.showMessage('Selecione ao menos uma disciplina.', 'error'); return; }
     const n = this.selectedIds.size;
-    const acaoLabel = this.bulkAction === 'excluir' ? 'excluir' : this.bulkAction === 'ativar' ? 'ativar' : 'desativar';
+    const acaoLabel = this.bulkAction === 'excluir' ? 'inativar' : this.bulkAction === 'ativar' ? 'ativar' : 'inativar';
     const isDanger = this.bulkAction === 'excluir' || this.bulkAction === 'desativar';
     const snap = this.bulkAction;
     this.openConfirm(
@@ -260,17 +311,44 @@ export class DisciplinasListComponent implements AfterViewInit {
       isDanger,
       () => {
         if (snap === 'excluir') {
-          this.disciplinas = this.disciplinas.filter(d => !this.selectedIds.has(d.id));
-          this.selectedIds.clear(); this.bulkAction = '';
-          this.applyFilters();
-          this.showMessage('Disciplinas excluídas com sucesso.', 'success');
+          // Inativar todas as disciplinas selecionadas
+          const promises = Array.from(this.selectedIds).map(id => {
+            return this.disciplinasService.deletar(id).toPromise();
+          });
+          
+          Promise.all(promises).then(() => {
+            this.showMessage('Disciplinas inativadas com sucesso.', 'success');
+            this.selectedIds.clear();
+            this.bulkAction = '';
+            this.carregarDisciplinas();
+          }).catch((error) => {
+            console.error('Erro ao inativar disciplinas:', error);
+            this.showMessage('Erro ao inativar disciplinas', 'error');
+          });
           return;
         }
+        
         const status: StatusDisciplina = snap === 'ativar' ? 'ativa' : 'inativa';
-        this.disciplinas = this.disciplinas.map(d => this.selectedIds.has(d.id) ? { ...d, status } : d);
-        this.selectedIds.clear(); this.bulkAction = '';
-        this.applyFilters();
-        this.showMessage(`Disciplinas ${status === 'ativa' ? 'ativadas' : 'desativadas'} com sucesso.`, 'success');
+        const promises = Array.from(this.selectedIds).map(id => {
+          const disc = this.disciplinas.find(d => d.id === id);
+          if (disc) {
+            return this.disciplinasService.atualizar(id, {
+              ...disc,
+              status
+            }).toPromise();
+          }
+          return Promise.resolve();
+        });
+        
+        Promise.all(promises).then(() => {
+          this.showMessage(`Disciplinas ${status === 'ativa' ? 'ativadas' : 'inativadas'} com sucesso.`, 'success');
+          this.selectedIds.clear();
+          this.bulkAction = '';
+          this.carregarDisciplinas();
+        }).catch((error) => {
+          console.error('Erro ao atualizar disciplinas:', error);
+          this.showMessage('Erro ao atualizar disciplinas', 'error');
+        });
       }
     );
   }

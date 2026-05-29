@@ -17,7 +17,8 @@ interface MovimentacaoMensal {
 @Component({
   selector: 'app-dashboard-financeiro',
   templateUrl: './dashboard-financeiro.component.html',
-  styleUrls: ['./dashboard-financeiro.component.scss']
+  styleUrls: ['./dashboard-financeiro.component.scss'],
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
 export class DashboardFinanceiroComponent implements OnInit {
   periodo: string = 'mes'; // 'mes' ou 'ano'

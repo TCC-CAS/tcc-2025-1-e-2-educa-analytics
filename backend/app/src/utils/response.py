@@ -1,5 +1,6 @@
 """
 Utilitários para montar respostas HTTP no padrão do API Gateway.
+Inclui headers de segurança em todas as respostas.
 """
 
 import json
@@ -7,12 +8,23 @@ from app.src.core.config import Config
 
 
 def _headers() -> dict:
-    return {
+    """Retorna headers HTTP com segurança"""
+    headers = {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": Config.ALLOWED_ORIGINS,
-        "Access-Control-Allow-Headers": "Content-Type,Authorization",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-CSRF-Token",
         "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
     }
+    
+    # Adicionar headers de segurança
+    try:
+        from app.src.services.security_middleware import obter_security_headers
+        security_headers = obter_security_headers()
+        headers.update(security_headers)
+    except ImportError:
+        pass  # security_middleware ainda não carregado
+    
+    return headers
 
 
 def ok(data: any, status_code: int = 200) -> dict:

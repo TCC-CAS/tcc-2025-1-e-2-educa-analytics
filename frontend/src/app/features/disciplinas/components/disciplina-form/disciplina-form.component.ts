@@ -1,28 +1,24 @@
-﻿import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DisciplinasService, Disciplina } from '../../services/disciplinas.service';
 
 type StatusDisciplina = 'ativa' | 'inativa';
 
-type Turno = 'Manha' | 'Tarde' | 'Noite';
-
-type PeriodoLetivo = '2025.1' | '2025.2' | '2026.1';
-
-type Serie = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
-
-type AreaConhecimento = 'Linguagens' | 'Matematica' | 'Ciencias Humanas' | 'Ciencias da Natureza';
-
-interface DisciplinaFormModel {
-  abreviatura: string;
+interface DisciplinaOption {
   nome: string;
-  serie: Serie | '';
-  periodoLetivo: PeriodoLetivo | '';
-  turno: Turno | '';
-  aulasSemanais: number | null;
-  horasSemanais: number | null;
-  horasAnuais: number | null;
-  areaConhecimento: AreaConhecimento | '';
-  status: StatusDisciplina | '';
+  codigo: string;
 }
+
+const DISCIPLINAS_OPCOES: DisciplinaOption[] = [
+  { nome: 'LÍNGUA PORTUGUESA',    codigo: 'LP' },
+  { nome: 'ARTE',                 codigo: 'ART' },
+  { nome: 'EDUCAÇÃO FÍSICA',      codigo: 'EDF' },
+  { nome: 'LÍNGUA INGLESA',       codigo: 'LI' },
+  { nome: 'MATEMÁTICA',           codigo: 'MAT' },
+  { nome: 'CIÊNCIAS DA NATUREZA', codigo: 'CN' },
+  { nome: 'GEOGRAFIA',            codigo: 'GEO' },
+  { nome: 'HISTÓRIA',             codigo: 'HIS' },
+];
 
 @Component({
   selector: 'app-disciplina-form',
@@ -30,81 +26,133 @@ interface DisciplinaFormModel {
   styleUrls: ['./disciplina-form.component.scss'],
   host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
 })
-export class DisciplinaFormComponent {
-  disciplinaId: string | null = null;
+export class DisciplinaFormComponent implements OnInit {
+  disciplinaId: number | null = null;
   message = '';
   messageType: 'success' | 'error' = 'success';
   confirmVisible = false;
-  private _pendingValid = false;
+  isLoading = false;
 
-  model: DisciplinaFormModel = {
-    abreviatura: '',
+  readonly disciplinasOpcoes = DISCIPLINAS_OPCOES;
+
+  model: Disciplina = {
+    codigo: '',
     nome: '',
-    serie: '',
-    periodoLetivo: '',
-    turno: '',
-    aulasSemanais: null,
-    horasSemanais: null,
-    horasAnuais: null,
-    areaConhecimento: '',
-    status: ''
+    cargaHoraria: 0,
+    descricao: '',
+    status: 'ativa'
   };
 
-  constructor(private route: ActivatedRoute, private router: Router) {
-    this.disciplinaId = this.route.snapshot.paramMap.get('id');
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private disciplinasService: DisciplinasService
+  ) {}
 
-    if (this.disciplinaId) {
-      this.model = {
-        abreviatura: 'POR',
-        nome: 'Portugues',
-        serie: '2',
-        periodoLetivo: '2025.2',
-        turno: 'Tarde',
-        aulasSemanais: 4,
-        horasSemanais: 3,
-        horasAnuais: 120,
-        areaConhecimento: 'Linguagens',
-        status: 'inativa'
-      };
+  ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.disciplinaId = parseInt(id, 10);
+      this.carregarDisciplina();
+    }
+  }
+
+  carregarDisciplina(): void {
+    if (!this.disciplinaId) return;
+    
+    this.isLoading = true;
+    this.disciplinasService.buscar(this.disciplinaId).subscribe({
+      next: (disciplina) => {
+        this.model = { ...disciplina };
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar disciplina:', error);
+        this.showMessage('Erro ao carregar disciplina', 'error');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  onNomeChange(): void {
+    const opcao = DISCIPLINAS_OPCOES.find(d => d.nome === this.model.nome);
+    if (opcao) {
+      this.model.codigo = opcao.codigo;
+    } else {
+      this.model.codigo = '';
     }
   }
 
   submit(formValid: boolean): void {
     if (!formValid) {
-      this.showMessage('Preencha todos os campos obrigatorios.', 'error');
-      return;
-    }
-
-    if (this.turmaHorasInvalidas()) {
-      this.showMessage('Horas anuais devem ser maiores ou iguais as horas semanais.', 'error');
+      this.showMessage('Preencha todos os campos obrigatórios.', 'error');
       return;
     }
 
     if (this.disciplinaId) {
-      this._pendingValid = true;
       this.confirmVisible = true;
       return;
     }
 
-    this.showMessage('Disciplina cadastrada com sucesso.', 'success');
+    // Criar nova disciplina
+    this.isLoading = true;
+    this.disciplinasService.criar({
+      codigo: this.model.codigo,
+      nome: this.model.nome,
+      cargaHoraria: 0,
+      descricao: this.model.descricao,
+      status: this.model.status
+    }).subscribe({
+      next: () => {
+        this.showMessage('Disciplina cadastrada com sucesso.', 'success');
+        this.isLoading = false;
+        setTimeout(() => {
+          this.router.navigate(['/disciplinas']);
+        }, 1500);
+      },
+      error: (error) => {
+        console.error('Erro ao criar disciplina:', error);
+        const msg = error.error?.message || 'Erro ao cadastrar disciplina';
+        this.showMessage(msg, 'error');
+        this.isLoading = false;
+      }
+    });
   }
 
   confirmEdit(): void {
     this.confirmVisible = false;
-    this.showMessage('Disciplina editada com sucesso.', 'success');
+    
+    if (!this.disciplinaId) return;
+    
+    this.isLoading = true;
+    this.disciplinasService.atualizar(this.disciplinaId, {
+      codigo: this.model.codigo,
+      nome: this.model.nome,
+      descricao: this.model.descricao,
+      status: this.model.status
+    }).subscribe({
+      next: () => {
+        this.showMessage('Disciplina editada com sucesso.', 'success');
+        this.isLoading = false;
+        setTimeout(() => {
+          this.router.navigate(['/disciplinas']);
+        }, 1500);
+      },
+      error: (error) => {
+        console.error('Erro ao atualizar disciplina:', error);
+        const msg = error.error?.message || 'Erro ao atualizar disciplina';
+        this.showMessage(msg, 'error');
+        this.isLoading = false;
+      }
+    });
   }
 
   cancelConfirm(): void {
     this.confirmVisible = false;
   }
 
-  turmaHorasInvalidas(): boolean {
-    if (this.model.horasAnuais === null || this.model.horasSemanais === null) return false;
-    return this.model.horasAnuais < this.model.horasSemanais;
-  }
-
-  showMessage(message: string, type: 'success' | 'error'): void {
-    this.message = message;
+  showMessage(msg: string, type: 'success' | 'error'): void {
+    this.message = msg;
     this.messageType = type;
   }
 
@@ -112,3 +160,4 @@ export class DisciplinaFormComponent {
     this.router.navigate(['/disciplinas']);
   }
 }
+

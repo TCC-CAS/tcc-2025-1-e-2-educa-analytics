@@ -465,6 +465,19 @@ class SalaModel(BaseModel):
         return rows[0] if rows else None
 
     @classmethod
+    def find_all_active(cls) -> list[dict]:
+        """Retorna apenas salas ativas"""
+        return execute_query(
+            """
+            SELECT idSala, codSala, nomeSala, tipoSala, status,
+                   capacidade, bloco, andar, recursos, obsSala
+            FROM Salas
+            WHERE status = 'ativa'
+            ORDER BY nomeSala
+            """
+        )
+
+    @classmethod
     def create(cls, data: dict) -> int:
         import json as _json
         recursos_json = _json.dumps(data.get("recursos") or {}, ensure_ascii=False)
@@ -715,7 +728,7 @@ class EducadorModel(BaseModel):
             SELECT idMatricula, nomeCompleto, 
                    nacionalidade, genero, cor, dataNascimento, idade,
                    email, telefone, cpf, rg, orgaoEmissor, estadoEmissor,
-                   cargo, departamento, tipoUsuario, idStatus
+                   cargo, departamento, periodos, tipoUsuario, idStatus
             FROM Educador 
             ORDER BY nomeCompleto
             """
@@ -729,7 +742,7 @@ class EducadorModel(BaseModel):
             SELECT idMatricula, nomeCompleto, 
                    nacionalidade, genero, cor, dataNascimento, idade,
                    email, telefone, cpf, rg, orgaoEmissor, estadoEmissor,
-                   cargo, departamento, tipoUsuario, idStatus
+                   cargo, departamento, periodos, tipoUsuario, idStatus
             FROM Educador 
             WHERE idMatricula = %s 
             LIMIT 1
@@ -746,7 +759,7 @@ class EducadorModel(BaseModel):
             SELECT idMatricula, nomeCompleto, 
                    nacionalidade, genero, cor, dataNascimento, idade,
                    email, telefone, cpf, rg, orgaoEmissor, estadoEmissor,
-                   cargo, departamento, tipoUsuario, idStatus
+                   cargo, departamento, periodos, tipoUsuario, idStatus
             FROM Educador 
             WHERE cpf = %s 
             LIMIT 1
@@ -850,6 +863,23 @@ class EducadorModel(BaseModel):
         """Remove educador pela matrícula funcional."""
         return execute_write(
             "DELETE FROM Educador WHERE idMatricula = %s", (matricula,)
+        )
+
+    @classmethod
+    def find_by_disciplina(cls, id_disciplina: int) -> list[dict]:
+        """
+        Busca educadores que lecionam uma disciplina específica
+        através da tabela EducadorDisciplina
+        """
+        return execute_query(
+            """
+            SELECT DISTINCT e.*, ed.idEducador
+            FROM Educador e
+            JOIN EducadorDisciplina ed ON ed.matriculaEducador = e.idMatricula
+            WHERE ed.idDisciplina = %s AND e.idStatus = 'ativo'
+            ORDER BY e.nomeCompleto
+            """,
+            (id_disciplina,)
         )
 
 
@@ -1094,28 +1124,26 @@ class DisciplinaModel(BaseModel):
         return rows[0] if rows else None
 
     @classmethod
-    def create(cls, cod_disciplina: str, nome_disciplina: str, 
-               carga_horaria: int = 40, descricao=None,
-               status: str = 'ativa') -> int:
+    def create(cls, cod_disciplina: str, nome_disciplina: str,
+               descricao=None, status: str = 'ativa') -> int:
         """Cria uma nova disciplina"""
         return execute_write(
-            """INSERT INTO Disciplinas 
-               (codDisciplina, nomeDisciplina, cargaHoraria, descricao, status) 
-               VALUES (%s, %s, %s, %s, %s)""",
-            (cod_disciplina, nome_disciplina, carga_horaria, descricao, status)
+            """INSERT INTO Disciplinas
+               (codDisciplina, nomeDisciplina, descricao, status)
+               VALUES (%s, %s, %s, %s)""",
+            (cod_disciplina, nome_disciplina, descricao, status)
         )
 
     @classmethod
     def update(cls, id_disciplina: int, cod_disciplina: str, nome_disciplina: str,
-               carga_horaria: int, descricao=None, 
-               status: str = 'ativa') -> int:
+               descricao=None, status: str = 'ativa') -> int:
         """Atualiza uma disciplina existente"""
         return execute_write(
-            """UPDATE Disciplinas 
-               SET codDisciplina = %s, nomeDisciplina = %s, cargaHoraria = %s,
+            """UPDATE Disciplinas
+               SET codDisciplina = %s, nomeDisciplina = %s,
                    descricao = %s, status = %s
                WHERE idDisciplina = %s""",
-            (cod_disciplina, nome_disciplina, carga_horaria, descricao, status, id_disciplina)
+            (cod_disciplina, nome_disciplina, descricao, status, id_disciplina)
         )
 
     @classmethod
@@ -1318,3 +1346,410 @@ class CronogramaModel(BaseModel):
             "DELETE FROM Cronograma WHERE idCronograma = %s",
             (id_cronograma,)
         )
+
+
+# ── Matriz Curricular ───────────────────────────────────────────────────────────────
+
+class MatrizCurricularModel(BaseModel):
+    """
+    Model para a tabela MatrizCurricular.
+    Define as disciplinas por série do Ensino Fundamental, com
+    suas respectivas cargas horárias semanais (QAS) e anuais (CH).
+
+    CH (Carga Horária Anual) = QAS × 40  (40 semanas letivas / ano)
+    """
+    TABLE = "MatrizCurricular"
+
+    # ── SELECT base ────────────────────────────────────────────────
+    _SELECT = """
+        SELECT
+            m.idMatriz,
+            m.serie,
+            m.idDisciplina,
+            m.cargaHorariaSemanal,
+            (m.cargaHorariaSemanal * 40)      AS cargaHorariaAnual,
+            m.anoLetivo,
+            m.status,
+            m.observacoes,
+            m.criadoEm,
+            m.atualizadoEm,
+            d.nomeDisciplina,
+            d.codDisciplina,
+            d.areaConhecimento
+        FROM MatrizCurricular m
+        JOIN Disciplinas d ON d.idDisciplina = m.idDisciplina
+    """
+
+    @classmethod
+    def find_all(cls, ano_letivo: int | None = None, status: str = "ativa") -> list[dict]:
+        """Lista toda a matriz curricular, opcionalmente filtrada por ano letivo."""
+        if ano_letivo:
+            return execute_query(
+                cls._SELECT + """
+                WHERE m.anoLetivo = %s AND m.status = %s
+                ORDER BY m.serie, d.nomeDisciplina
+                """,
+                (ano_letivo, status)
+            )
+        return execute_query(
+            cls._SELECT + """
+            WHERE m.status = %s
+            ORDER BY m.anoLetivo DESC, m.serie, d.nomeDisciplina
+            """,
+            (status,)
+        )
+
+    @classmethod
+    def find_by_id(cls, id_matriz: int) -> dict | None:
+        """Retorna uma entrada da matriz pelo ID."""
+        rows = execute_query(
+            cls._SELECT + "WHERE m.idMatriz = %s LIMIT 1",
+            (id_matriz,)
+        )
+        return rows[0] if rows else None
+
+    @classmethod
+    def find_by_serie(cls, serie: str, ano_letivo: int, status: str = "ativa") -> list[dict]:
+        """Retorna todas as disciplinas de uma série específica."""
+        return execute_query(
+            cls._SELECT + """
+            WHERE m.serie = %s AND m.anoLetivo = %s AND m.status = %s
+            ORDER BY d.nomeDisciplina
+            """,
+            (serie, ano_letivo, status)
+        )
+
+    @classmethod
+    def find_anos_letivos(cls) -> list[int]:
+        """Retorna lista de anos letivos distintos disponíveis na matriz."""
+        rows = execute_query(
+            """
+            SELECT DISTINCT anoLetivo
+            FROM MatrizCurricular
+            ORDER BY anoLetivo DESC
+            """
+        )
+        return [r["anoLetivo"] for r in (rows or [])]
+
+    @classmethod
+    def find_series(cls, ano_letivo: int) -> list[str]:
+        """Retorna lista de séries disponíveis para um ano letivo."""
+        rows = execute_query(
+            """
+            SELECT DISTINCT serie
+            FROM MatrizCurricular
+            WHERE anoLetivo = %s AND status = 'ativa'
+            ORDER BY serie
+            """,
+            (ano_letivo,)
+        )
+        return [r["serie"] for r in rows]
+
+    @classmethod
+    def create(cls, data: dict) -> int:
+        """Cria uma nova entrada na matriz curricular e retorna o ID."""
+        return execute_write(
+            """
+            INSERT INTO MatrizCurricular
+                (serie, idDisciplina, cargaHorariaSemanal, anoLetivo, status, observacoes)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                data["serie"],
+                data["idDisciplina"],
+                data.get("cargaHorariaSemanal", 2),
+                data.get("anoLetivo", 2026),
+                data.get("status", "ativa"),
+                data.get("observacoes")
+            )
+        )
+
+    @classmethod
+    def update(cls, id_matriz: int, data: dict) -> int:
+        """Atualiza os dados de uma entrada na matriz curricular."""
+        return execute_write(
+            """
+            UPDATE MatrizCurricular
+            SET serie               = %s,
+                idDisciplina        = %s,
+                cargaHorariaSemanal = %s,
+                anoLetivo           = %s,
+                status              = %s,
+                observacoes         = %s
+            WHERE idMatriz = %s
+            """,
+            (
+                data["serie"],
+                data["idDisciplina"],
+                data.get("cargaHorariaSemanal", 2),
+                data.get("anoLetivo", 2026),
+                data.get("status", "ativa"),
+                data.get("observacoes"),
+                id_matriz
+            )
+        )
+
+    @classmethod
+    def delete(cls, id_matriz: int) -> int:
+        """Remove permanentemente uma entrada da matriz curricular."""
+        return execute_write(
+            "DELETE FROM MatrizCurricular WHERE idMatriz = %s",
+            (id_matriz,)
+        )
+
+    @classmethod
+    def update_status(cls, id_matriz: int, status: str) -> int:
+        """Altera o status (ativa/inativa) de uma entrada."""
+        return execute_write(
+            "UPDATE MatrizCurricular SET status = %s WHERE idMatriz = %s",
+            (status, id_matriz)
+        )
+
+    @classmethod
+    def copy_to_year(cls, ano_origem: int, ano_destino: int,
+                     series: list[str] | None = None) -> dict:
+        """
+        Copia toda a matriz curricular de ano_origem para ano_destino.
+
+        Entradas que já existem no ano_destino (mesma série+disciplina) são
+        ignoradas (INSERT IGNORE), preservando personalizações já feitas.
+
+        Returns:
+            dict com 'copiadas' (novas) e 'ignoradas' (já existiam)
+        """
+        where_series = ""
+        params_series: list = []
+        if series:
+            placeholders = ", ".join(["%s"] * len(series))
+            where_series = f"AND serie IN ({placeholders})"
+            params_series = list(series)
+
+        # Conta quantas seriam copiadas
+        total_rows = execute_query(
+            f"""
+            SELECT COUNT(*) AS total
+            FROM MatrizCurricular
+            WHERE anoLetivo = %s AND status = 'ativa' {where_series}
+            """,
+            [ano_origem] + params_series
+        )
+        total = total_rows[0]["total"] if total_rows else 0
+
+        # Conta quantas já existem no destino (antes da cópia)
+        existing_rows = execute_query(
+            f"""
+            SELECT COUNT(*) AS total
+            FROM MatrizCurricular
+            WHERE anoLetivo = %s {where_series}
+            """,
+            [ano_destino] + params_series
+        )
+        existing = existing_rows[0]["total"] if existing_rows else 0
+
+        # Executa a cópia com INSERT IGNORE
+        execute_write(
+            f"""
+            INSERT IGNORE INTO MatrizCurricular
+                (serie, idDisciplina, cargaHorariaSemanal, anoLetivo, status, observacoes)
+            SELECT serie, idDisciplina, cargaHorariaSemanal, %s, status, observacoes
+            FROM MatrizCurricular
+            WHERE anoLetivo = %s AND status = 'ativa' {where_series}
+            """,
+            [ano_destino, ano_origem] + params_series
+        )
+
+        # Conta quantas existem no destino (depois da cópia)
+        after_rows = execute_query(
+            f"""
+            SELECT COUNT(*) AS total
+            FROM MatrizCurricular
+            WHERE anoLetivo = %s {where_series}
+            """,
+            [ano_destino] + params_series
+        )
+        after = after_rows[0]["total"] if after_rows else 0
+
+        copiadas = after - existing
+
+        return {
+            "copiadas": copiadas,
+            "ignoradas": total - copiadas
+        }
+
+    # ── Bulk upsert (série completa) ───────────────────────────
+
+    @classmethod
+    def bulk_upsert_serie(
+        cls,
+        serie: str,
+        ano_letivo: int,
+        disciplinas: list,
+        motivo: str | None = None
+    ) -> dict:
+        """
+        Cria/atualiza todas as disciplinas ativas de uma série no mesmo ano letivo.
+
+        - Entradas na lista → upsert com status='ativa'
+        - Entradas existentes que NÃO estão na lista → marcadas como 'inativa'
+
+        Returns: dict(criados=N, atualizados=N, inativados=N)
+        """
+        criados = atualizados = inativados = 0
+
+        # IDs das disciplinas que devem estar ativas
+        ids_ativos = {int(d["idDisciplina"]) for d in disciplinas}
+
+        # Entradas já existentes na série/ano
+        existentes = execute_query(
+            """
+            SELECT idMatriz, idDisciplina, cargaHorariaSemanal, status, observacoes
+            FROM MatrizCurricular
+            WHERE serie = %s AND anoLetivo = %s
+            """,
+            (serie, ano_letivo)
+        )
+        existentes_map = {int(r["idDisciplina"]): r for r in (existentes or [])}
+
+        # 1. Upsert entradas ativas
+        for item in disciplinas:
+            id_disc = int(item["idDisciplina"])
+            qas     = int(item.get("cargaHorariaSemanal", 1))
+            obs     = item.get("observacoes")
+
+            if id_disc in existentes_map:
+                id_matriz = existentes_map[id_disc]["idMatriz"]
+                entrada_antes = cls.find_by_id(id_matriz)
+                execute_write(
+                    """
+                    UPDATE MatrizCurricular
+                    SET cargaHorariaSemanal = %s,
+                        status             = 'ativa',
+                        observacoes        = %s
+                    WHERE idMatriz = %s
+                    """,
+                    (qas, obs, id_matriz)
+                )
+                if entrada_antes:
+                    cls.record_history(entrada_antes, "atualizado", motivo)
+                atualizados += 1
+            else:
+                novo_id = execute_write(
+                    """
+                    INSERT INTO MatrizCurricular
+                        (serie, idDisciplina, cargaHorariaSemanal, anoLetivo, status, observacoes)
+                    VALUES (%s, %s, %s, %s, 'ativa', %s)
+                    """,
+                    (serie, id_disc, qas, ano_letivo, obs)
+                )
+                entrada = cls.find_by_id(novo_id)
+                if entrada:
+                    cls.record_history(entrada, "criado", motivo)
+                criados += 1
+
+        # 2. Inativar entradas que não estão na lista
+        for id_disc, row in existentes_map.items():
+            if id_disc not in ids_ativos and row.get("status") == "ativa":
+                entrada_antes = cls.find_by_id(row["idMatriz"])
+                execute_write(
+                    "UPDATE MatrizCurricular SET status = 'inativa' WHERE idMatriz = %s",
+                    (row["idMatriz"],)
+                )
+                if entrada_antes:
+                    cls.record_history(entrada_antes, "atualizado", motivo)
+                inativados += 1
+
+        return {"criados": criados, "atualizados": atualizados, "inativados": inativados}
+
+    # ── Histórico ──────────────────────────────────────────────
+
+    @classmethod
+    def record_history(cls, entrada: dict, acao: str,
+                       motivo: str | None = None) -> None:
+        """
+        Grava um snapshot da entrada no histórico.
+
+        Args:
+            entrada: dict com os dados atuais da entrada (resultado de find_by_id)
+            acao: 'criado' | 'atualizado' | 'excluido'
+            motivo: justificativa opcional
+        """
+        # Mapear ações para valores do enum do banco
+        acao_map = {
+            'criado': 'criacao',
+            'atualizado': 'alteracao',
+            'excluido': 'exclusao'
+        }
+        acao_db = acao_map.get(acao, acao)
+        
+        qas = entrada.get("cargaHorariaSemanal", 0)
+        execute_write(
+            """
+            INSERT INTO MatrizCurricularHistorico
+                (idMatriz, serie, idDisciplina, codDisciplina, nomeDisciplina,
+                 areaConhecimento, cargaHorariaSemanal, cargaHorariaAnual,
+                 anoLetivo, status, observacoes, acao, motivoAlteracao)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                entrada.get("idMatriz"),
+                entrada.get("serie"),
+                entrada.get("idDisciplina"),
+                entrada.get("codDisciplina"),
+                entrada.get("nomeDisciplina"),
+                entrada.get("areaConhecimento"),
+                qas,
+                qas * 40,
+                entrada.get("anoLetivo"),
+                entrada.get("status", "ativa"),
+                entrada.get("observacoes"),
+                acao_db,
+                motivo
+            )
+        )
+
+    @classmethod
+    def find_historico(cls, serie: str | None = None,
+                       ano_letivo: int | None = None,
+                       id_matriz: int | None = None,
+                       limit: int = 50) -> list[dict]:
+        """
+        Lista o histórico de alterações com filtros opcionais.
+
+        Pode filtrar por série, ano letivo ou por idMatriz específico.
+        """
+        conditions = []
+        params: list = []
+
+        if serie:
+            conditions.append("h.serie = %s")
+            params.append(serie)
+        if ano_letivo:
+            conditions.append("h.anoLetivo = %s")
+            params.append(ano_letivo)
+        if id_matriz:
+            conditions.append("h.idMatriz = %s")
+            params.append(id_matriz)
+
+        where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+        params.append(limit)
+
+        try:
+            return execute_query(
+                f"""
+                SELECT
+                    h.*,
+                    COALESCE(h.nomeDisciplina, d.nomeDisciplina) AS nomeDisc,
+                    d.codDisciplina
+                FROM MatrizCurricularHistorico h
+                LEFT JOIN Disciplinas d ON d.idDisciplina = h.idDisciplina
+                {where}
+                ORDER BY h.registradoEm DESC
+                LIMIT %s
+                """,
+                params
+            ) or []
+        except Exception as exc:
+            # Tabela ainda não foi criada (migration pendente) → retorna vazio
+            if "1146" in str(exc) or "doesn't exist" in str(exc).lower():
+                return []
+            raise

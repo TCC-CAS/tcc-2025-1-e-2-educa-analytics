@@ -20,7 +20,7 @@ dotenv_path = Path(__file__).parent / ".env"
 load_dotenv(dotenv_path, override=True)
 
 # Debug: mostrar configuração do banco
-print(f"\n🔧 Configuração do Banco de Dados:")
+print(f"\n[CONFIG] Configuracao do Banco de Dados:")
 print(f"   DB_HOST: {os.environ.get('DB_HOST', 'NOT SET')}")
 print(f"   DB_PORT: {os.environ.get('DB_PORT', 'NOT SET')}")
 print(f"   DB_USER: {os.environ.get('DB_USER', 'NOT SET')}")
@@ -73,6 +73,12 @@ class LambdaHandler(BaseHTTPRequestHandler):
         body = self.rfile.read(content_length) if content_length > 0 else b""
 
         event = self._build_event(body)
+        
+        # DEBUG: Log do evento construído
+        print(f"[DEBUG server.py] self.path = {self.path}")
+        print(f"[DEBUG server.py] event['path'] = {event.get('path')}")
+        print(f"[DEBUG server.py] event['httpMethod'] = {event.get('httpMethod')}")
+        
         response = lambda_function.router.dispatch(event)
 
         status_code = response.get("statusCode", 200)

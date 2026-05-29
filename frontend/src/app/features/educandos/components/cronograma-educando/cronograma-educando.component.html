@@ -1,0 +1,100 @@
+<div class="cron-page">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header class="page-header">
+    <div class="header-info">
+      <div class="avatar">{{ educando.nome[0] }}</div>
+      <div class="header-text">
+        <h1>Meu Cronograma</h1>
+        <p class="header-sub">{{ educando.nome }}</p>
+        <div class="header-badges">
+          <span class="badge serie">{{ educando.turma.serie }} — Turma {{ educando.turma.codigo }}</span>
+          <span class="badge turno">{{ educando.turma.turno }}</span>
+          <span class="badge ano">{{ educando.turma.anoLetivo }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-card">
+        <span class="stat-num">{{ totalAulas }}</span>
+        <span class="stat-label">aulas/semana</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ disciplinasCount }}</span>
+        <span class="stat-label">disciplinas</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Legenda ────────────────────────────────────────────── -->
+  <div class="legenda-bar" *ngIf="legenda.length > 0">
+    <span class="legenda-titulo">Disciplinas:</span>
+    <span class="legenda-item" *ngFor="let item of legenda">
+      <span class="legenda-dot"
+            [style.background]="item.corBg"
+            [style.border-color]="item.corBorder"></span>
+      {{ item.disciplina }}
+    </span>
+  </div>
+
+  <!-- ── Grade semanal ─────────────────────────────────────── -->
+  <div class="grade-container">
+    <div class="grade">
+
+      <!-- Cabeçalho dias da semana -->
+      <div class="grade-header">
+        <div class="hora-col-header"></div>
+        <div class="dia-header"
+             *ngFor="let dia of dias; trackBy: trackByDia"
+             [class.hoje]="isHoje(dia.key)">
+          <span class="dia-nome">{{ dia.label }}</span>
+          <span class="dia-abrev">{{ dia.abrev }}</span>
+          <span class="hoje-tag" *ngIf="isHoje(dia.key)">Hoje</span>
+        </div>
+      </div>
+
+      <!-- Linhas de horário -->
+      <div class="grade-row" *ngFor="let hora of horasFiltradas; trackBy: trackByHora">
+
+        <div class="hora-label">
+          <span>{{ hora }}</span>
+        </div>
+
+        <div class="celula"
+             *ngFor="let dia of dias; trackBy: trackByDia"
+             [class.hoje-col]="isHoje(dia.key)">
+
+          <div class="slot"
+               *ngIf="getSlot(dia.key, hora) as slot"
+               [style.background]="slot.corBg"
+               [style.border-left-color]="slot.corBorder"
+               [style.color]="slot.corText">
+
+            <span class="slot-disciplina">{{ slot.disciplina }}</span>
+
+            <span class="slot-info" *ngIf="slot.educador">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              {{ slot.educador }}
+            </span>
+
+            <span class="slot-info" *ngIf="slot.sala">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+              </svg>
+              {{ slot.sala }}
+            </span>
+
+            <span class="slot-hora">{{ slot.horaInicio }} – {{ slot.horaFim }}</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

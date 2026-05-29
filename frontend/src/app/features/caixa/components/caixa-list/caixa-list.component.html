@@ -1,4 +1,4 @@
-<div class="caixa-list-container">
+<div class="caixa-page">
 
   <!-- Modal de Confirmação -->
   <div class="modal-overlay" *ngIf="confirm.visible" (click)="cancelConfirm()">
@@ -11,159 +11,344 @@
       <p class="modal-message">{{ confirm.message }}</p>
       <div class="modal-actions">
         <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
-        <button type="button" class="modal-btn"
-          [class.modal-confirm-danger]="confirm.danger"
-          [class.modal-confirm]="!confirm.danger"
-          (click)="confirmAction()">Confirmar</button>
+        <button type="button" class="modal-btn" [class.modal-confirm-danger]="confirm.danger" [class.modal-confirm]="!confirm.danger" (click)="confirmAction()">Confirmar</button>
       </div>
     </div>
   </div>
 
-  <!-- Mensagem de feedback -->
-  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
-    {{ message }}
+  <!-- Header -->
+  <div class="page-header" *ngIf="!isLoading">
+    <div class="page-title">
+      <h1>Fluxo de Caixa</h1>
+      <span class="page-subtitle">Controle de entradas, saídas e projeção financeira da escola.</span>
+      <button class="btn btn-primary" (click)="novo()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Lançamento
+      </button>
+    </div>
   </div>
 
-  <div class="header">
-    <h1>Lançamentos de Caixa</h1>
-    <button class="btn-primary" (click)="novo()">+ Novo Lançamento</button>
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">{{ message }}</div>
+
+  <!-- Skeleton Loading -->
+  <div class="sk-wrapper sk-inner" *ngIf="isLoading">
+    <div class="sk-page-header">
+      <div class="sk-header-text">
+        <div class="sk sk-h22 sk-w40p"></div>
+        <div class="sk sk-h14 sk-w60p"></div>
+      </div>
+      <div class="sk sk-btn"></div>
+    </div>
+    <div class="sk-card sk-summary-row">
+      <div class="sk-summary-card" *ngFor="let i of [1,2,3]">
+        <div class="sk sk-icon-sq"></div>
+        <div class="sk-summary-text">
+          <div class="sk sk-h12 sk-w70p"></div>
+          <div class="sk sk-h20 sk-w50p"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sk-card">
+      <div class="sk-card-header">
+        <div class="sk sk-h16 sk-w25p"></div>
+        <div class="sk sk-h16 sk-w12p"></div>
+      </div>
+      <div class="sk-filter-body">
+        <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+        <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+        <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+        <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+      </div>
+    </div>
+    <div class="sk-card">
+      <div class="sk-table-head">
+        <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+        <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+      </div>
+      <div class="sk-table-row" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+        <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+        <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Totalizadores do período -->
+  <div class="totais-row" *ngIf="!isLoading">
+    <div class="total-card total-entrada">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      <div class="total-info">
+        <span class="total-label">Total Entradas</span>
+        <span class="total-valor">R$ {{ totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+      </div>
+    </div>
+    <div class="total-card total-saida">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+      <div class="total-info">
+        <span class="total-label">Total Saídas</span>
+        <span class="total-valor">R$ {{ totalSaidas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+      </div>
+    </div>
+    <div class="total-card" [class.total-saldo-pos]="saldo >= 0" [class.total-saldo-neg]="saldo < 0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      <div class="total-info">
+        <span class="total-label">Saldo Atual</span>
+        <span class="total-valor">R$ {{ saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fluxo Projetado (próximos 30 dias) -->
+  <div class="fluxo-card" *ngIf="!isLoading">
+    <div class="fluxo-header" (click)="mostrarFluxo = !mostrarFluxo">
+      <div class="fluxo-titulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Fluxo Projetado — Próximos 30 dias</span>
+        <span class="fluxo-badge">IA Preditiva</span>
+      </div>
+      <div class="fluxo-resumo">
+        <div class="fluxo-item-resumo">
+          <span class="fluxo-label">Entradas previstas</span>
+          <span class="fluxo-val entrada">R$ {{ entradasProjetadas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+        </div>
+        <div class="fluxo-sep">–</div>
+        <div class="fluxo-item-resumo">
+          <span class="fluxo-label">Saídas previstas</span>
+          <span class="fluxo-val saida">R$ {{ saidasProjetadas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+        </div>
+        <div class="fluxo-sep">=</div>
+        <div class="fluxo-item-resumo">
+          <span class="fluxo-label">Saldo projetado</span>
+          <span class="fluxo-val" [class.entrada]="saldoProjetado >= 0" [class.saida]="saldoProjetado < 0">
+            R$ {{ saldoProjetado.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+          </span>
+        </div>
+        <button class="btn-toggle-fluxo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" [style.transform]="mostrarFluxo ? 'rotate(180deg)' : ''">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="fluxo-detalhes" *ngIf="mostrarFluxo">
+      <div class="fluxo-cols">
+        <div class="fluxo-col">
+          <h4 class="fluxo-col-titulo entrada-titulo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            Entradas Previstas
+          </h4>
+          <div class="fluxo-item" *ngFor="let item of entradasFluxo">
+            <div class="fluxo-item-info">
+              <span class="fluxo-item-desc">{{ item.descricao }}</span>
+              <span class="fluxo-item-data">{{ item.previsaoData | date:'dd/MM/yyyy' }} · {{ item.centroCusto }}</span>
+            </div>
+            <span class="fluxo-item-valor entrada">+ R$ {{ item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+          </div>
+        </div>
+        <div class="fluxo-divider"></div>
+        <div class="fluxo-col">
+          <h4 class="fluxo-col-titulo saida-titulo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+            Saídas Previstas
+          </h4>
+          <div class="fluxo-item" *ngFor="let item of saidasFluxo">
+            <div class="fluxo-item-info">
+              <span class="fluxo-item-desc">{{ item.descricao }}</span>
+              <span class="fluxo-item-data">{{ item.previsaoData | date:'dd/MM/yyyy' }} · {{ item.centroCusto }}</span>
+            </div>
+            <span class="fluxo-item-valor saida">- R$ {{ item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Filtros -->
-  <div class="filters-section">
-    <h3>Filtros</h3>
-    <div class="filters-grid">
-      <div class="filter-field">
+  <div class="filtros-card" *ngIf="!isLoading">
+    <div class="filtros-header">
+      <div class="filtros-titulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        <span>Filtros</span>
+        <span class="filtros-ativos-badge" *ngIf="filtrosAtivos > 0">{{ filtrosAtivos }}</span>
+      </div>
+      <div class="filtros-resultado">
+        <span class="resultado-count"><strong>{{ lancamentosFiltrados.length }}</strong> resultado(s)</span>
+        <button class="btn-limpar" (click)="limparFiltros()" *ngIf="filtrosAtivos > 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Limpar filtros
+        </button>
+      </div>
+    </div>
+
+    <div class="filtros-grid">
+      <div class="filtro-field">
         <label>Mês</label>
-        <input
-          type="month"
-          [(ngModel)]="filtroMes"
-          (ngModelChange)="aplicarFiltros()">
+        <div class="input-wrapper">
+          <input type="month" [(ngModel)]="filtroMes" (input)="aplicarFiltros()" [class.active]="filtroMes">
+        </div>
       </div>
-
-      <div class="filter-field">
+      <div class="filtro-field">
         <label>Data</label>
-        <input 
-          type="date" 
-          [(ngModel)]="filtroData" 
-          (ngModelChange)="aplicarFiltros()">
+        <div class="input-wrapper">
+          <input type="date" [(ngModel)]="filtroData" (input)="aplicarFiltros()" [class.active]="filtroData">
+        </div>
       </div>
-
-      <div class="filter-field">
-        <label>Tipo de Operação</label>
-        <select [(ngModel)]="filtroTipo" (ngModelChange)="aplicarFiltros()">
-          <option value="">Todos</option>
-          <option value="entrada">Entrada</option>
-          <option value="saida">Saída</option>
-        </select>
+      <div class="filtro-field">
+        <label>Tipo</label>
+        <div class="input-wrapper">
+          <select [(ngModel)]="filtroTipo" (change)="aplicarFiltros()" [class.active]="filtroTipo">
+            <option value="">Todos</option>
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+          </select>
+        </div>
       </div>
-
-      <div class="filter-field">
+      <div class="filtro-field">
+        <label>Centro de Custo</label>
+        <div class="input-wrapper">
+          <select [(ngModel)]="filtroCentroCusto" (change)="aplicarFiltros()" [class.active]="filtroCentroCusto">
+            <option value="">Todos</option>
+            <option value="Pedagógico">Pedagógico</option>
+            <option value="Administrativo">Administrativo</option>
+            <option value="Infraestrutura">Infraestrutura</option>
+            <option value="Tecnologia">Tecnologia</option>
+            <option value="Alimentação">Alimentação</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Eventos">Eventos</option>
+          </select>
+        </div>
+      </div>
+      <div class="filtro-field">
         <label>Forma de Pagamento</label>
-        <select [(ngModel)]="filtroFormaPagamento" (ngModelChange)="aplicarFiltros()">
-          <option value="">Todas</option>
-          <option value="dinheiro">Dinheiro</option>
-          <option value="pix">Pix</option>
-          <option value="credito">Cartão de Crédito</option>
-          <option value="debito">Cartão de Débito</option>
-        </select>
+        <div class="input-wrapper">
+          <select [(ngModel)]="filtroFormaPagamento" (change)="aplicarFiltros()" [class.active]="filtroFormaPagamento">
+            <option value="">Todas</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="pix">Pix</option>
+            <option value="credito">Cartão de Crédito</option>
+            <option value="debito">Cartão de Débito</option>
+          </select>
+        </div>
       </div>
-
-      <div class="filter-field">
-        <label>Tipo de Despesa</label>
-        <select [(ngModel)]="filtroTipoDespesa" (ngModelChange)="aplicarFiltros()">
-          <option value="">Todos</option>
-          <option value="Material Escolar">Material Escolar</option>
-          <option value="Alimentação">Alimentação</option>
-          <option value="Manutenção">Manutenção</option>
-          <option value="Energia / Água / Telefone">Energia / Água / Telefone</option>
-          <option value="Transporte">Transporte</option>
-          <option value="Uniforme">Uniforme</option>
-          <option value="Outros">Outros</option>
-          <option value="N/A">N/A</option>
-        </select>
-      </div>
-
-      <div class="filter-field">
+      <div class="filtro-field">
         <label>Fornecedor</label>
-        <input 
-          type="text" 
-          [(ngModel)]="filtroFornecedor" 
-          (ngModelChange)="aplicarFiltros()"
-          placeholder="Digite o fornecedor">
-      </div>
-
-      <div class="filter-actions">
-        <button class="btn-secondary" (click)="limparFiltros()">Limpar Filtros</button>
+        <div class="input-wrapper">
+          <input type="text" placeholder="Digite o fornecedor" [(ngModel)]="filtroFornecedor" (input)="aplicarFiltros()" [class.active]="filtroFornecedor">
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Totalizadores -->
-  <div class="totals-section">
-    <div class="total-card entrada">
-      <span class="label">Total Entradas</span>
-      <span class="value">R$ {{ totalEntradas.toFixed(2) }}</span>
-    </div>
-    <div class="total-card saida">
-      <span class="label">Total Saídas</span>
-      <span class="value">R$ {{ totalSaidas.toFixed(2) }}</span>
-    </div>
-    <div class="total-card saldo" [class.saldo-positivo]="saldo >= 0" [class.saldo-negativo]="saldo < 0">
-      <span class="label">Saldo</span>
-      <span class="value">R$ {{ saldo.toFixed(2) }}</span>
+  <!-- Barra de ações em lote -->
+  <div class="lote-bar" *ngIf="algumSelecionado">
+    <span class="lote-info">{{ quantidadeSelecionados }} lançamento(s) selecionado(s)</span>
+    <div class="lote-acoes">
+      <button type="button" class="btn btn-danger btn-sm" (click)="excluirSelecionados()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+        Excluir selecionados
+      </button>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="limparSelecao()">Desmarcar tudo</button>
     </div>
   </div>
 
   <!-- Tabela -->
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Tipo</th>
-          <th>Forma de Pgto.</th>
-          <th>Tipo de Despesa</th>
-          <th>Descrição</th>
-          <th>Fornecedor</th>
-          <th class="right">Valor</th>
-          <th>Usuário</th>
-          <th class="actions-col">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let lancamento of lancamentosFiltrados">
-          <td>{{ lancamento.data | date: 'dd/MM/yyyy' }}</td>
-          <td>
-            <span class="badge-tipo" 
-                  [class.badge-entrada]="lancamento.tipoConta === 'entrada'"
-                  [class.badge-saida]="lancamento.tipoConta === 'saida'">
-              {{ getTipoLabel(lancamento.tipoConta) }}
-            </span>
-          </td>
-          <td>{{ getFormaPagamentoLabel(lancamento.formaPagamento) }}</td>
-          <td>{{ lancamento.tipoDespesa }}</td>
-          <td><strong>{{ lancamento.descricao }}</strong></td>
-          <td>{{ lancamento.fornecedor }}</td>
-          <td class="right" 
-              [class.valor-entrada]="lancamento.tipoConta === 'entrada'"
-              [class.valor-saida]="lancamento.tipoConta === 'saida'">
-            <strong>R$ {{ lancamento.valor.toFixed(2) }}</strong>
-          </td>
-          <td>{{ lancamento.usuario }}</td>
-          <td class="actions-col">
-            <button class="btn-icon" (click)="editar(lancamento)" title="Editar">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-            <button class="btn-icon btn-delete" (click)="excluir(lancamento)" title="Excluir">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            </button>
-          </td>
-        </tr>
-        <tr *ngIf="lancamentosFiltrados.length === 0">
-          <td colspan="9" class="empty-message">Nenhum lançamento encontrado</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="tabela-card" *ngIf="!isLoading">
+    <div class="tabela-wrapper">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th class="th-check">
+              <input type="checkbox" [(ngModel)]="todosSelecionados" (change)="toggleTodos()" title="Selecionar todos">
+            </th>
+            <th><div class="th-content">Data</div></th>
+            <th><div class="th-content">Tipo</div></th>
+            <th><div class="th-content">Centro de Custo</div></th>
+            <th><div class="th-content">Forma de Pgto.</div></th>
+            <th><div class="th-content">Descrição</div></th>
+            <th><div class="th-content">Fornecedor</div></th>
+            <th><div class="th-content th-right">Valor</div></th>
+            <th><div class="th-content">Usuário</div></th>
+            <th><div class="th-content">Ações</div></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="tabela-row" *ngFor="let lancamento of lancamentosPaginados" [class.selecionada]="lancamento.selected">
+            <td class="td-check">
+              <input type="checkbox" [(ngModel)]="lancamento.selected" (change)="toggleLancamento()">
+            </td>
+            <td><span class="td-text">{{ lancamento.data | date:'dd/MM/yyyy' }}</span></td>
+            <td>
+              <span class="badge-tipo" [class.badge-entrada]="lancamento.tipoConta === 'entrada'" [class.badge-saida]="lancamento.tipoConta === 'saida'">
+                {{ getTipoLabel(lancamento.tipoConta) }}
+              </span>
+            </td>
+            <td><span class="badge-cc">{{ lancamento.centroCusto }}</span></td>
+            <td><span class="td-text">{{ getFormaPagamentoLabel(lancamento.formaPagamento) }}</span></td>
+            <td><span class="td-text td-bold">{{ lancamento.descricao }}</span></td>
+            <td><span class="td-text">{{ lancamento.fornecedor }}</span></td>
+            <td class="td-right">
+              <span class="td-valor" [class.valor-entrada]="lancamento.tipoConta === 'entrada'" [class.valor-saida]="lancamento.tipoConta === 'saida'">
+                {{ lancamento.tipoConta === 'saida' ? '-' : '+' }} R$ {{ lancamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+              </span>
+            </td>
+            <td><span class="td-text">{{ lancamento.usuario }}</span></td>
+            <td>
+              <div class="row-actions">
+                <button type="button" class="btn-icone" title="Editar" (click)="editar(lancamento)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button type="button" class="btn-icone btn-icone-excluir" title="Excluir" (click)="excluir(lancamento)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tabela-empty" *ngIf="lancamentosFiltrados.length === 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Nenhum lançamento encontrado</span>
+      </div>
+    </div>
+
+    <!-- Paginação -->
+    <div class="pagination" *ngIf="lancamentosFiltrados.length > 0">
+      <div class="pagination-info">
+        <strong>{{ (paginaAtual - 1) * itensPorPagina + 1 }}</strong> - <strong>{{ Math.min(paginaAtual * itensPorPagina, lancamentosFiltrados.length) }}</strong> de <strong>{{ lancamentosFiltrados.length }}</strong>
+      </div>
+      <div class="pagination-controls">
+        <button type="button" class="pagination-btn" [disabled]="paginaAtual === 1" (click)="irParaPagina(1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+        </button>
+        <button type="button" class="pagination-btn" [disabled]="paginaAtual === 1" (click)="irParaPagina(paginaAtual - 1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="pagination-pages">
+          <button type="button" class="pagination-page"
+            *ngFor="let page of paginasVisiveis; trackBy: trackByIndex"
+            [class.active]="page === paginaAtual" [class.dots]="page === -1"
+            [disabled]="page === -1" (click)="page !== -1 && irParaPagina(page)">
+            {{ page === -1 ? '...' : page }}
+          </button>
+        </div>
+        <button type="button" class="pagination-btn" [disabled]="paginaAtual === totalPaginas" (click)="irParaPagina(paginaAtual + 1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button type="button" class="pagination-btn" [disabled]="paginaAtual === totalPaginas" (click)="irParaPagina(totalPaginas)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+        </button>
+      </div>
+      <div class="pagination-size">
+        <label>Por página:</label>
+        <select [(ngModel)]="itensPorPagina" (change)="onItensPorPaginaChange()">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+      </div>
+    </div>
   </div>
+
 </div>

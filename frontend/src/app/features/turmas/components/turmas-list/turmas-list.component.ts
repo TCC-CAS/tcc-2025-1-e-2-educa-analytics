@@ -1,8 +1,9 @@
 import { Component, AfterViewInit, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { TurmasService, Turma, Educando } from '../../services/turmas.service';
 
-type StatusTurma = 'ativa' | 'inativa';
+type StatusTurma = 'planejada' | 'ativa' | 'encerrada' | 'cancelada' | 'suspensa' | 'inativa';
 
 type Turno = 'Manhã' | 'Tarde' | 'Noite' | 'Integral';
 
@@ -23,7 +24,15 @@ interface TurmaFiltro {
   selector: 'app-turmas-list',
   templateUrl: './turmas-list.component.html',
   styleUrls: ['./turmas-list.component.scss'],
-  host: { style: 'display:block;width:100%;margin:0;text-align:left;box-sizing:border-box;' }
+  host: { style: 'display:block;width:100%;margin:0;text-align:left;box-sizing:border-box;' },
+  animations: [
+    trigger('fadeIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('200ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ])
+  ]
 })
 export class TurmasListComponent implements AfterViewInit, OnInit {
   turmas: Turma[] = [];
@@ -52,7 +61,7 @@ export class TurmasListComponent implements AfterViewInit, OnInit {
     this.turmaVisualizacao = turma;
     this.educandosTurmaCarregados = [];
     this.educandosCarregando = true;
-    this.turmasService.listarEducandos(turma.id).subscribe({
+    this.turmasService.listarEducandos(this.getTurmaId(turma)).subscribe({
       next: (data) => {
         this.educandosTurmaCarregados = data;
         this.educandosCarregando = false;
@@ -66,14 +75,44 @@ export class TurmasListComponent implements AfterViewInit, OnInit {
   fecharEducandos(): void {
     this.turmaVisualizacao = null;
     this.educandosTurmaCarregados = [];
+    this.buscaEducando = '';
+  }
+
+  // Busca e filtragem de educandos
+  buscaEducando = '';
+
+  educandosFiltrados(): Educando[] {
+    if (!this.buscaEducando.trim()) {
+      return this.educandosTurmaCarregados;
+    }
+    
+    const busca = this.buscaEducando.toLowerCase().trim();
+    return this.educandosTurmaCarregados.filter(educando => 
+      educando.nome?.toLowerCase().includes(busca) ||
+      educando.idMatricula?.toLowerCase().includes(busca)
+    );
+  }
+
+  getIniciais(nome: string): string {
+    if (!nome) return '?';
+    
+    const palavras = nome.trim().split(/\s+/);
+    if (palavras.length === 1) {
+      return palavras[0].substring(0, 2).toUpperCase();
+    }
+    
+    return (palavras[0][0] + palavras[palavras.length - 1][0]).toUpperCase();
   }
 
   selectedIds = new Set<number>();
   bulkAction = '';
+  
+  // Menu dropdown de status
+  statusMenuAberto: number | null = null;
 
   // Lote
   modalLoteVisible = false;
-  statusLote: StatusTurma = 'ativa';
+  statusLote: StatusTurma = 'planejada';
 
   // Paginação
   currentPage = 1;
@@ -139,7 +178,7 @@ export class TurmasListComponent implements AfterViewInit, OnInit {
 
   abrirModalLote(): void {
     if (this.selectedIds.size === 0) return;
-    this.statusLote = 'ativa';
+    this.statusLote = 'planejada';
     this.modalLoteVisible = true;
   }
 
@@ -172,6 +211,16 @@ export class TurmasListComponent implements AfterViewInit, OnInit {
   };
 
   constructor(private router: Router, private turmasService: TurmasService) { }
+
+  // Método auxiliar para obter ID da turma (compatível com antiga e nova estrutura)
+  private getTurmaId(turma: any): number {
+    return turma.idTurma || turma.id;
+  }
+
+  // Método auxiliar para obter código da turma (compatível com antiga e nova estrutura)
+  private getTurmaCodigo(turma: any): string {
+    return turma.codigo_automatico || turma.codigo || '';
+  }
 
   ngOnInit(): void {
     this.carregarTurmas();
@@ -213,6 +262,13 @@ export class TurmasListComponent implements AfterViewInit, OnInit {
       subtree: true,
       attributes: true,
       attributeFilter: ['style', 'class']
+    });
+
+    // Fechar menu de status ao clicar fora
+    document.addEventListener('click', () => {
+      if (this.statusMenuAberto !== null) {
+        this.fecharStatusMenu();
+      }
     });
 
     setTimeout(() => {
@@ -308,12 +364,12 @@ export class TurmasListComponent implements AfterViewInit, OnInit {
     const codigo = this.filtro.codigo.trim().toLowerCase();
     const nome = this.filtro.nome.trim().toLowerCase();
 
-    this.filteredTurmas = this.turmas.filter((turma) => {
-      const matchesCodigo = !codigo || turma.codigo.toLowerCase().includes(codigo);
-      const matchesDescricao = !nome || turma.nome.toLowerCase().includes(nome);
-      const matchesTurno = !this.filtro.turno || turma.turno === this.filtro.turno;
-      const matchesPeriodo = !this.filtro.anoLetivo || turma.anoLetivo === this.filtro.anoLetivo;
-      const matchesSerie = !this.filtro.serie || turma.serie === this.filtro.serie;
+    this.filteredTurmas = this.turmas.filter((turma: any) => {
+      const matchesCodigo = !codigo || (turma.codigo_automatico || turma.codigo || '').toLowerCase().includes(codigo);
+      const matchesDescricao = !nome || (turma.nomeTurma || turma.nome || '').toLowerCase().includes(nome);
+      const matchesTurno = !this.filtro.turno || (turma.periodo_nome || turma.turno) === this.filtro.turno;
+      const matchesPeriodo = !this.filtro.anoLetivo || String(turma.ano_letivo || turma.anoLetivo) === String(this.filtro.anoLetivo);
+      const matchesSerie = !this.filtro.serie || (turma.serie_nome || turma.serie_codigo || turma.serie) === this.filtro.serie;
       const matchesStatus = !this.filtro.status || turma.status === this.filtro.status;
 
       return (
@@ -361,25 +417,85 @@ export class TurmasListComponent implements AfterViewInit, OnInit {
 
   toggleAll(checked: boolean): void {
     if (checked) {
-      this.filteredTurmas.forEach((turma) => this.selectedIds.add(turma.id));
+      this.filteredTurmas.forEach((turma) => this.selectedIds.add(this.getTurmaId(turma)));
     } else {
       this.selectedIds.clear();
     }
   }
 
   allSelected(): boolean {
-    return this.filteredTurmas.length > 0 && this.filteredTurmas.every((turma) => this.selectedIds.has(turma.id));
+    return this.filteredTurmas.length > 0 && this.filteredTurmas.every((turma) => this.selectedIds.has(this.getTurmaId(turma)));
   }
 
   syncSelection(): void {
-    const validIds = new Set(this.filteredTurmas.map((turma) => turma.id));
+    const validIds = new Set(this.filteredTurmas.map((turma) => this.getTurmaId(turma)));
     this.selectedIds.forEach((id) => {
       if (!validIds.has(id)) this.selectedIds.delete(id);
     });
   }
 
   editTurma(turma: Turma): void {
-    this.router.navigate(['/turmas', turma.id, 'editar']);
+    this.router.navigate(['/turmas', this.getTurmaId(turma), 'editar']);
+  }
+
+  toggleStatusMenu(turmaId: number | undefined, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (!turmaId) return;
+    this.statusMenuAberto = this.statusMenuAberto === turmaId ? null : turmaId;
+  }
+
+  fecharStatusMenu(): void {
+    this.statusMenuAberto = null;
+  }
+
+  alterarStatusPara(turma: Turma, novoStatus: StatusTurma, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.fecharStatusMenu();
+    
+    if (turma.status === novoStatus) {
+      this.showMessage('A turma já está com este status.', 'error');
+      return;
+    }
+
+    const statusLabels: {[key: string]: string} = {
+      'planejada': 'Planejada',
+      'ativa': 'Ativa',
+      'encerrada': 'Encerrada',
+      'cancelada': 'Cancelada',
+      'suspensa': 'Suspensa',
+      'inativa': 'Inativa'
+    };
+    
+    this.openConfirm(
+      'Alterar status',
+      `Deseja alterar o status da turma ${this.getTurmaCodigo(turma)} para "${statusLabels[novoStatus]}"?`,
+      novoStatus === 'cancelada' || novoStatus === 'inativa',
+      () => {
+        this.turmasService.alterarStatus(this.getTurmaId(turma), novoStatus).subscribe({
+          next: () => {
+            this.showMessage(`Status da turma ${this.getTurmaCodigo(turma)} alterado para "${statusLabels[novoStatus]}" com sucesso.`, 'success');
+            this.carregarTurmas();
+          },
+          error: () => this.showMessage('Erro ao alterar status.', 'error'),
+        });
+      }
+    );
+  }
+
+  getStatusLabel(status: string): string {
+    const labels: {[key: string]: string} = {
+      'planejada': 'Planejada',
+      'ativa': 'Ativa',
+      'encerrada': 'Encerrada',
+      'cancelada': 'Cancelada',
+      'suspensa': 'Suspensa',
+      'inativa': 'Inativa'
+    };
+    return labels[status] || status;
   }
 
   toggleStatus(turma: Turma): void {
@@ -387,12 +503,12 @@ export class TurmasListComponent implements AfterViewInit, OnInit {
     const acao = novoStatus === 'ativa' ? 'ativar' : 'desativar';
     this.openConfirm(
       `${acao.charAt(0).toUpperCase() + acao.slice(1)} turma`,
-      `Tem certeza que deseja ${acao} a turma ${turma.codigo}?`,
+      `Tem certeza que deseja ${acao} a turma ${this.getTurmaCodigo(turma)}?`,
       acao === 'desativar',
       () => {
-        this.turmasService.alterarStatus(turma.id, novoStatus).subscribe({
+        this.turmasService.alterarStatus(this.getTurmaId(turma), novoStatus).subscribe({
           next: () => {
-            this.showMessage(`Turma ${turma.codigo} ${novoStatus === 'ativa' ? 'ativada' : 'desativada'} com sucesso.`, 'success');
+            this.showMessage(`Turma ${this.getTurmaCodigo(turma)} ${novoStatus === 'ativa' ? 'ativada' : 'desativada'} com sucesso.`, 'success');
             this.carregarTurmas();
           },
           error: () => this.showMessage('Erro ao alterar status.', 'error'),
@@ -404,12 +520,12 @@ export class TurmasListComponent implements AfterViewInit, OnInit {
   deleteTurma(turma: Turma): void {
     this.openConfirm(
       'Excluir turma',
-      `Tem certeza que deseja excluir a turma ${turma.codigo}? Esta ação não pode ser desfeita.`,
+      `Tem certeza que deseja excluir a turma ${this.getTurmaCodigo(turma)}? Esta ação não pode ser desfeita.`,
       true,
       () => {
-        this.turmasService.deletar(turma.id).subscribe({
+        this.turmasService.deletar(this.getTurmaId(turma)).subscribe({
           next: () => {
-            this.showMessage(`Turma ${turma.codigo} excluída com sucesso.`, 'success');
+            this.showMessage(`Turma ${this.getTurmaCodigo(turma)} excluída com sucesso.`, 'success');
             this.carregarTurmas();
           },
           error: () => this.showMessage('Erro ao excluir turma.', 'error'),
@@ -440,7 +556,7 @@ export class TurmasListComponent implements AfterViewInit, OnInit {
       isDanger,
       () => {
         if (bulkActionSnapshot === 'excluir') {
-          this.turmas = this.turmas.filter((turma) => !this.selectedIds.has(turma.id));
+          this.turmas = this.turmas.filter((turma) => !this.selectedIds.has(this.getTurmaId(turma)));
           this.selectedIds.clear();
           this.bulkAction = '';
           this.applyFilters();
@@ -450,7 +566,7 @@ export class TurmasListComponent implements AfterViewInit, OnInit {
 
         const status = bulkActionSnapshot === 'ativar' ? 'ativa' : 'inativa';
         this.turmas = this.turmas.map((turma) =>
-          this.selectedIds.has(turma.id) ? { ...turma, status } : turma
+          this.selectedIds.has(this.getTurmaId(turma)) ? { ...turma, status } : turma
         );
         this.selectedIds.clear();
         this.bulkAction = '';

@@ -91,7 +91,7 @@
           <label class="field required">
             <span>CEP *</span>
             <div class="cep-wrapper" [class.searching]="cepLoading">
-              <input type="text" name="cep" [(ngModel)]="endereco.cep" placeholder="00000-000" maxlength="9" inputmode="numeric" (blur)="buscarCep()" required />
+              <input type="text" name="cep" [(ngModel)]="endereco.cep" placeholder="00000-000" maxlength="9" inputmode="numeric" (blur)="buscarCep()" (input)="formatarCep($event)" required />
             </div>
             <span class="cep-erro" *ngIf="cepErro">CEP não encontrado</span>
           </label>
@@ -141,7 +141,7 @@
         <div class="field-grid">
           <label class="field required">
             <span>RG *</span>
-            <input type="text" name="rg" [(ngModel)]="rg" placeholder="00.000.000-0" required />
+            <input type="text" name="rg" [(ngModel)]="rg" placeholder="00.000.000-0" maxlength="12" (input)="formatarRG($event)" required />
           </label>
           <label class="field required">
             <span>Órgão emissor *</span>
@@ -149,11 +149,11 @@
           </label>
           <label class="field required">
             <span>Estado emissor *</span>
-            <input type="text" name="estadoEmissor" [(ngModel)]="estadoEmissor" placeholder="SP" maxlength="2" required />
+            <input type="text" name="estadoEmissor" [(ngModel)]="estadoEmissor" placeholder="SP" maxlength="2" style="text-transform:uppercase" required />
           </label>
           <label class="field required">
             <span>CPF *</span>
-            <input type="text" name="cpf" [(ngModel)]="cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" required />
+            <input type="text" name="cpf" [(ngModel)]="cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" (input)="formatarCPF($event)" required />
           </label>
         </div>
       </div>
@@ -173,17 +173,25 @@
       <div class="field-group">
         <h3 class="group-title">Dados Profissionais</h3>
         <div class="field-grid">
-          <label class="field">
-            <span>Matrícula Funcional</span>
-            <input type="text" name="matFuncional2" [(ngModel)]="matriculaFuncional" readonly />
+          <label class="field required">
+            <span>Tipo de Colaborador *</span>
+            <select name="cargo" [(ngModel)]="cargo" required>
+              <option value="">Selecione</option>
+              <option value="Colaborador">Colaborador</option>
+              <option value="Gestor">Gestor</option>
+            </select>
           </label>
           <label class="field required">
-            <span>Cargo *</span>
-            <input type="text" name="cargo" [(ngModel)]="cargo" placeholder="Ex: Secretaria Escolar" required />
-          </label>
-          <label class="field">
-            <span>Departamento</span>
-            <input type="text" name="departamento" [(ngModel)]="departamento" placeholder="Ex: Administrativo" />
+            <span>Departamento *</span>
+            <select name="departamento" [(ngModel)]="departamento" required>
+              <option value="">Selecione</option>
+              <option value="Secretaria">Secretaria</option>
+              <option value="Financeiro">Financeiro</option>
+              <option value="Gestão">Gestão</option>
+              <option value="Pedagógico">Pedagógico</option>
+              <option value="Biblioteca">Biblioteca</option>
+              <option value="Outro">Outro</option>
+            </select>
           </label>
         </div>
       </div>
@@ -213,7 +221,18 @@
             </label>
             <label class="field required col-2">
               <span>Instituição *</span>
-              <input type="text" name="instFormacao" [(ngModel)]="novaFormacao.instituicao" placeholder="Nome da instituição" required />
+              <input 
+                type="text" 
+                name="instFormacao" 
+                [(ngModel)]="novaFormacao.instituicao" 
+                (input)="buscarInstituicoes($event)"
+                list="instituicoes-datalist"
+                placeholder="Digite para buscar..." 
+                required 
+                autocomplete="off" />
+              <datalist id="instituicoes-datalist">
+                <option *ngFor="let inst of instituicoesSugeridas" [value]="inst">{{ inst }}</option>
+              </datalist>
             </label>
             <label class="field required col-2">
               <span>Área de estudo / Curso *</span>
@@ -298,17 +317,80 @@
   </div>
 </div>
 
-<!-- MODAL DE CONFIRMACAO -->
-<div class="modal-overlay" *ngIf="confirm.visible" (click)="cancelConfirm()">
-  <div class="modal" (click)="$event.stopPropagation()">
-    <div class="modal-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    </div>
-    <h3 class="modal-title">{{ confirm.title }}</h3>
-    <p class="modal-message">{{ confirm.message }}</p>
-    <div class="modal-actions">
-      <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
-      <button type="button" class="modal-btn modal-confirm" (click)="confirmAction()">Confirmar</button>
-    </div>
+<!-- MODAL DE CONFIRMAÇÃO -->
+<div class="modal-overlay" *ngIf="modalConfirmacaoAberto" (click)="fecharModal()">
+  <div class="modal-confirmacao" (click)="$event.stopPropagation()">
+
+    <!-- TELA DE SUCESSO -->
+    <ng-container *ngIf="colaboradorRealizado">
+      <div class="confirmacao-sucesso">
+        <button type="button" class="modal-close sucesso-close" (click)="voltarParaLista()" title="Voltar">&#x2715;</button>
+        <div class="sucesso-icon">
+          <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+            <circle cx="26" cy="26" r="25" stroke="#1e8e3e" stroke-width="2" fill="#e6f4ea"/>
+            <path d="M14 27l8 8 16-16" stroke="#1e8e3e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>{{ isEdicao ? 'Colaborador atualizado!' : 'Colaborador cadastrado!' }}</h2>
+        <ng-container *ngIf="!isEdicao">
+          <p>Um e-mail com o ID e o link para definição de senha foi enviado para:</p>
+          <p class="sucesso-email"><strong>{{ email }}</strong></p>
+        </ng-container>
+        <p class="sucesso-id">ID do colaborador: <strong>{{ colaboradorCadastradoId }}</strong></p>
+        <div class="sucesso-actions">
+          <button type="button" class="btn-secondary" (click)="voltarParaLista()">Voltar para a lista</button>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- TELA DE CONFIRMAÇÃO -->
+    <ng-container *ngIf="!colaboradorRealizado">
+      <header class="modal-header">
+        <div class="modal-title-block">
+          <h2>{{ isEdicao ? 'Confirmar atualização' : 'Confirmar cadastro' }}</h2>
+          <p class="modal-subtitle">Revise os dados antes de finalizar</p>
+        </div>
+        <button type="button" class="modal-close" (click)="fecharModal()">&#x2715;</button>
+      </header>
+
+      <div class="confirmacao-body">
+        <div class="conf-secao">
+          <h3>Identificação</h3>
+          <div class="conf-grid">
+            <div class="conf-item"><span>Matrícula</span><strong>{{ matriculaFuncional }}</strong></div>
+            <div class="conf-item"><span>Nome</span><strong>{{ nomeCompleto || '—' }}</strong></div>
+            <div class="conf-item"><span>E-mail</span><strong>{{ email || '—' }}</strong></div>
+            <div class="conf-item"><span>CPF</span><strong>{{ cpf || '—' }}</strong></div>
+          </div>
+        </div>
+        <div class="conf-secao">
+          <h3>Dados Profissionais</h3>
+          <div class="conf-grid">
+            <div class="conf-item"><span>Cargo</span><strong>{{ cargo || '—' }}</strong></div>
+            <div class="conf-item"><span>Departamento</span><strong>{{ departamento || '—' }}</strong></div>
+          </div>
+        </div>
+        <p class="conf-aviso" *ngIf="!isEdicao">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#f59e0b" stroke-width="1.5"/><path d="M10 6v4M10 14h.01" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Ao confirmar, um e-mail com o ID e o link de definição de senha será enviado ao colaborador.
+        </p>
+      </div>
+
+      <div class="conf-erro" *ngIf="emailErro">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#dc2626" stroke-width="1.5"/><path d="M10 6v4M10 14h.01" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round"/></svg>
+        {{ emailErrMsg }}
+      </div>
+
+      <footer class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="fecharModal()" [disabled]="emailEnviando">Cancelar</button>
+        <button type="button" class="btn-confirmar" (click)="confirmarCadastro()" [disabled]="emailEnviando">
+          <span *ngIf="!emailEnviando">{{ isEdicao ? 'Confirmar atualização' : 'Confirmar e enviar e-mail' }}</span>
+          <span *ngIf="emailEnviando" class="loading-text">
+            <span class="spinner"></span> Salvando...
+          </span>
+        </button>
+      </footer>
+    </ng-container>
+
   </div>
 </div>

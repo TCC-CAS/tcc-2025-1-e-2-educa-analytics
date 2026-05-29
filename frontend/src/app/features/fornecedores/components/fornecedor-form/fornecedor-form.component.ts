@@ -1,7 +1,8 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { FornecedoresService } from '../../services/fornecedores.service';
 
-interface Fornecedor {
+interface FornecedorForm {
   id?: number;
   tipo: 'PF' | 'PJ' | '';
   nome: string;
@@ -11,6 +12,7 @@ interface Fornecedor {
   telefone: string;
   cep: string;
   endereco: string;
+  centroCusto: string;
   tipoDespesa: string;
 }
 
@@ -22,9 +24,13 @@ interface Fornecedor {
 })
 export class FornecedorFormComponent implements OnInit {
   fornecedorId: number | null = null;
-  isEdicao: boolean = false;
-  
-  fornecedor: Fornecedor = {
+  isEdicao = false;
+  salvando = false;
+  buscandoCep = false;
+  message = '';
+  messageType: 'success' | 'error' = 'success';
+
+  fornecedor: FornecedorForm = {
     tipo: '',
     nome: '',
     razaoSocial: '',
@@ -33,79 +39,124 @@ export class FornecedorFormComponent implements OnInit {
     telefone: '',
     cep: '',
     endereco: '',
+    centroCusto: '',
     tipoDespesa: ''
   };
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private fornecedoresService: FornecedoresService
   ) {}
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.fornecedorId = parseInt(id);
+      this.fornecedorId = parseInt(id, 10);
       this.isEdicao = true;
       this.carregarFornecedor();
     }
   }
 
   carregarFornecedor(): void {
-    // Mock - substituir por chamada à API
-    this.fornecedor = {
-      id: this.fornecedorId!,
-      tipo: 'PJ',
-      nome: 'Papelaria Central',
-      razaoSocial: 'Papelaria Central Ltda',
-      cpfCnpj: '12.345.678/0001-90',
-      email: 'contato@papelariacentral.com.br',
-      telefone: '(31) 3456-7890',
-      cep: '30130-000',
-      endereco: 'Av. Afonso Pena, 1500',
-      tipoDespesa: 'Material Escolar'
-    };
+    this.fornecedoresService.buscar(this.fornecedorId!).subscribe({
+      next: (dados) => {
+        this.fornecedor = {
+          id: dados.id,
+          tipo: dados.tipo,
+          nome: dados.nome,
+          razaoSocial: dados.razaoSocial || '',
+          cpfCnpj: dados.cpfCnpj,
+          email: dados.email,
+          telefone: dados.telefone,
+          cep: dados.cep,
+          endereco: dados.endereco,
+          centroCusto: dados.centroCusto || '',
+          tipoDespesa: dados.tipoDespesa || dados.categoria
+        };
+      },
+      error: () => this.showMessage('Erro ao carregar dados do fornecedor.', 'error')
+    });
   }
 
-  get mostrarRazaoSocial(): boolean {
-    return this.fornecedor.tipo === 'PJ';
+  buscarCep(): void {
+    const cep = (this.fornecedor.cep || '').replace(/\D/g, '');
+    if (cep.length !== 8) return;
+
+    this.buscandoCep = true;
+    this.fornecedoresService.buscarCep(cep).subscribe({
+      next: (dados: any) => {
+        this.buscandoCep = false;
+        if (dados.erro) {
+          this.showMessage('CEP não encontrado.', 'error');
+          return;
+        }
+        const partes = [dados.logradouro, dados.bairro, `${dados.localidade} - ${dados.uf}`]
+          .filter(Boolean).join(', ');
+        this.fornecedor.endereco = partes;
+      },
+      error: () => {
+        this.buscandoCep = false;
+        this.showMessage('Erro ao buscar CEP. Verifique e preencha o endereço manualmente.', 'error');
+      }
+    });
   }
 
-  get labelNome(): string {
-    return this.fornecedor.tipo === 'PF' ? 'Nome Completo' : 'Nome Fantasia';
-  }
-
-  get labelDocumento(): string {
-    return this.fornecedor.tipo === 'PF' ? 'CPF' : 'CNPJ';
-  }
+  get mostrarRazaoSocial(): boolean { return this.fornecedor.tipo === 'PJ'; }
+  get labelNome(): string { return this.fornecedor.tipo === 'PF' ? 'Nome Completo' : 'Nome Fantasia'; }
+  get labelDocumento(): string { return this.fornecedor.tipo === 'PF' ? 'CPF' : 'CNPJ'; }
 
   salvar(form: any): void {
     if (!form.valid) {
-      alert('Por favor, preencha todos os campos obrigatórios');
+      this.showMessage('Preencha todos os campos obrigatórios antes de continuar.', 'error');
       return;
     }
 
-    // Validações específicas
-    if (this.fornecedor.tipo === 'PF' && this.fornecedor.cpfCnpj.replace(/\D/g, '').length !== 11) {
-      alert('CPF deve ter 11 dígitos');
+    const digitos = this.fornecedor.cpfCnpj.replace(/\D/g, '');
+    if (this.fornecedor.tipo === 'PF' && digitos.length !== 11) {
+      this.showMessage('CPF inválido — deve ter 11 dígitos.', 'error');
+      return;
+    }
+    if (this.fornecedor.tipo === 'PJ' && digitos.length !== 14) {
+      this.showMessage('CNPJ inválido — deve ter 14 dígitos.', 'error');
       return;
     }
 
-    if (this.fornecedor.tipo === 'PJ' && this.fornecedor.cpfCnpj.replace(/\D/g, '').length !== 14) {
-      alert('CNPJ deve ter 14 dígitos');
-      return;
-    }
+    this.salvando = true;
+    const payload = {
+      tipo: this.fornecedor.tipo as 'PF' | 'PJ',
+      nome: this.fornecedor.nome,
+      razaoSocial: this.fornecedor.razaoSocial || '',
+      cpfCnpj: this.fornecedor.cpfCnpj,
+      email: this.fornecedor.email,
+      telefone: this.fornecedor.telefone,
+      cep: this.fornecedor.cep,
+      endereco: this.fornecedor.endereco,
+      centroCusto: this.fornecedor.centroCusto,
+      tipoDespesa: this.fornecedor.tipoDespesa,
+      categoria: this.fornecedor.tipoDespesa
+    };
 
-    if (this.isEdicao) {
-      console.log('Atualizar fornecedor:', this.fornecedor);
-      alert('Fornecedor atualizado com sucesso!');
-      // Implementar chamada à API
-    } else {
-      console.log('Criar novo fornecedor:', this.fornecedor);
-      alert('Fornecedor cadastrado com sucesso!');
-      // Implementar chamada à API
-    }
+    const request$ = this.isEdicao
+      ? this.fornecedoresService.atualizar(this.fornecedorId!, payload)
+      : this.fornecedoresService.criar(payload);
 
-    this.voltar();
+    request$.subscribe({
+      next: () => {
+        this.salvando = false;
+        this.router.navigate(['/fornecedores']);
+      },
+      error: (err) => {
+        this.salvando = false;
+        this.showMessage(err?.error?.error || 'Erro ao salvar. Tente novamente.', 'error');
+      }
+    });
+  }
+
+  showMessage(msg: string, type: 'success' | 'error'): void {
+    this.message = msg;
+    this.messageType = type;
+    setTimeout(() => { this.message = ''; }, 5000);
   }
 
   voltar(): void {

@@ -21,6 +21,7 @@ interface Educador {
 export class EducadoresListComponent implements OnInit {
   educadores: Educador[] = [];
   educadoresFiltrados: Educador[] = [];
+  isLoading: boolean = false;
 
   filtroNome: string = '';
   filtroMatricula: string = '';
@@ -51,6 +52,7 @@ export class EducadoresListComponent implements OnInit {
   }
 
   carregarEducadores(): void {
+    this.isLoading = true;
     this.http.get<any>(`${environment.apiUrl}/educadores`).subscribe({
       next: (response) => {
         console.log('Resposta da API:', response);
@@ -80,15 +82,17 @@ export class EducadoresListComponent implements OnInit {
               nomeCompleto: edu.nomeCompleto,
               disciplinaLecionada: disciplinaLecionada,
               turno: turno,
-              status: edu.status || 'ativo'
+              status: edu.idStatus || edu.status || 'ativo'
             };
           });
           this.aplicarFiltros();
         }
+        this.isLoading = false;
       },
       error: (err) => {
         console.error('Erro ao carregar educadores:', err);
         alert('Erro ao carregar lista de educadores. Verifique o console.');
+        this.isLoading = false;
       }
     });
   }

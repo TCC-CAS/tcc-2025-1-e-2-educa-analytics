@@ -60,8 +60,15 @@ def _enviar(destinatario: str, assunto: str, html: str, texto: str) -> None:
 
 # ── templates ─────────────────────────────────────────────────────────────────
 
-def _html_boas_vindas(nome: str, link: str, tipo: str) -> str:
-    papel = "educando(a)" if tipo == "educando" else "responsável"
+def _html_boas_vindas(nome: str, link: str, tipo: str, matricula: str = "") -> str:
+    papel_map = {
+        "educando": "educando(a)",
+        "responsavel": "responsável",
+        "educador": "educador(a)",
+        "colaborador": "colaborador(a)",
+        "gestor": "gestor(a)"
+    }
+    papel = papel_map.get(tipo, "usuário(a)")
     return f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -82,7 +89,7 @@ def _html_boas_vindas(nome: str, link: str, tipo: str) -> str:
           <h2 style="margin:0 0 8px;color:#111827;font-size:18px;">Olá, {nome}!</h2>
           <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.6;">
             Sua matrícula no sistema Educa Analytics foi realizada com sucesso.<br>
-            Você foi cadastrado(a) como <strong>{papel}</strong>.
+            Você foi cadastrado(a) como <strong>{papel}</strong>.{' Sua matrícula funcional é: <strong style="font-family: monospace;">' + matricula + '</strong>.' if matricula else ''}
           </p>
           <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6;">
             Para acessar o sistema, você precisa criar sua senha clicando no botão abaixo.
@@ -125,12 +132,20 @@ def _html_boas_vindas(nome: str, link: str, tipo: str) -> str:
 </html>"""
 
 
-def _texto_boas_vindas(nome: str, link: str, tipo: str) -> str:
-    papel = "educando(a)" if tipo == "educando" else "responsável"
+def _texto_boas_vindas(nome: str, link: str, tipo: str, matricula: str = "") -> str:
+    papel_map = {
+        "educando": "educando(a)",
+        "responsavel": "responsável",
+        "educador": "educador(a)",
+        "colaborador": "colaborador(a)",
+        "gestor": "gestor(a)"
+    }
+    papel = papel_map.get(tipo, "usuário(a)")
+    matricula_texto = f"\nSua matrícula funcional é: {matricula}\n" if matricula else ""
     return (
         f"Olá, {nome}!\n\n"
         f"Sua matrícula no Educa Analytics foi realizada com sucesso.\n"
-        f"Você foi cadastrado(a) como {papel}.\n\n"
+        f"Você foi cadastrado(a) como {papel}.{matricula_texto}\n"
         f"Para acessar o sistema, crie sua senha acessando o link abaixo (válido por 48 h):\n"
         f"{link}\n\n"
         f"Se você não esperava este e-mail, ignore-o.\n\n"
@@ -145,15 +160,16 @@ def enviar_boas_vindas(
     nome: str,
     token: str,
     id_matricula: str,
-    tipo: str,  # "educando" | "responsavel"
+    tipo: str,  # "educando" | "responsavel" | "educador" | "colaborador" | "gestor"
+    matricula_funcional: str = "",  # Opcional: matrícula funcional
 ) -> None:
     """Envia o e-mail de boas-vindas com link de criação de senha."""
     app_url = Config.APP_URL().rstrip("/")
     link = f"{app_url}/criar-senha?token={token}&id={id_matricula}"
 
     assunto = "Bem-vindo ao Educa Analytics — Crie sua senha"
-    html  = _html_boas_vindas(nome, link, tipo)
-    texto = _texto_boas_vindas(nome, link, tipo)
+    html  = _html_boas_vindas(nome, link, tipo, matricula_funcional)
+    texto = _texto_boas_vindas(nome, link, tipo, matricula_funcional)
 
     try:
         _enviar(destinatario, assunto, html, texto)

@@ -72,9 +72,37 @@
 
 <!-- Lista de matrículas -->
 <!-- Carregando -->
-<div class="lista-loading" *ngIf="carregando">
-  <div class="loading-spinner"></div>
-  <span>Carregando matrículas...</span>
+<!-- Skeleton Loading -->
+<div class="sk-wrapper" *ngIf="carregando">
+  <div class="sk-page-header">
+    <div class="sk-header-text">
+      <div class="sk sk-h22 sk-w40p"></div>
+      <div class="sk sk-h14 sk-w60p"></div>
+    </div>
+    <div class="sk sk-btn"></div>
+  </div>
+  <div class="sk-card">
+    <div class="sk-card-header">
+      <div class="sk sk-h16 sk-w25p"></div>
+      <div class="sk sk-h16 sk-w12p"></div>
+    </div>
+    <div class="sk-filter-body">
+      <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+      <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+      <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+      <div class="sk-field"><div class="sk sk-label"></div><div class="sk sk-input"></div></div>
+    </div>
+  </div>
+  <div class="sk-card">
+    <div class="sk-table-head">
+      <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+      <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+    </div>
+    <div class="sk-table-row" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+      <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+      <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Erro de carregamento -->
@@ -306,13 +334,21 @@
               </div>
             </td>
             <td>
-              <div class="serie-turma-cell">
+              <div class="serie-turma-cell" *ngIf="m.serie && m.codigoTurma">
                 <span class="badge-serie">{{ m.serie }}</span>
                 <span class="turma-cod">{{ m.codigoTurma }}</span>
               </div>
+              <div class="serie-turma-cell empty" *ngIf="!m.serie || !m.codigoTurma">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span class="empty-text">Turma não atribuída</span>
+              </div>
             </td>
             <td>
-              <div class="ano-cell">
+              <div class="ano-cell" *ngIf="m.anoLetivo">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                   <rect x="3" y="4" width="18" height="18" rx="2"/>
                   <line x1="16" y1="2" x2="16" y2="6"/>
@@ -321,14 +357,30 @@
                 </svg>
                 <span>{{ m.anoLetivo }}</span>
               </div>
+              <div class="ano-cell empty" *ngIf="!m.anoLetivo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span class="empty-text">Não definido</span>
+              </div>
             </td>
             <td>
-              <div class="periodo-cell">
+              <div class="periodo-cell" *ngIf="m.periodo">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                   <circle cx="12" cy="12" r="10"/>
                   <polyline points="12 6 12 12 16 14"/>
                 </svg>
                 <span>{{ m.periodo }}</span>
+              </div>
+              <div class="periodo-cell empty" *ngIf="!m.periodo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span class="empty-text">Não definido</span>
               </div>
             </td>
             <td>

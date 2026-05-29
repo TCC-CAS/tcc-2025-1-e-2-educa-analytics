@@ -175,8 +175,20 @@
         <h3 class="group-title">Dados Profissionais</h3>
         <div class="field-grid">
           <label class="field">
-            <span>Matrícula Funcional</span>
-            <input type="text" name="matFuncional2" [(ngModel)]="matriculaFuncional" readonly />
+            <span>Cargo <small style="color: #666;">(função que exerce)</small></span>
+            <select name="cargo" [(ngModel)]="cargo" required>
+              <option value="">Selecione o cargo</option>
+              <option value="Professor(a)">Professor(a)</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Departamento/Área <small style="color: #666;">(setor onde atua)</small></span>
+            <select name="departamento" [(ngModel)]="departamento" required>
+              <option value="">Selecione o departamento</option>
+              <option value="Ensino Fundamental I">Ensino Fundamental I (1º ao 5º ano)</option>
+              <option value="Ensino Fundamental II">Ensino Fundamental II (6º ao 9º ano)</option>
+              <option value="Multidisciplinar">Multidisciplinar (ambos os níveis)</option>
+            </select>
           </label>
         </div>
 
@@ -233,7 +245,18 @@
             </label>
             <label class="field required col-2">
             <span>Instituição</span>
-              <input type="text" name="instFormacao" [(ngModel)]="novaFormacao.instituicao" placeholder="Nome da instituição" required />
+              <input 
+                type="text" 
+                name="instFormacao" 
+                [(ngModel)]="novaFormacao.instituicao" 
+                (input)="buscarInstituicoes($event)"
+                list="instituicoes-datalist-edu"
+                placeholder="Digite para buscar..." 
+                required 
+                autocomplete="off" />
+              <datalist id="instituicoes-datalist-edu">
+                <option *ngFor="let inst of instituicoesSugeridas" [value]="inst">{{ inst }}</option>
+              </datalist>
             </label>
             <label class="field required col-2">
             <span>Área de estudo / Curso</span>

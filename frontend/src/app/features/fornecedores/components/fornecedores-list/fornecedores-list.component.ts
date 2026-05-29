@@ -1,19 +1,6 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-
-interface Fornecedor {
-  id: number;
-  tipo: 'PF' | 'PJ';
-  nome: string;
-  razaoSocial?: string;
-  cpfCnpj: string;
-  email: string;
-  telefone: string;
-  cep: string;
-  endereco: string;
-  tipoDespesa: string;
-  ativo: boolean;
-}
+import { FornecedoresService, Fornecedor } from '../../services/fornecedores.service';
 
 @Component({
   selector: 'app-fornecedores-list',
@@ -24,108 +11,113 @@ interface Fornecedor {
 export class FornecedoresListComponent implements OnInit {
   fornecedores: Fornecedor[] = [];
   fornecedoresFiltrados: Fornecedor[] = [];
-  
-  // Filtros
-  filtroTipo: string = '';
-  filtroNome: string = '';
-  filtroStatus: string = '';
-  filtroTipoDespesa: string = '';
-  
-  // Seleção
+
+  filtroTipo = '';
+  filtroNome = '';
+  filtroStatus = '';
+  filtroCentroCusto = '';
+
   selecionados: Set<number> = new Set();
-  bulkAction: string = '';
+  bulkAction = '';
 
-  // Mensagem de feedback
-  message: string = '';
+  paginaAtual = 1;
+  itensPorPagina = 10;
+  readonly Math = Math;
+
+  message = '';
   messageType: 'success' | 'error' = 'success';
+  isLoading = false;
 
-  // Modal de confirmação
-  confirm = {
-    visible: false,
-    title: '',
-    message: '',
-    danger: false,
-    callback: () => {}
-  };
+  confirm = { visible: false, title: '', message: '', danger: false, callback: () => {} };
 
-  constructor(private router: Router) {}
+  get totalPaginas(): number {
+    return Math.ceil(this.fornecedoresFiltrados.length / this.itensPorPagina);
+  }
+
+  get fornecedoresPaginados(): Fornecedor[] {
+    const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
+    return this.fornecedoresFiltrados.slice(inicio, inicio + this.itensPorPagina);
+  }
+
+  get paginasVisiveis(): number[] {
+    const total = this.totalPaginas;
+    const atual = this.paginaAtual;
+    const delta = 2;
+    const range: number[] = [];
+    for (let i = Math.max(2, atual - delta); i <= Math.min(total - 1, atual + delta); i++) range.push(i);
+    if (atual - delta > 2) range.unshift(-1);
+    if (atual + delta < total - 1) range.push(-1);
+    range.unshift(1);
+    if (total > 1) range.push(total);
+    return range;
+  }
+
+  get filtrosAtivos(): number {
+    return (this.filtroTipo ? 1 : 0) + (this.filtroNome ? 1 : 0) +
+           (this.filtroStatus ? 1 : 0) + (this.filtroCentroCusto ? 1 : 0);
+  }
+
+  // Cards de resumo
+  get qtdAtivos(): number {
+    return this.fornecedores.filter(f => f.ativo).length;
+  }
+
+  get gastoMensalTotal(): number {
+    return this.fornecedores.filter(f => f.ativo).reduce((a, f) => a + f.valorMensalMedio, 0);
+  }
+
+  get qtdContratosTotais(): number {
+    return this.fornecedores.reduce((a, f) => a + f.qtdContratos, 0);
+  }
+
+  get ultimoPagamentoGeral(): string {
+    const datas = this.fornecedores
+      .filter(f => f.ultimoPagamento)
+      .map(f => f.ultimoPagamento as string)
+      .sort((a, b) => b.localeCompare(a));
+    return datas.length ? datas[0] : '';
+  }
+
+  get scoreGeral(): number {
+    const ativos = this.fornecedores.filter(f => f.ativo);
+    if (!ativos.length) return 0;
+    const total = ativos.reduce((a, f) => a + (f.scoreEntrega + f.scorePontualidade + f.scoreQualidade) / 3, 0);
+    return Math.round((total / ativos.length) * 10) / 10;
+  }
+
+  constructor(private router: Router, private fornecedoresService: FornecedoresService) {}
 
   ngOnInit(): void {
     this.carregarFornecedores();
   }
 
   carregarFornecedores(): void {
-    // Mock data - substituir por chamada à API
-    this.fornecedores = [
-      {
-        id: 1,
-        tipo: 'PJ',
-        nome: 'Papelaria Central',
-        razaoSocial: 'Papelaria Central Ltda',
-        cpfCnpj: '12.345.678/0001-90',
-        email: 'contato@papelariacentral.com.br',
-        telefone: '(31) 3456-7890',
-        cep: '30130-000',
-        endereco: 'Av. Afonso Pena, 1500',
-        tipoDespesa: 'Material Escolar',
-        ativo: true
+    this.isLoading = true;
+    this.fornecedoresService.listar().subscribe({
+      next: (dados) => {
+        this.fornecedores = dados;
+        this.aplicarFiltros();
+        this.isLoading = false;
       },
-      {
-        id: 2,
-        tipo: 'PJ',
-        nome: 'Companhia de Energia',
-        razaoSocial: 'CEMIG Distribuição S.A.',
-        cpfCnpj: '06.981.176/0001-16',
-        email: 'atendimento@cemig.com.br',
-        telefone: '(31) 3506-1500',
-        cep: '30190-922',
-        endereco: 'Av. Barbacena, 1200',
-        tipoDespesa: 'Energia / Água / Telefone',
-        ativo: true
-      },
-      {
-        id: 3,
-        tipo: 'PF',
-        nome: 'João Carlos Silva',
-        cpfCnpj: '123.456.789-00',
-        email: 'joao.silva@email.com',
-        telefone: '(31) 98765-4321',
-        cep: '30140-071',
-        endereco: 'Rua Rio de Janeiro, 1000',
-        tipoDespesa: 'Manutenção',
-        ativo: true
-      },
-      {
-        id: 4,
-        tipo: 'PJ',
-        nome: 'Fornecedor de Alimentos',
-        razaoSocial: 'Alimentos BH Ltda',
-        cpfCnpj: '98.765.432/0001-10',
-        email: 'vendas@alimentosbh.com.br',
-        telefone: '(31) 3200-5500',
-        cep: '31110-000',
-        endereco: 'Rua dos Goi  tácazes, 500',
-        tipoDespesa: 'Alimentação',
-        ativo: false
+      error: () => {
+        this.showMessage('Erro ao carregar fornecedores.', 'error');
+        this.isLoading = false;
       }
-    ];
-    
-    this.aplicarFiltros();
+    });
   }
 
   aplicarFiltros(): void {
-    this.fornecedoresFiltrados = this.fornecedores.filter(fornecedor => {
-      const matchTipo = !this.filtroTipo || fornecedor.tipo === this.filtroTipo;
-      const matchNome = !this.filtroNome || 
-        fornecedor.nome.toLowerCase().includes(this.filtroNome.toLowerCase()) ||
-        (fornecedor.razaoSocial && fornecedor.razaoSocial.toLowerCase().includes(this.filtroNome.toLowerCase()));
-      const matchStatus = !this.filtroStatus || 
-        (this.filtroStatus === 'ativo' && fornecedor.ativo) ||
-        (this.filtroStatus === 'inativo' && !fornecedor.ativo);
-      const matchTipoDespesa = !this.filtroTipoDespesa ||
-        fornecedor.tipoDespesa === this.filtroTipoDespesa;
-      
-      return matchTipo && matchNome && matchStatus && matchTipoDespesa;
+    this.paginaAtual = 1;
+    this.fornecedoresFiltrados = this.fornecedores.filter(f => {
+      const matchTipo   = !this.filtroTipo || f.tipo === this.filtroTipo;
+      const matchNome   = !this.filtroNome ||
+        f.nome.toLowerCase().includes(this.filtroNome.toLowerCase()) ||
+        (f.razaoSocial && f.razaoSocial.toLowerCase().includes(this.filtroNome.toLowerCase()));
+      const matchStatus = !this.filtroStatus ||
+        (this.filtroStatus === 'ativo' && f.ativo) ||
+        (this.filtroStatus === 'inativo' && !f.ativo);
+      const matchCC     = !this.filtroCentroCusto || f.centroCusto === this.filtroCentroCusto;
+      return matchTipo && matchNome && matchStatus && matchCC;
     });
   }
 
@@ -133,121 +125,126 @@ export class FornecedoresListComponent implements OnInit {
     this.filtroTipo = '';
     this.filtroNome = '';
     this.filtroStatus = '';
-    this.filtroTipoDespesa = '';
+    this.filtroCentroCusto = '';
     this.aplicarFiltros();
   }
 
   toggleSelecao(id: number): void {
-    if (this.selecionados.has(id)) {
-      this.selecionados.delete(id);
-    } else {
-      this.selecionados.add(id);
-    }
+    if (this.selecionados.has(id)) this.selecionados.delete(id);
+    else this.selecionados.add(id);
   }
 
   toggleTodos(event: any): void {
-    const target = event.target as HTMLInputElement;
-    if (target.checked) {
-      this.fornecedoresFiltrados.forEach(f => this.selecionados.add(f.id));
-    } else {
-      this.selecionados.clear();
-    }
+    const checked = (event.target as HTMLInputElement).checked;
+    if (checked) this.fornecedoresFiltrados.forEach(f => this.selecionados.add(f.id));
+    else this.selecionados.clear();
   }
 
-  get quantidadeSelecionados(): number {
-    return this.selecionados.size;
+  get quantidadeSelecionados(): number { return this.selecionados.size; }
+  get todosSelecionados(): boolean {
+    return this.fornecedoresFiltrados.length > 0 && this.fornecedoresFiltrados.every(f => this.selecionados.has(f.id));
   }
+
+  limparSelecao(): void { this.selecionados.clear(); }
 
   private _ativarSelecionados(): void {
-    this.fornecedores.forEach(f => { if (this.selecionados.has(f.id)) f.ativo = true; });
-    const n = this.selecionados.size;
-    this.selecionados.clear();
-    this.bulkAction = '';
-    this.aplicarFiltros();
-    this.showMessage(`${n} fornecedor(es) ativado(s) com sucesso.`, 'success');
+    const ids = Array.from(this.selecionados);
+    const n = ids.length;
+    this.fornecedoresService.alterarStatusLote(ids, true).subscribe({
+      next: () => {
+        this.selecionados.clear(); this.bulkAction = '';
+        this.carregarFornecedores();
+        this.showMessage(`${n} fornecedor(es) ativado(s).`, 'success');
+      },
+      error: () => this.showMessage('Erro ao ativar fornecedores.', 'error')
+    });
   }
 
   private _desativarSelecionados(): void {
-    this.fornecedores.forEach(f => { if (this.selecionados.has(f.id)) f.ativo = false; });
-    const n = this.selecionados.size;
-    this.selecionados.clear();
-    this.bulkAction = '';
-    this.aplicarFiltros();
-    this.showMessage(`${n} fornecedor(es) desativado(s) com sucesso.`, 'success');
+    const ids = Array.from(this.selecionados);
+    const n = ids.length;
+    this.fornecedoresService.alterarStatusLote(ids, false).subscribe({
+      next: () => {
+        this.selecionados.clear(); this.bulkAction = '';
+        this.carregarFornecedores();
+        this.showMessage(`${n} fornecedor(es) desativado(s).`, 'success');
+      },
+      error: () => this.showMessage('Erro ao desativar fornecedores.', 'error')
+    });
   }
 
   private _excluirSelecionados(): void {
-    const n = this.selecionados.size;
-    this.fornecedores = this.fornecedores.filter(f => !this.selecionados.has(f.id));
-    this.selecionados.clear();
-    this.bulkAction = '';
-    this.aplicarFiltros();
-    this.showMessage(`${n} fornecedor(es) excluído(s) com sucesso.`, 'success');
+    const ids = Array.from(this.selecionados);
+    const n = ids.length;
+    this.fornecedoresService.excluirLote(ids).subscribe({
+      next: () => {
+        this.selecionados.clear(); this.bulkAction = '';
+        this.carregarFornecedores();
+        this.showMessage(`${n} fornecedor(es) excluído(s).`, 'success');
+      },
+      error: () => this.showMessage('Erro ao excluir fornecedores.', 'error')
+    });
   }
 
-  novo(): void {
-    this.router.navigate(['/fornecedores/novo']);
+  novo(): void { this.router.navigate(['/fornecedores/novo']); }
+  editar(id: number): void { this.router.navigate([`/fornecedores/${id}/editar`]); }
+
+  excluir(f: Fornecedor): void {
+    this.openConfirm('Excluir fornecedor', `Excluir "${f.nome}"? Esta ação não pode ser desfeita.`, true, () => {
+      this.fornecedoresService.excluir(f.id).subscribe({
+        next: () => {
+          this.carregarFornecedores();
+          this.showMessage(`Fornecedor "${f.nome}" excluído.`, 'success');
+        },
+        error: () => this.showMessage('Erro ao excluir fornecedor.', 'error')
+      });
+    });
   }
 
-  editar(id: number): void {
-    this.router.navigate([`/fornecedores/${id}/editar`]);
-  }
-
-  excluir(fornecedor: Fornecedor): void {
-    this.openConfirm(
-      'Excluir fornecedor',
-      `Tem certeza que deseja excluir o fornecedor "${fornecedor.nome}"? Esta ação não pode ser desfeita.`,
-      true,
-      () => {
-        this.fornecedores = this.fornecedores.filter(f => f.id !== fornecedor.id);
-        this.aplicarFiltros();
-        this.showMessage(`Fornecedor "${fornecedor.nome}" excluído com sucesso.`, 'success');
-      }
-    );
-  }
-
-  toggleAtivo(fornecedor: Fornecedor): void {
-    const acao = fornecedor.ativo ? 'desativar' : 'ativar';
-    this.openConfirm(
-      `${acao.charAt(0).toUpperCase() + acao.slice(1)} fornecedor`,
-      `Tem certeza que deseja ${acao} o fornecedor "${fornecedor.nome}"?`,
-      acao === 'desativar',
-      () => {
-        fornecedor.ativo = !fornecedor.ativo;
-        this.aplicarFiltros();
-        this.showMessage(`Fornecedor "${fornecedor.nome}" ${fornecedor.ativo ? 'ativado' : 'desativado'} com sucesso.`, 'success');
-      }
-    );
+  toggleAtivo(f: Fornecedor): void {
+    const acao = f.ativo ? 'desativar' : 'ativar';
+    this.openConfirm(`${acao.charAt(0).toUpperCase() + acao.slice(1)} fornecedor`,
+      `Tem certeza que deseja ${acao} "${f.nome}"?`, acao === 'desativar', () => {
+        this.fornecedoresService.alterarStatus(f.id, !f.ativo).subscribe({
+          next: () => {
+            this.carregarFornecedores();
+            this.showMessage(`Fornecedor "${f.nome}" ${!f.ativo ? 'ativado' : 'desativado'}.`, 'success');
+          },
+          error: () => this.showMessage('Erro ao alterar status.', 'error')
+        });
+      });
   }
 
   performBulkAction(): void {
-    if (!this.bulkAction) {
-      this.showMessage('Selecione uma ação em lote.', 'error');
-      return;
-    }
-    if (this.quantidadeSelecionados === 0) {
-      this.showMessage('Selecione pelo menos um fornecedor.', 'error');
-      return;
-    }
+    if (!this.bulkAction || !this.quantidadeSelecionados) return;
     const n = this.quantidadeSelecionados;
-    const acaoLabel = this.bulkAction === 'excluir' ? 'excluir' : this.bulkAction === 'ativar' ? 'ativar' : 'desativar';
-    const isDanger = this.bulkAction === 'excluir' || this.bulkAction === 'desativar';
-    const snapshot = this.bulkAction;
-    this.openConfirm(
-      'Ação em lote',
-      `Tem certeza que deseja ${acaoLabel} ${n} fornecedor(es) selecionado(s)?`,
-      isDanger,
-      () => {
-        if (snapshot === 'ativar')    this._ativarSelecionados();
-        if (snapshot === 'desativar') this._desativarSelecionados();
-        if (snapshot === 'excluir')   this._excluirSelecionados();
-      }
-    );
+    const label = this.bulkAction === 'excluir' ? 'excluir' : this.bulkAction === 'ativar' ? 'ativar' : 'desativar';
+    const snap = this.bulkAction;
+    this.openConfirm('Ação em lote', `${label} ${n} fornecedor(es)?`, this.bulkAction !== 'ativar', () => {
+      if (snap === 'ativar')    this._ativarSelecionados();
+      if (snap === 'desativar') this._desativarSelecionados();
+      if (snap === 'excluir')   this._excluirSelecionados();
+    });
   }
 
+  getScoreGeral(f: Fornecedor): number {
+    return Math.round(((f.scoreEntrega + f.scorePontualidade + f.scoreQualidade) / 3) * 10) / 10;
+  }
+
+  getScoreClass(score: number): string {
+    if (score >= 9) return 'score-excelente';
+    if (score >= 7.5) return 'score-bom';
+    if (score >= 6) return 'score-regular';
+    return 'score-ruim';
+  }
+
+  irParaPagina(p: number): void { if (p >= 1 && p <= this.totalPaginas) this.paginaAtual = p; }
+  onItensPorPaginaChange(): void { this.paginaAtual = 1; }
+  trackByIndex(i: number): number { return i; }
+
   showMessage(msg: string, type: 'success' | 'error'): void {
-    this.message = msg;
-    this.messageType = type;
+    this.message = msg; this.messageType = type;
+    setTimeout(() => { this.message = ''; }, 4000);
   }
 
   openConfirm(title: string, message: string, danger: boolean, callback: () => void): void {

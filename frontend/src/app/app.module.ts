@@ -34,7 +34,7 @@ import { CriarSenhaComponent } from './features/criar-senha/criar-senha.componen
     {
       provide: RECAPTCHA_SETTINGS,
       useValue: {
-        siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+        siteKey: '6Lf37_MsAAAAAK997gkVdKgqQrBjLYkhrDpCCO8-'
       }
     }
   ],

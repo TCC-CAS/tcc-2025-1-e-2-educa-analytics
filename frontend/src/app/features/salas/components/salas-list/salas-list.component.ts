@@ -2,7 +2,7 @@ import { Component, AfterViewInit, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { SalasService, Sala } from '../../services/salas.service';
 
-type StatusSala = 'ativa' | 'inativa';
+type StatusSala = 'disponivel' | 'em-manutencao' | 'reservada' | 'interditada';
 type TipoSala = 'sala-de-aula' | 'laboratorio' | 'auditorio' | 'biblioteca' | 'quadra' | 'outro';
 
 interface SalaFiltro {
@@ -91,15 +91,16 @@ export class SalasListComponent implements OnInit, AfterViewInit {
   selectedIds = new Set<number>();
   bulkAction = '';
 
-  // Lote
+  // Lote e menu dropdown
   modalLoteVisible = false;
-  statusLote: StatusSala = 'ativa';
+  statusLote: StatusSala = 'disponivel';
+  statusMenuAberto: number | null = null;
 
   get totalSelecionados(): number { return this.selectedIds.size; }
 
   abrirModalLote(): void {
     if (this.selectedIds.size === 0) return;
-    this.statusLote = 'ativa';
+    this.statusLote = 'disponivel';
     this.modalLoteVisible = true;
   }
 
@@ -177,6 +178,13 @@ export class SalasListComponent implements OnInit, AfterViewInit {
       subtree: true,
       attributes: true,
       attributeFilter: ['style', 'class']
+    });
+
+    // Fechar menu de status ao clicar fora
+    document.addEventListener('click', () => {
+      if (this.statusMenuAberto !== null) {
+        this.fecharStatusMenu();
+      }
     });
 
     setTimeout(() => {
@@ -323,22 +331,51 @@ export class SalasListComponent implements OnInit, AfterViewInit {
   }
 
   editSala(sala: Sala): void {
-    this.router.navigate(['/salas', sala.id, 'editar']);
+    if (sala.id) {
+      this.router.navigate(['/salas', sala.id, 'editar']);
+    }
   }
 
-  toggleStatus(sala: Sala): void {
-    const acao = sala.status === 'ativa' ? 'desativar' : 'ativar';
-    const novoStatus: StatusSala = sala.status === 'ativa' ? 'inativa' : 'ativa';
+  toggleStatusMenu(salaId: number | undefined, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (!salaId) return;
+    this.statusMenuAberto = this.statusMenuAberto === salaId ? null : salaId;
+  }
+
+  fecharStatusMenu(): void {
+    this.statusMenuAberto = null;
+  }
+
+  alterarStatusPara(sala: Sala, novoStatus: StatusSala, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.fecharStatusMenu();
+    
+    if (sala.status === novoStatus) {
+      this.showMessage('A sala já está com este status.', 'error');
+      return;
+    }
+
+    const statusLabels: {[key: string]: string} = {
+      'disponivel': 'Disponível',
+      'em-manutencao': 'Em manutenção',
+      'reservada': 'Reservada',
+      'interditada': 'Interditada'
+    };
+    
     this.openConfirm(
-      acao === 'ativar' ? 'Ativar sala' : 'Desativar sala',
-      `Deseja ${acao} a sala ${sala.codigo}?`,
-      false,
+      'Alterar status',
+      `Deseja alterar o status da sala ${sala.codigo} para "${statusLabels[novoStatus]}"?`,
+      novoStatus === 'interditada',
       () => {
         if (sala.id) {
           this.salasService.atualizarStatus(sala.id, novoStatus).subscribe({
             next: () => {
               this.carregarSalas();
-              this.showMessage(`Sala ${sala.codigo} ${novoStatus === 'ativa' ? 'ativada' : 'desativada'} com sucesso.`, 'success');
+              this.showMessage(`Status da sala ${sala.codigo} alterado para "${statusLabels[novoStatus]}" com sucesso.`, 'success');
             },
             error: (err) => {
               console.error('Erro ao atualizar status:', err);
@@ -348,6 +385,19 @@ export class SalasListComponent implements OnInit, AfterViewInit {
         }
       }
     );
+  }
+
+  getStatusLabel(status: string): string {
+    const labels: {[key: string]: string} = {
+      'disponivel': 'Disponível',
+      'em-manutencao': 'Em manutenção',
+      'reservada': 'Reservada',
+      'interditada': 'Interditada',
+      // Legacy
+      'ativa': 'Disponível',
+      'inativa': 'Interditada'
+    };
+    return labels[status] || status;
   }
 
   deleteSala(sala: Sala): void {
@@ -389,19 +439,8 @@ export class SalasListComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    const novoStatus: StatusSala = this.bulkAction === 'ativar' ? 'ativa' : 'inativa';
-    const acao = novoStatus === 'ativa' ? 'ativar' : 'desativar';
-    this.openConfirm(
-      `${acao.charAt(0).toUpperCase() + acao.slice(1)} salas`,
-      `Deseja ${acao} ${label} selecionada${count > 1 ? 's' : ''}?`,
-      false,
-      () => {
-        this.salas = this.salas.map(s => (s.id && this.selectedIds.has(s.id)) ? { ...s, status: novoStatus } : s);
-        this.selectedIds.clear(); this.bulkAction = '';
-        this.applyFilters();
-        this.showMessage(`Salas ${novoStatus === 'ativa' ? 'ativadas' : 'desativadas'} com sucesso.`, 'success');
-      }
-    );
+    // Nota: este código é mantido para compatibilidade, mas não é mais usado na UI
+    // A alteração de status em lote agora é feita através do statusLote
   }
 
   openConfirm(title: string, message: string, danger: boolean, callback: () => void): void {
