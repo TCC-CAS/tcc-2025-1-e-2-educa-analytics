@@ -5,7 +5,7 @@ import { HttpClientModule } from '@angular/common/http';
 
 import { ReposicoesRoutingModule } from './reposicoes-routing.module';
 import { ReposicoesListComponent } from './components/reposicoes-list/reposicoes-list.component';
-import { ReposicoesService } from '../../../services/reposicoes.service';
+import { ReposicoesService } from './services/reposicoes.service';
 
 @NgModule({
   declarations: [

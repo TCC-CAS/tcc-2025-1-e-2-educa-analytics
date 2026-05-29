@@ -1,98 +1,187 @@
-<div class="avaliacao-form-container" *ngIf="avaliacao">
-  <div class="header">
-    <button class="btn-voltar" (click)="voltar()">← Voltar</button>
-    <h1>{{ avaliacao.titulo }}</h1>
-    <div class="progresso-info">{{ progresso }}% concluído</div>
-  </div>
+<!-- ═══════════ TELA DE CONCLUSÃO ═══════════ -->
+<div class="completion-screen" *ngIf="showCompletion">
+  <div class="completion-card">
+    <div class="confetti-ring">🎉</div>
+    <h1 class="completion-title">Avaliação Concluída!</h1>
+    <p class="completion-sub">Obrigado pela sua participação. Sua opinião é muito importante!</p>
 
-  <div class="progresso-bar">
-    <div class="progresso-fill" [style.width.%]="progresso"></div>
-  </div>
+    <div class="xp-burst">
+      <span class="xp-plus">+{{ xpEarned }}</span>
+      <span class="xp-label-big">XP conquistados</span>
+    </div>
 
-  <div class="descricao">
-    {{ avaliacao.descricao }}
-  </div>
-
-  <form #avaliacaoForm="ngForm" (ngSubmit)="enviarAvaliacao(avaliacaoForm)">
-    <div class="perguntas-section">
-      <div *ngFor="let pergunta of avaliacao.perguntas; let i = index" 
-           class="pergunta-item">
-        <div class="pergunta-numero">{{ i + 1 }}/{{ avaliacao.perguntas.length }}</div>
-        
-        <label class="pergunta-texto">
-          {{ pergunta.texto }}
-          <span *ngIf="pergunta.obrigatoria" class="obrigatoria">*</span>
-        </label>
-
-        <!-- Pergunta Escala (1-5) -->
-        <div *ngIf="pergunta.tipo === 'escala'" class="resposta-escala">
-          <div class="opcoes-escala">
-            <button *ngFor="let opt of [1,2,3,4,5]" 
-                    type="button"
-                    class="opcao-escala" 
-                    [class.selecionada]="respostas[pergunta.id] === opt"
-                    (click)="responderPergunta(pergunta.id, opt); $any(opt)">
-              {{ opt }}
-            </button>
-          </div>
-          <div class="labels-escala">
-            <span>Discordo</span>
-            <span>Neutro</span>
-            <span>Concordo</span>
-          </div>
-        </div>
-
-        <!-- Pergunta Sim/Não -->
-        <div *ngIf="pergunta.tipo === 'sim_nao'" class="resposta-sim-nao">
-          <button type="button"
-                  class="opcao-sim-nao"
-                  [class.selecionada]="respostas[pergunta.id] === 'sim'"
-                  (click)="responderPergunta(pergunta.id, 'sim')">
-            Sim
-          </button>
-          <button type="button"
-                  class="opcao-sim-nao"
-                  [class.selecionada]="respostas[pergunta.id] === 'nao'"
-                  (click)="responderPergunta(pergunta.id, 'nao')">
-            Não
-          </button>
-        </div>
-
-        <!-- Pergunta Múltipla Escolha -->
-        <div *ngIf="pergunta.tipo === 'multipla'" class="resposta-multipla">
-          <button *ngFor="let opcao of pergunta.opcoes"
-                  type="button"
-                  class="opcao-multipla"
-                  [class.selecionada]="respostas[pergunta.id] === opcao"
-                  (click)="responderPergunta(pergunta.id, opcao)">
-            {{ opcao }}
-          </button>
-        </div>
-
-        <!-- Pergunta Aberta -->
-        <div *ngIf="pergunta.tipo === 'aberta'" class="resposta-aberta">
-          <textarea 
-            [name]="pergunta.id"
-            [(ngModel)]="respostas[pergunta.id]"
-            (ngModelChange)="responderPergunta(pergunta.id, $event)"
-            rows="4"
-            placeholder="Digite sua resposta aqui..."
-            [required]="pergunta.obrigatoria"></textarea>
-        </div>
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="stat-val">{{ totalQuestions }}</span>
+        <span class="stat-lbl">Respostas</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-val">{{ maxStreak }}</span>
+        <span class="stat-lbl">Maior sequência</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-val">{{ progresso }}%</span>
+        <span class="stat-lbl">Completado</span>
       </div>
     </div>
 
-    <div class="form-actions">
-      <button type="button" class="btn-cancelar" (click)="voltar()">
-        Cancelar
-      </button>
-      <button type="submit" class="btn-enviar">
-        Enviar Avaliação
-      </button>
-    </div>
-  </form>
-
-  <div class="nota-anonimidade">
-    <strong>🔒 Sua privacidade:</strong> Esta avaliação é completamente anônima. Seus dados pessoais não serão associados às suas respostas.
+    <button class="btn-return" (click)="voltarParaLista()">
+      Ver minhas avaliações
+    </button>
   </div>
+</div>
+
+<!-- ═══════════ FORMULÁRIO PRINCIPAL ═══════════ -->
+<div class="avaliacao-form-page" *ngIf="!showCompletion && avaliacao">
+
+  <!-- ── Top bar ── -->
+  <div class="top-bar">
+    <button class="btn-sair" (click)="voltar()" title="Sair da avaliação">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+
+    <div class="progress-wrap">
+      <div class="progress-track">
+        <div class="progress-fill" [style.width.%]="progresso"></div>
+      </div>
+      <span class="progress-pct">{{ progresso }}%</span>
+    </div>
+
+    <div class="xp-chip">
+      <span class="xp-icon">⚡</span>
+      <span class="xp-val">{{ xpEarned }} XP</span>
+    </div>
+  </div>
+
+  <!-- ── Question area ── -->
+  <div class="question-area">
+
+    <!-- Streak badge -->
+    <div class="streak-pill" *ngIf="streak >= 3" [class.hot]="streak >= 5">
+      🔥 {{ streak }} em sequência!
+    </div>
+
+    <!-- Step counter + dots -->
+    <div class="step-counter">
+      <span class="step-current">{{ currentQuestionIndex + 1 }}</span>
+      <span class="step-sep">/</span>
+      <span class="step-total">{{ totalQuestions }}</span>
+    </div>
+
+    <!-- Question card -->
+    <div class="question-card"
+         [class.exiting-forward]="isExiting  && exitDirection === 'forward'"
+         [class.exiting-backward]="isExiting && exitDirection === 'backward'"
+         [class.entering]="isEntering"
+         *ngIf="currentQuestion">
+
+      <p class="question-text">
+        {{ currentQuestion.texto }}
+        <span class="required-star" *ngIf="currentQuestion.obrigatoria">*</span>
+      </p>
+
+      <!-- ── ESCALA 1–5 ── -->
+      <div *ngIf="currentQuestion.tipo === 'escala'" class="answer-scale">
+        <div class="scale-labels-top">
+          <span>Muito ruim</span>
+          <span>Excelente</span>
+        </div>
+        <div class="scale-options">
+          <button *ngFor="let opt of [1,2,3,4,5]"
+                  type="button"
+                  class="scale-btn"
+                  [class.selected]="respostas[currentQuestion.id] === opt"
+                  [class.opt-1]="opt === 1"
+                  [class.opt-2]="opt === 2"
+                  [class.opt-3]="opt === 3"
+                  [class.opt-4]="opt === 4"
+                  [class.opt-5]="opt === 5"
+                  (click)="responderPergunta(currentQuestion.id, opt)">
+            <span class="scale-num">{{ opt }}</span>
+            <span class="scale-emoji">{{ ['😞','😕','😐','🙂','😄'][opt - 1] }}</span>
+          </button>
+        </div>
+        <p class="keyboard-hint">Pressione <kbd>1</kbd>–<kbd>5</kbd> no teclado</p>
+      </div>
+
+      <!-- ── SIM / NÃO ── -->
+      <div *ngIf="currentQuestion.tipo === 'sim_nao'" class="answer-yesno">
+        <button type="button"
+                class="yesno-btn yes"
+                [class.selected]="respostas[currentQuestion.id] === 'sim'"
+                (click)="responderPergunta(currentQuestion.id, 'sim')">
+          <span class="yn-emoji">👍</span>
+          <span class="yn-label">Sim</span>
+          <kbd class="yn-key">S</kbd>
+        </button>
+        <button type="button"
+                class="yesno-btn no"
+                [class.selected]="respostas[currentQuestion.id] === 'nao'"
+                (click)="responderPergunta(currentQuestion.id, 'nao')">
+          <span class="yn-emoji">👎</span>
+          <span class="yn-label">Não</span>
+          <kbd class="yn-key">N</kbd>
+        </button>
+      </div>
+
+      <!-- ── MÚLTIPLA ESCOLHA ── -->
+      <div *ngIf="currentQuestion.tipo === 'multipla'" class="answer-multipla">
+        <button *ngFor="let opcao of currentQuestion.opcoes; let i = index"
+                type="button"
+                class="multipla-btn"
+                [class.selected]="respostas[currentQuestion.id] === opcao"
+                (click)="responderPergunta(currentQuestion.id, opcao)">
+          <span class="multipla-letter">{{ 'ABCDE'[i] }}</span>
+          <span class="multipla-text">{{ opcao }}</span>
+        </button>
+      </div>
+
+      <!-- ── ABERTA ── -->
+      <div *ngIf="currentQuestion.tipo === 'aberta'" class="answer-aberta">
+        <textarea
+          [name]="currentQuestion.id"
+          [(ngModel)]="respostas[currentQuestion.id]"
+          rows="4"
+          placeholder="Digite sua resposta... (opcional)"></textarea>
+        <p class="keyboard-hint">Pressione <kbd>→</kbd> ou clique em "Continuar" para avançar</p>
+      </div>
+
+    </div><!-- /.question-card -->
+
+  </div><!-- /.question-area -->
+
+  <!-- ── Bottom bar ── -->
+  <div class="bottom-bar">
+    <button class="btn-prev"
+            (click)="goToPrevious()"
+            [disabled]="isFirstQuestion || autoAdvancing">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Anterior
+    </button>
+
+    <div class="dot-track">
+      <span *ngFor="let p of avaliacao?.perguntas; let i = index"
+            class="dot"
+            [class.active]="i === currentQuestionIndex"
+            [class.done]="respostas[p.id] !== undefined && respostas[p.id] !== ''">
+      </span>
+    </div>
+
+    <button class="btn-next"
+            (click)="goToNext()"
+            [disabled]="!canAdvance || autoAdvancing"
+            [class.pulse]="canAdvance && !autoAdvancing">
+      {{ isLastQuestion ? 'Concluir 🎯' : 'Continuar' }}
+      <svg *ngIf="!isLastQuestion" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+  </div>
+
 </div>

@@ -1,6 +1,13 @@
 import { Component, OnInit } from '@angular/core';
+import { SalasService } from '../../../salas/services/salas.service';
+import { Sala } from '../../../salas/services/salas.service';
+import { TurmasService } from '../../services/turmas.service';
+import { DisciplinasService, Disciplina } from '../../services/disciplinas.service';
+import { EducadoresService, Educador } from '../../services/educadores.service';
+import { CronogramaService, HorarioCronograma, CriarAulaRequest } from '../../services/cronograma.service';
+import { forkJoin } from 'rxjs';
 
-export type DiaSemana = 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta';
+export type DiaSemana = 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado';
 
 export interface AulaSlot {
   id: string;
@@ -30,45 +37,45 @@ const CORES = [
   { bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4' },
 ];
 
-const MOCK_TURMAS = [
-  { id: 't1', nome: '6A', serie: '6º Ano', turno: 'Manhã' },
-  { id: 't2', nome: '7B', serie: '7º Ano', turno: 'Manhã' },
-  { id: 't3', nome: '8A', serie: '8º Ano', turno: 'Tarde' },
-  { id: 't4', nome: '9B', serie: '9º Ano', turno: 'Tarde' },
-  { id: 't5', nome: '1EM-A', serie: '1ª Série EM', turno: 'Noite' },
-];
+// Interfaces para turmas (backend retorna diferente)
+interface TurmaBackend {
+  id: number;
+  codigo: string;
+  nome: string;
+  serie: string;
+  periodo: 'matutino' | 'vespertino' | 'noturno' | 'integral';
+  anoLetivo: number;
+  vagas: number;
+}
 
-const MOCK_DISCIPLINAS = [
-  { id: 'd1', nome: 'Matemática' },
-  { id: 'd2', nome: 'Português' },
-  { id: 'd3', nome: 'Ciências' },
-  { id: 'd4', nome: 'História' },
-  { id: 'd5', nome: 'Geografia' },
-  { id: 'd6', nome: 'Inglês' },
-  { id: 'd7', nome: 'Educação Física' },
-  { id: 'd8', nome: 'Artes' },
-  { id: 'd9', nome: 'Filosofia' },
-  { id: 'd10', nome: 'Sociologia' },
-];
+interface TurmaLocal {
+  id: string;
+  nome: string;
+  serie: string;
+  turno: 'Manhã' | 'Tarde' | 'Noite';
+  anoLetivo: number;
+  vagas: number;
+}
 
-const MOCK_EDUCADORES = [
-  { id: 'e1', nome: 'Prof. Ana Silva' },
-  { id: 'e2', nome: 'Prof. Carlos Souza' },
-  { id: 'e3', nome: 'Prof. Maria Santos' },
-  { id: 'e4', nome: 'Prof. João Lima' },
-  { id: 'e5', nome: 'Prof. Lúcia Ferreira' },
-  { id: 'e6', nome: 'Prof. Roberto Alves' },
-];
+interface DisciplinaLocal {
+  id: string;
+  nome: string;
+}
 
-const MOCK_SALAS = [
-  { id: 's1', nome: 'Sala 101' },
-  { id: 's2', nome: 'Sala 102' },
-  { id: 's3', nome: 'Sala 201' },
-  { id: 's4', nome: 'Lab. Ciências' },
-  { id: 's5', nome: 'Lab. Informática' },
-  { id: 's6', nome: 'Quadra' },
-  { id: 's7', nome: 'Auditório' },
-];
+interface EducadorLocal {
+  id: string;
+  nome: string;
+}
+
+// Mock salas removido - agora usa dados do backend
+interface SalaSimples {
+  id: number;
+  nome: string;
+  codigo?: string;
+  tipo?: string;
+  capacidade?: number;
+  status?: string;
+}
 
 @Component({
   selector: 'app-cronograma-view',
@@ -77,13 +84,19 @@ const MOCK_SALAS = [
 })
 export class CronogramaViewComponent implements OnInit {
 
-  turmas = MOCK_TURMAS;
-  disciplinas = MOCK_DISCIPLINAS;
-  educadores = MOCK_EDUCADORES;
-  salas = MOCK_SALAS;
+  turmas: TurmaLocal[] = [];
+  disciplinas: DisciplinaLocal[] = [];
+  educadores: EducadorLocal[] = [];
+  salas: SalaSimples[] = [];
+  salasCarregando = false;
+  dadosCarregando = false;
+  anosLetivos: number[] = [];
+  salaConflito: { dia: DiaSemana; hora: string; salaId: number } | null = null;
 
   turmaSelecionadaId: string = '';
-  anoLetivo: string = '2025';
+  anoLetivo: number = 2026;
+  disciplinaSelecionadaId: string = '';
+  educadoresDisponiveis: EducadorLocal[] = [];
 
   dias: { key: DiaSemana; label: string; abrev: string }[] = [
     { key: 'segunda', label: 'Segunda-feira', abrev: 'Seg' },
@@ -91,6 +104,7 @@ export class CronogramaViewComponent implements OnInit {
     { key: 'quarta',  label: 'Quarta-feira',   abrev: 'Qua' },
     { key: 'quinta',  label: 'Quinta-feira',   abrev: 'Qui' },
     { key: 'sexta',   label: 'Sexta-feira',    abrev: 'Sex' },
+    { key: 'sabado',  label: 'Sábado',         abrev: 'Sáb' },
   ];
 
   horas: string[] = [];
@@ -117,6 +131,14 @@ export class CronogramaViewComponent implements OnInit {
   // Message
   message = '';
   messageType: 'success' | 'error' = 'success';
+
+  constructor(
+    private salasService: SalasService,
+    private turmasService: TurmasService,
+    private disciplinasService: DisciplinasService,
+    private educadoresService: EducadoresService,
+    private cronogramaService: CronogramaService
+  ) {}
 
   private corMap: Record<string, { bg: string; text: string; border: string }> = {};
   private corIndex = 0;
@@ -150,28 +172,190 @@ export class CronogramaViewComponent implements OnInit {
     return this.horas.filter(h => parseInt(h) >= 7 && parseInt(h) <= 12);
   }
 
+  getSalasEmUso(): number {
+    const salasUnicas = new Set(
+      this.slotsDaTurma
+        .filter(s => s.salaId)
+        .map(s => s.salaId)
+    );
+    return salasUnicas.size;
+  }
+
   ngOnInit(): void {
     for (let h = 7; h <= 22; h++) {
       this.horas.push(`${h.toString().padStart(2, '0')}:00`);
     }
 
-    try {
-      const stored = localStorage.getItem('cronograma_slots_v2');
-      if (stored) {
-        this.slots = JSON.parse(stored);
-        // Rebuild corMap
-        this.slots.forEach(s => {
-          if (!this.corMap[s.disciplinaId]) {
-            this.corMap[s.disciplinaId] = { bg: s.corBg, text: s.corText, border: s.corBorder };
-          }
-        });
-        this.corIndex = Object.keys(this.corMap).length;
-      }
-    } catch {}
+    // Carregar todos os dados do backend
+    this.carregarDadosIniciais();
+  }
 
-    if (this.turmas.length > 0) {
-      this.turmaSelecionadaId = this.turmas[0].id;
+  carregarDadosIniciais(): void {
+    this.dadosCarregando = true;
+    
+    forkJoin({
+      anosLetivos: this.turmasService.listarAnosLetivos(),
+      disciplinas: this.disciplinasService.listarDisciplinas('ativa'),
+      educadores: this.educadoresService.listarEducadores('ativo'),
+      salas: this.salasService.listarSalas()
+    }).subscribe({
+      next: (dados) => {
+        // Anos letivos
+        this.anosLetivos = dados.anosLetivos;
+        if (this.anosLetivos.length > 0) {
+          this.anoLetivo = this.anosLetivos[0];
+        }
+
+        // Disciplinas
+        this.disciplinas = dados.disciplinas.map((d: Disciplina) => ({
+          id: d.id.toString(),
+          nome: d.nome
+        }));
+
+        // Educadores
+        this.educadores = dados.educadores.map((e: Educador) => ({
+          id: e.id.toString(),
+          nome: e.nome
+        }));
+        this.educadoresDisponiveis = [...this.educadores];
+
+        // Salas
+        const salasAtivas = dados.salas.data.filter((sala: Sala) => sala.status === 'ativa');
+        this.salas = salasAtivas.map((sala: Sala) => ({
+          id: sala.id,
+          nome: sala.nome,
+          codigo: sala.codigo,
+          tipo: sala.tipo,
+          capacidade: sala.capacidade,
+          status: sala.status
+        }));
+
+        this.dadosCarregando = false;
+        
+        // Carregar turmas do ano letivo selecionado
+        this.carregarTurmas();
+        
+        console.log('[Cronograma] Dados carregados:', {
+          anosLetivos: this.anosLetivos.length,
+          disciplinas: this.disciplinas.length,
+          educadores: this.educadores.length,
+          salas: this.salas.length
+        });
+      },
+      error: (err) => {
+        console.error('[Cronograma] Erro ao carregar dados:', err);
+        this.showMsg('Erro ao carregar dados. Verifique a conexão.', 'error');
+        this.dadosCarregando = false;
+      }
+    });
+  }
+
+  carregarTurmas(): void {
+    this.turmasService.listarTurmas(this.anoLetivo).subscribe({
+      next: (turmasBackend: TurmaBackend[]) => {
+        this.turmas = turmasBackend.map(t => ({
+          id: t.id.toString(),
+          nome: t.nome,
+          serie: t.serie,
+          turno: this.periodoParaTurno(t.periodo),
+          anoLetivo: t.anoLetivo,
+          vagas: t.vagas
+        }));
+
+        if (this.turmas.length > 0 && !this.turmaSelecionadaId) {
+          this.turmaSelecionadaId = this.turmas[0].id;
+          this.carregarCronogramaTurma();
+        }
+        
+        console.log('[Cronograma] Turmas carregadas:', this.turmas.length);
+      },
+      error: (err) => {
+        console.error('[Cronograma] Erro ao carregar turmas:', err);
+        this.showMsg('Erro ao carregar turmas.', 'error');
+      }
+    });
+  }
+
+  periodoParaTurno(periodo: string): 'Manhã' | 'Tarde' | 'Noite' {
+    const mapa: Record<string, 'Manhã' | 'Tarde' | 'Noite'> = {
+      'matutino': 'Manhã',
+      'vespertino': 'Tarde',
+      'noturno': 'Noite',
+      'integral': 'Manhã'
+    };
+    return mapa[periodo] || 'Manhã';
+  }
+
+  onTurmaSelecionada(): void {
+    this.carregarCronogramaTurma();
+  }
+
+  onAnoLetivoChange(): void {
+    this.turmaSelecionadaId = '';
+    this.slots = [];
+    this.carregarTurmas();
+  }
+
+  carregarCronogramaTurma(): void {
+    if (!this.turmaSelecionadaId) return;
+
+    const turmaId = parseInt(this.turmaSelecionadaId);
+    this.cronogramaService.listarCronogramaTurma(turmaId).subscribe({
+      next: (horarios: HorarioCronograma[]) => {
+        // Converter horários do backend para AulaSlot
+        this.slots = horarios.map(h => {
+          const cor = this.getCorDisciplina(h.idDisciplina.toString());
+          return {
+            id: h.id?.toString() || Date.now().toString(),
+            turmaId: h.idTurma.toString(),
+            disciplinaId: h.idDisciplina.toString(),
+            disciplina: h.disciplina?.nome || '',
+            educadorId: h.idEducador.toString(),
+            educador: h.educador?.nome || '',
+            salaId: h.idSala?.toString() || '',
+            sala: h.sala?.nome || '',
+            diaSemana: h.diaSemana,
+            horaInicio: h.horaInicio,
+            horaFim: h.horaFim,
+            corBg: cor.bg,
+            corText: cor.text,
+            corBorder: cor.border
+          };
+        });
+        
+        console.log('[Cronograma] Horários carregados:', this.slots.length);
+      },
+      error: (err) => {
+        console.error('[Cronograma] Erro ao carregar cronograma:', err);
+        this.showMsg('Erro ao carregar cronograma da turma.', 'error');
+      }
+    });
+  }
+
+  onDisciplinaSelecionada(): void {
+    if (!this.novoSlot.disciplinaId) {
+      this.educadoresDisponiveis = [...this.educadores];
+      return;
     }
+
+    const disciplinaId = parseInt(this.novoSlot.disciplinaId);
+    this.educadoresService.listarEducadoresPorDisciplina(disciplinaId, 'ativo').subscribe({
+      next: (educadores: Educador[]) => {
+        this.educadoresDisponiveis = educadores.map(e => ({
+          id: e.id.toString(),
+          nome: e.nome
+        }));
+        console.log('[Cronograma] Educadores disponíveis para disciplina:', this.educadoresDisponiveis.length);
+      },
+      error: (err) => {
+        console.error('[Cronograma] Erro ao buscar educadores:', err);
+        this.educadoresDisponiveis = [...this.educadores];
+      }
+    });
+  }
+
+  carregarSalas(): void {
+    // Função mantida para compatibilidade (salas já carregadas em carregarDadosIniciais)
   }
 
   getCorDisciplina(disciplinaId: string): { bg: string; text: string; border: string } {
@@ -229,70 +413,145 @@ export class CronogramaViewComponent implements OnInit {
     this.confirmDeleteVisible = false;
   }
 
+  verificarConflitoSala(dia: DiaSemana, horaInicio: string, horaFim: string, salaId: string, slotAtualId?: string): boolean {
+    if (!salaId) return false;
+    
+    const salaIdNum = typeof salaId === 'string' ? parseInt(salaId) : salaId;
+    
+    return this.slots.some(slot => {
+      // Ignorar o próprio slot se estiver editando
+      if (slotAtualId && slot.id === slotAtualId) return false;
+      
+      // Verificar se é a mesma sala e mesmo dia
+      const slotSalaId = typeof slot.salaId === 'string' ? parseInt(slot.salaId) : slot.salaId;
+      if (slotSalaId !== salaIdNum || slot.diaSemana !== dia) return false;
+      
+      // Verificar sobreposição de horários
+      const slotInicio = this.horaParaMinutos(slot.horaInicio);
+      const slotFim = this.horaParaMinutos(slot.horaFim);
+      const novoInicio = this.horaParaMinutos(horaInicio);
+      const novoFim = this.horaParaMinutos(horaFim);
+      
+      return (novoInicio < slotFim && novoFim > slotInicio);
+    });
+  }
+
+  private horaParaMinutos(hora: string): number {
+    const [h, m] = hora.split(':').map(Number);
+    return h * 60 + m;
+  }
+
   salvarSlot(): void {
-    if (!this.novoSlot.disciplinaId) return;
-
-    const disc = this.disciplinas.find(d => d.id === this.novoSlot.disciplinaId);
-    const educ = this.educadores.find(e => e.id === this.novoSlot.educadorId);
-    const sala = this.salas.find(s => s.id === this.novoSlot.salaId);
-    const cor  = this.getCorDisciplina(this.novoSlot.disciplinaId);
-
-    if (this.editingSlot) {
-      const idx = this.slots.findIndex(s => s.id === this.editingSlot!.id);
-      if (idx >= 0) {
-        this.slots[idx] = {
-          ...this.editingSlot,
-          disciplinaId: this.novoSlot.disciplinaId,
-          disciplina: disc?.nome ?? '',
-          educadorId: this.novoSlot.educadorId,
-          educador: educ?.nome ?? '',
-          salaId: this.novoSlot.salaId,
-          sala: sala?.nome ?? '',
-          horaInicio: this.novoSlot.horaInicio,
-          horaFim: this.novoSlot.horaFim,
-          corBg: cor.bg, corText: cor.text, corBorder: cor.border,
-        };
-      }
-      this.showMsg('Aula atualizada com sucesso!', 'success');
-    } else {
-      this.slots.push({
-        id: Date.now().toString(),
-        turmaId: this.turmaSelecionadaId,
-        disciplinaId: this.novoSlot.disciplinaId,
-        disciplina: disc?.nome ?? '',
-        educadorId: this.novoSlot.educadorId,
-        educador: educ?.nome ?? '',
-        salaId: this.novoSlot.salaId,
-        sala: sala?.nome ?? '',
-        diaSemana: this.modalDia!,
-        horaInicio: this.novoSlot.horaInicio,
-        horaFim: this.novoSlot.horaFim,
-        corBg: cor.bg, corText: cor.text, corBorder: cor.border,
-      });
-      this.showMsg('Aula adicionada com sucesso!', 'success');
+    if (!this.novoSlot.disciplinaId || !this.novoSlot.educadorId) {
+      this.showMsg('Preencha disciplina e educador!', 'error');
+      return;
     }
 
-    this.persist();
-    this.fecharModal();
+    // Verificar conflito de sala
+    if (this.novoSlot.salaId) {
+      const temConflito = this.verificarConflitoSala(
+        this.modalDia!,
+        this.novoSlot.horaInicio,
+        this.novoSlot.horaFim,
+        this.novoSlot.salaId,
+        this.editingSlot?.id
+      );
+
+      if (temConflito) {
+        const sala = this.salas.find(s => s.id.toString() === this.novoSlot.salaId.toString());
+        this.showMsg(`A sala "${sala?.nome || 'selecionada'}" já está ocupada neste horário!`, 'error');
+        return;
+      }
+    }
+
+    const aulaRequest: CriarAulaRequest = {
+      idTurma: parseInt(this.turmaSelecionadaId),
+      idDisciplina: parseInt(this.novoSlot.disciplinaId),
+      idEducador: this.novoSlot.educadorId,
+      idSala: this.novoSlot.salaId ? parseInt(this.novoSlot.salaId) : undefined,
+      diaSemana: this.modalDia!,
+      horaInicio: this.novoSlot.horaInicio,
+      horaFim: this.novoSlot.horaFim,
+      observacoes: ''
+    };
+
+    if (this.editingSlot && this.editingSlot.id) {
+      // Atualizar aula existente
+      this.cronogramaService.atualizarAula(parseInt(this.editingSlot.id), aulaRequest).subscribe({
+        next: () => {
+          this.showMsg('Aula atualizada com sucesso!', 'success');
+          this.carregarCronogramaTurma();
+          this.fecharModal();
+        },
+        error: (err) => {
+          console.error('[Cronograma] Erro ao atualizar aula:', err);
+          this.showMsg('Erro ao atualizar aula. Verifique conflitos.', 'error');
+        }
+      });
+    } else {
+      // Criar nova aula
+      this.cronogramaService.criarAula(aulaRequest).subscribe({
+        next: () => {
+          this.showMsg('Aula adicionada com sucesso!', 'success');
+          this.carregarCronogramaTurma();
+          this.fecharModal();
+        },
+        error: (err) => {
+          console.error('[Cronograma] Erro ao criar aula:', err);
+          this.showMsg('Erro ao adicionar aula. Verifique conflitos.', 'error');
+        }
+      });
+    }
   }
 
   excluirSlot(): void {
-    if (!this.editingSlot) return;
-    this.slots = this.slots.filter(s => s.id !== this.editingSlot!.id);
-    this.persist();
-    this.showMsg('Aula removida.', 'success');
-    this.fecharModal();
+    if (!this.editingSlot || !this.editingSlot.id) return;
+    
+    this.cronogramaService.deletarAula(parseInt(this.editingSlot.id)).subscribe({
+      next: () => {
+        this.showMsg('Aula removida com sucesso!', 'success');
+        this.carregarCronogramaTurma();
+        this.fecharModal();
+      },
+      error: (err) => {
+        console.error('[Cronograma] Erro ao excluir aula:', err);
+        this.showMsg('Erro ao remover aula.', 'error');
+      }
+    });
   }
 
   limparCronograma(): void {
-    this.slots = this.slots.filter(s => s.turmaId !== this.turmaSelecionadaId);
-    this.persist();
-    this.confirmLimpar = false;
-    this.showMsg('Cronograma limpo.', 'success');
+    if (!this.turmaSelecionadaId) return;
+
+    const slotsParaExcluir = this.slotsDaTurma.filter(s => s.id);
+    
+    if (slotsParaExcluir.length === 0) {
+      this.showMsg('Não há aulas para limpar.', 'error');
+      this.confirmLimpar = false;
+      return;
+    }
+
+    // Excluir todas as aulas da turma
+    const exclusoes = slotsParaExcluir.map(slot => 
+      this.cronogramaService.deletarAula(parseInt(slot.id!))
+    );
+
+    forkJoin(exclusoes).subscribe({
+      next: () => {
+        this.showMsg(`${slotsParaExcluir.length} aula(s) removida(s).`, 'success');
+        this.carregarCronogramaTurma();
+        this.confirmLimpar = false;
+      },
+      error: (err) => {
+        console.error('[Cronograma] Erro ao limpar cronograma:', err);
+        this.showMsg('Erro ao limpar cronograma.', 'error');
+        this.confirmLimpar = false;
+      }
+    });
   }
 
   private persist(): void {
-    try { localStorage.setItem('cronograma_slots_v2', JSON.stringify(this.slots)); } catch {}
+    // localStorage removido - dados salvos no backend
   }
 
   private showMsg(msg: string, type: 'success' | 'error'): void {
@@ -303,6 +562,20 @@ export class CronogramaViewComponent implements OnInit {
 
   getDiaLabel(dia: DiaSemana): string {
     return this.dias.find(d => d.key === dia)?.label ?? dia;
+  }
+
+  getTipoSalaLabel(tipo?: string): string {
+    if (!tipo) return '';
+    const tipoMap: Record<string, string> = {
+      'sala-de-aula': 'Sala de Aula',
+      'laboratorio': 'Laboratório',
+      'auditorio': 'Auditório',
+      'biblioteca': 'Biblioteca',
+      'quadra': 'Quadra',
+      'sala-de-reuniao': 'Sala de Reunião',
+      'outro': 'Outro'
+    };
+    return tipoMap[tipo] || tipo;
   }
 
   trackByHora(_: number, h: string) { return h; }

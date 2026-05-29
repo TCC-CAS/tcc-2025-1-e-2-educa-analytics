@@ -1,0 +1,215 @@
+.cronograma-educando-container {
+  padding: 20px;
+  
+  .header {
+    margin-bottom: 20px;
+    
+    h2 {
+      margin-bottom: 5px;
+      color: #333;
+    }
+    
+    .turma-info {
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+  
+  .content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════
+  // GRADE COMPACTA
+  // ═══════════════════════════════════════════════════════════════════════
+  .grade-compacta {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+    h3 {
+      margin-bottom: 15px;
+      color: #3788d8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .dias-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      
+      .dia-coluna {
+        .dia-header {
+          background: #3788d8;
+          color: white;
+          text-align: center;
+          padding: 8px;
+          border-radius: 6px 6px 0 0;
+          font-weight: 600;
+          font-size: 0.9rem;
+        }
+        
+        .sem-aulas-mini {
+          background: #f9f9f9;
+          text-align: center;
+          padding: 20px 10px;
+          color: #999;
+          border: 1px dashed #ddd;
+          border-top: none;
+          border-radius: 0 0 6px 6px;
+        }
+        
+        .aula-mini {
+          background: #3788d8;
+          color: white;
+          padding: 10px;
+          margin-top: 5px;
+          border-radius: 4px;
+          text-align: center;
+          transition: transform 0.2s;
+          
+          &:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          }
+          
+          .hora {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+          }
+          
+          .disciplina {
+            font-size: 0.7rem;
+            opacity: 0.9;
+          }
+        }
+      }
+    }
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════
+  // ATIVIDADES RECENTES
+  // ═══════════════════════════════════════════════════════════════════════
+  .atividades-recentes {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+    h3 {
+      margin-bottom: 15px;
+      color: #4caf50;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .sem-atividades {
+      text-align: center;
+      padding: 30px;
+      color: #999;
+      
+      i {
+        font-size: 3rem;
+        margin-bottom: 10px;
+      }
+    }
+    
+    .atividade-card {
+      background: #f9f9f9;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-left: 4px solid #4caf50;
+      
+      .atividade-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        
+        .tipo-badge {
+          background: #4caf50;
+          color: white;
+          padding: 2px 8px;
+          border-radius: 12px;
+          font-size: 0.7rem;
+          text-transform: uppercase;
+          
+          &.tipo-prova {
+            background: #f44336;
+          }
+          
+          &.tipo-trabalho {
+            background: #ff9800;
+          }
+        }
+        
+        .disciplina-nome {
+          font-size: 0.8rem;
+          color: #666;
+        }
+      }
+      
+      .atividade-titulo {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+      }
+      
+      .atividade-footer {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: #999;
+        
+        span {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+      }
+    }
+  }
+}
+
+// Loading Spinner
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3788d8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  p {
+    margin-top: 15px;
+    color: #666;
+    font-size: 14px;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

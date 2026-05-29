@@ -1,0 +1,142 @@
+<div class="gerar-automatico-page">
+  
+  <!-- Message Toast -->
+  <div class="message-toast" *ngIf="message" [class.success]="messageType === 'success'" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="page-header-info">
+      <h1>Gerador Automático de Cronograma</h1>
+      <p>Configure os parâmetros e gere automaticamente o cronograma de aulas</p>
+    </div>
+  </header>
+
+  <!-- Filters Card -->
+  <div class="filters-card">
+    <div class="filters-grid">
+      <label class="filter-field">
+        <span>Ano Letivo</span>
+        <div class="select-wrapper">
+          <select [(ngModel)]="anoLetivo" (ngModelChange)="onAnoLetivoChange()">
+            <option *ngFor="let ano of anosLetivos" [value]="ano">{{ ano }}</option>
+          </select>
+        </div>
+      </label>
+
+      <label class="filter-field">
+        <span>Série</span>
+        <div class="select-wrapper">
+          <select [(ngModel)]="serie" (ngModelChange)="onSerieChange()" [disabled]="!anoLetivo">
+            <option value="">Selecione</option>
+            <option *ngFor="let s of seriesDisponiveis" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+      </label>
+
+      <label class="filter-field">
+        <span>Turno</span>
+        <div class="select-wrapper">
+          <select [(ngModel)]="turno" (ngModelChange)="onTurnoChange()" [disabled]="!serie">
+            <option value="">Selecione</option>
+            <option *ngFor="let t of TURNOS" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- Turmas Selection -->
+  <div class="turmas-card" *ngIf="turmasDisponiveis.length > 0">
+    <div class="turmas-header">
+      <h3>Selecione as turmas</h3>
+      <div class="turmas-actions">
+        <button class="btn-link" (click)="selecionarTodasTurmas()">Selecionar todas</button>
+        <button class="btn-link" (click)="limparSelecao()">Limpar seleção</button>
+      </div>
+    </div>
+
+    <div class="turmas-grid">
+      <div class="turma-checkbox" *ngFor="let turma of turmasDisponiveis">
+        <label>
+          <input 
+            type="checkbox" 
+            [checked]="turmasSelecionadas.includes(turma.codTurma)"
+            (change)="toggleTurma(turma.codTurma)">
+          <div class="turma-info">
+            <span class="turma-nome">{{ turma.codTurma }} — {{ turma.nomeTurma }}</span>
+            <span class="turma-detalhes">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                <path d="M16 3.13a4 4 0 010 7.75"/>
+              </svg>
+              {{ turma.qldVagas }} vagas
+            </span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="turmas-summary" *ngIf="turmasSelecionadas.length > 0">
+      {{ turmasSelecionadas.length }} turma(s) selecionada(s)
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && turno && turmasDisponiveis.length === 0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <p>Nenhuma turma encontrada para os filtros selecionados</p>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions-bar" *ngIf="turmasDisponiveis.length > 0">
+    <button class="btn-secondary" (click)="voltarParaCronograma()" [disabled]="loading">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+      </svg>
+      Voltar
+    </button>
+    <button 
+      class="btn-primary" 
+      (click)="gerarGrade()"
+      [disabled]="loading || turmasSelecionadas.length === 0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" *ngIf="!loading">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <span *ngIf="!loading">Gerar Cronograma</span>
+      <span *ngIf="loading">Gerando...</span>
+    </button>
+  </div>
+
+  <!-- Resultado -->
+  <div class="resultado-card" *ngIf="resultado && !loading">
+    <div class="resultado-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <h3>Cronograma gerado com sucesso!</h3>
+    </div>
+    <div class="resultado-stats">
+      <div class="stat">
+        <span class="stat-value">{{ resultado.aulas_criadas }}</span>
+        <span class="stat-label">Aulas criadas</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">{{ turmasSelecionadas.length }}</span>
+        <span class="stat-label">Turmas</span>
+      </div>
+    </div>
+    <button class="btn-view" (click)="voltarParaCronograma()">
+      Ver Cronogramas Completos
+    </button>
+  </div>
+
+</div>

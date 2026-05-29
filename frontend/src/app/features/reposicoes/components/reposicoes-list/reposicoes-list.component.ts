@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ReposicoesService, ReposicaoAula } from '../../../../../services/reposicoes.service';
+import { ReposicoesService, ReposicaoAula } from '../../services/reposicoes.service';
 
 @Component({
   selector: 'app-reposicoes-list',
