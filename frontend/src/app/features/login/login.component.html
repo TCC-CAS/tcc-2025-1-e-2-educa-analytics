@@ -27,13 +27,14 @@
             [attr.aria-describedby]="showEmailError() ? 'email-error' : null"
           />
         </div>
-        <span 
-          *ngIf="showEmailError()" 
-          id="email-error" 
-          class="error-message" 
+        <span
+          *ngIf="showEmailError()"
+          id="email-error"
+          class="error-message"
           role="alert"
           aria-live="polite"
         >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           {{ getEmailError() }}
         </span>
       </div>
@@ -45,24 +46,45 @@
             <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
             <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
-          <input 
-            formControlName="password" 
-            id="password" 
-            type="password" 
-            placeholder="Sua senha" 
-            required 
+          <input
+            formControlName="password"
+            id="password"
+            [type]="showPassword ? 'text' : 'password'"
+            placeholder="Sua senha"
+            required
             autocomplete="current-password"
             [attr.aria-invalid]="showPasswordError()"
             [attr.aria-describedby]="showPasswordError() ? 'password-error' : null"
           />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="toggleShowPassword()"
+            [attr.aria-label]="showPassword ? 'Ocultar senha' : 'Mostrar senha'"
+            [attr.aria-pressed]="showPassword"
+            tabindex="0"
+          >
+            <!-- Olho aberto — senha visível -->
+            <svg *ngIf="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <!-- Olho riscado — senha oculta -->
+            <svg *ngIf="!showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
         </div>
-        <span 
-          *ngIf="showPasswordError()" 
-          id="password-error" 
-          class="error-message" 
+        <span
+          *ngIf="showPasswordError()"
+          id="password-error"
+          class="error-message"
           role="alert"
           aria-live="polite"
         >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           {{ getPasswordError() }}
         </span>
       </div>
@@ -71,7 +93,7 @@
         <re-captcha 
           #captcha 
           (resolved)="onCaptchaResolved($event)" 
-          [siteKey]="'6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'"
+          [siteKey]="'6Lf37_MsAAAAAK997gkVdKgqQrBjLYkhrDpCCO8-'"
           aria-label="Verificação reCAPTCHA"
         ></re-captcha>
         <small 
@@ -195,6 +217,53 @@
           <span>{{ outlookLoading ? 'Conectando...' : 'Microsoft' }}</span>
         </button>
       </div>
+    </div>
+
+    <!-- Login Rápido para Testes -->
+    <div class="quick-login-section">
+      <div class="quick-login-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12 2L2 7v6c0 5.5 3.8 10.7 10 12 6.2-1.3 10-6.5 10-12V7l-10-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 11v3m0 3h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span>Login Rápido (Teste)</span>
+      </div>
+      
+      <div class="quick-login-grid">
+        <button type="button" class="quick-login-btn" (click)="quickLogin('educador')" title="Maria Santos - EDU001">
+          <span class="profile-icon">👨‍🏫</span>
+          <span class="profile-name">Educador</span>
+        </button>
+        
+        <button type="button" class="quick-login-btn" (click)="quickLogin('educando')" title="João Silva - ALU001">
+          <span class="profile-icon">🎓</span>
+          <span class="profile-name">Educando</span>
+        </button>
+        
+        <button type="button" class="quick-login-btn" (click)="quickLogin('responsavel')" title="Ana Costa - RESP001">
+          <span class="profile-icon">👨‍👩‍👧</span>
+          <span class="profile-name">Responsável</span>
+        </button>
+        
+        <button type="button" class="quick-login-btn" (click)="quickLogin('colaborador')" title="Carlos Mendes - COL001">
+          <span class="profile-icon">💼</span>
+          <span class="profile-name">Colaborador</span>
+        </button>
+        
+        <button type="button" class="quick-login-btn" (click)="quickLogin('gestor')" title="Patricia Lima - GEST001">
+          <span class="profile-icon">👔</span>
+          <span class="profile-name">Gestor</span>
+        </button>
+        
+        <button type="button" class="quick-login-btn" (click)="quickLogin('administrativo')" title="Pedro Oliveira - ADM001">
+          <span class="profile-icon">⚙️</span>
+          <span class="profile-name">Administrativo</span>
+        </button>
+      </div>
+      
+      <small class="quick-login-note">
+        Clique em um perfil para fazer login instantâneo como usuário de teste
+      </small>
     </div>
 
     <div class="footer-links">

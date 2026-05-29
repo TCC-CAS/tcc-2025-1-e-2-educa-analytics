@@ -26,6 +26,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   submitted = false;
   forgotSubmitted = false;
   showForgotPanel = false;
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -35,7 +36,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     private notify: NotificationService
   ) {
     this.form = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, this.emailOrIdValidator]],
       password: ['', [Validators.required]]
     });
 
@@ -161,8 +162,8 @@ export class LoginComponent implements OnInit, AfterViewInit {
     if (this.email.hasError('required')) {
       return 'Email ou ID de Matrícula é obrigatório';
     }
-    if (this.email.hasError('email')) {
-      return 'Digite um email válido';
+    if (this.email.hasError('emailOrId')) {
+      return 'Digite um email ou ID de matrícula válido';
     }
     return '';
   }
@@ -179,7 +180,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
       return 'Email ou ID de matricula e obrigatorio';
     }
     if (this.forgotEmail.hasError('emailOrId')) {
-      return 'Digite um email valido ou um ID de matricula numerico';
+      return 'Digite um email ou ID de matrícula válido';
     }
     return '';
   }
@@ -194,6 +195,10 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   showForgotEmailError(): boolean {
     return this.forgotEmail.invalid && (this.forgotEmail.dirty || this.forgotEmail.touched || this.forgotSubmitted);
+  }
+
+  toggleShowPassword(): void {
+    this.showPassword = !this.showPassword;
   }
 
   toggleForgotPasswordPanel(event?: Event): void {
@@ -239,10 +244,22 @@ export class LoginComponent implements OnInit, AfterViewInit {
       return null;
     }
 
+    // Aceita formato de email
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const idPattern = /^\d{4,20}$/;
+    
+    // Aceita IDs numéricos puros (ex: 706363650)
+    const numericIdPattern = /^\d+$/;
+    
+    // Aceita IDs de matrícula do sistema:
+    // - COL-77331 ou COL77331 (Colaborador)
+    // - EDU004 ou EDU-004 (Educador)
+    // - GES-12345 (Gestor)
+    // - ADM-98765 (Administrativo)
+    // - EST-55555 ou EDN-55555 (Educando)
+    // - RES-44444 (Responsável)
+    const idPattern = /^(COL|EDU|GES|ADM|EST|EDN|RES)-?\d+$/i;
 
-    if (emailPattern.test(rawValue) || idPattern.test(rawValue)) {
+    if (emailPattern.test(rawValue) || numericIdPattern.test(rawValue) || idPattern.test(rawValue)) {
       return null;
     }
 
@@ -279,6 +296,12 @@ export class LoginComponent implements OnInit, AfterViewInit {
       next: (res: any) => {
         if (res && res.token) {
           this.auth.setToken(res.token);
+          
+          // Salvar dados do usuário
+          if (res.usuario) {
+            this.auth.setUser(res.usuario);
+          }
+          
           this.router.navigateByUrl(this.returnUrl || '/home');
         } else {
           this.notify.error('Resposta de login inválida');
@@ -311,7 +334,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     setTimeout(() => {
       try {
         // Simula seleção aleatória de um tipo de usuário para demonstração
-        const userTypes: UserType[] = ['educador', 'educando', 'tutor', 'administrativo'];
+        const userTypes: UserType[] = ['educador', 'educando', 'responsavel', 'colaborador', 'gestor', 'administrativo'];
         const randomType = userTypes[Math.floor(Math.random() * userTypes.length)];
         
         // Login mock com o tipo selecionado
@@ -333,7 +356,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     setTimeout(() => {
       try {
         // Simula seleção aleatória de um tipo de usuário para demonstração
-        const userTypes: UserType[] = ['educador', 'educando', 'tutor', 'administrativo'];
+        const userTypes: UserType[] = ['educador', 'educando', 'responsavel', 'colaborador', 'gestor', 'administrativo'];
         const randomType = userTypes[Math.floor(Math.random() * userTypes.length)];
         
         // Login mock com o tipo selecionado
@@ -347,6 +370,15 @@ export class LoginComponent implements OnInit, AfterViewInit {
         this.outlookLoading = false;
       }
     }, 1000);
+  }
+
+  /**
+   * Login rápido com usuário de teste (para desenvolvimento)
+   */
+  quickLogin(tipo: UserType): void {
+    this.auth.loginMock(tipo);
+    this.notify.success(`Login como ${tipo}`);
+    this.router.navigateByUrl(this.returnUrl || '/home');
   }
 }
 
