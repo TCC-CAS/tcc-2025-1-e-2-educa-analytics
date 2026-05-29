@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
-import { CronogramaService, GerarGradeResponse } from '../../services/cronograma.service';
+import { CronogramaService } from '../../services/cronograma.service';
 
 interface DadosGeracaoAutomatica {
   anoLetivo: number;
@@ -220,10 +220,7 @@ export class GerarAutomaticoComponent implements OnInit {
       const turma = this.turmasDisponiveis.find(t => t.codTurma === codTurma);
       if (!turma) return null;
 
-      return this.cronogramaService.gerarGradeAutomatica({
-        idTurma: turma.idTurma,
-        idPeriodo: periodo.idPeriodo
-      });
+      return this.cronogramaService.gerarGradeAutomatica(turma.idTurma, periodo.idPeriodo);
     }).filter(r => r !== null);
 
     // Executa todas as requisições

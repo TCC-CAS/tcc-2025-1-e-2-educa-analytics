@@ -55,17 +55,33 @@
           </a>
         </li>
 
-        <!-- Item: Cronograma Gestão -->
+        <!-- Item: Cronograma (Grade Horária) -->
         <li class="nav-item">
-          <a class="nav-link" routerLink="/cronograma/gestao" routerLinkActive="nav-link-ativo"
-             [title]="menuRecolhido ? 'Cronograma Gestão' : ''">
+          <a class="nav-link" routerLink="/cronograma" routerLinkActive="nav-link-ativo"
+             [routerLinkActiveOptions]="{ exact: true }"
+             [title]="menuRecolhido ? 'Grade Horária' : ''">
+            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+              <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>
+            </svg>
+            <span class="nav-label" *ngIf="!menuRecolhido">Grade Horária</span>
+          </a>
+        </li>
+
+        <!-- Item: Cronograma Gestor -->
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/cronograma/gestor" routerLinkActive="nav-link-ativo"
+             [title]="menuRecolhido ? 'Cronograma Gestor' : ''">
             <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2"/>
               <line x1="16" y1="2" x2="16" y2="6"/>
               <line x1="8" y1="2" x2="8" y2="6"/>
               <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            <span class="nav-label" *ngIf="!menuRecolhido">Cronograma Gestão</span>
+            <span class="nav-label" *ngIf="!menuRecolhido">Cronograma Gestor</span>
           </a>
         </li>
 
@@ -151,6 +167,20 @@
           </a>
         </li>
 
+        <!-- Item: Matriz Curricular -->
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/matriz-curricular" routerLinkActive="nav-link-ativo"
+             [title]="menuRecolhido ? 'Matriz Curricular' : ''">
+            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <span class="nav-label" *ngIf="!menuRecolhido">Matriz Curricular</span>
+          </a>
+        </li>
+
         <!-- Item: Avaliações -->
         <li class="nav-item">
           <a class="nav-link" routerLink="/avaliacoes" routerLinkActive="nav-link-ativo"
@@ -221,15 +251,41 @@
         <!-- Grupo: Financeiro -->
         <li class="nav-group-label" *ngIf="!menuRecolhido">Financeiro</li>
 
-        <!-- Item: Caixa -->
+        <!-- Item: Fluxo de Caixa -->
         <li class="nav-item">
           <a class="nav-link" routerLink="/caixa" routerLinkActive="nav-link-ativo"
-             [title]="menuRecolhido ? 'Caixa' : ''">
+             [title]="menuRecolhido ? 'Fluxo de Caixa' : ''">
             <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="1" x2="12" y2="23"/>
               <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
             </svg>
-            <span class="nav-label" *ngIf="!menuRecolhido">Caixa</span>
+            <span class="nav-label" *ngIf="!menuRecolhido">Fluxo de Caixa</span>
+          </a>
+        </li>
+
+        <!-- Item: Contas a Pagar -->
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/contas-pagar" routerLinkActive="nav-link-ativo"
+             [title]="menuRecolhido ? 'Contas a Pagar' : ''">
+            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            <span class="nav-label" *ngIf="!menuRecolhido">Contas a Pagar</span>
+          </a>
+        </li>
+
+        <!-- Item: Contratos -->
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/contratos" routerLinkActive="nav-link-ativo"
+             [title]="menuRecolhido ? 'Contratos' : ''">
+            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <span class="nav-label" *ngIf="!menuRecolhido">Contratos</span>
           </a>
         </li>
 

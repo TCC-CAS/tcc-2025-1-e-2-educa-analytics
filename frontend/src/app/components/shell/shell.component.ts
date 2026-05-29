@@ -20,6 +20,15 @@ export class ShellComponent {
     return this.authService.isAuthenticated();
   }
 
+  get userType(): string | null {
+    return this.authService.getUserType();
+  }
+
+  hasRole(roles: string[]): boolean {
+    const userType = this.userType;
+    return userType ? roles.includes(userType) : false;
+  }
+
   toggleSidebar(): void {
     this.menuRecolhido = !this.menuRecolhido;
   }
