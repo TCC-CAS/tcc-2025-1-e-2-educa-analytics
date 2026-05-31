@@ -742,7 +742,9 @@ def registrar(nome: str, email: str, senha: str, perfil: str = "professor") -> i
 
 def get_usuario_do_evento(event: dict) -> dict | None:
     """Extrai e valida o token do header Authorization do evento Lambda."""
-    auth_header = (event.get("headers") or {}).get("Authorization", "")
+    headers = event.get("headers") or {}
+    # API Gateway HTTP API v2 normaliza headers para minúsculas
+    auth_header = headers.get("Authorization") or headers.get("authorization", "")
     if not auth_header.startswith("Bearer "):
         return None
     token = auth_header[7:]
