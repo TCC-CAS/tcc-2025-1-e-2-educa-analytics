@@ -342,22 +342,11 @@ export class LoginComponent implements OnInit, AfterViewInit {
             this.auth.setUser(res.usuario);
           }
 
-          // Redirecionar para rota específica do tipo de usuário
-          if (!this.returnUrl || this.returnUrl === '/home' || this.returnUrl === '/') {
-            const tipo = res.usuario?.tipo || this.auth.getUserType();
-            const rotasPorTipo: Record<string, string> = {
-              educador:       '/educadores/cronograma',
-              educando:       '/educando/notas',
-              responsavel:    '/responsavel/acompanhamento',
-              colaborador:    '/colaboradores',
-              gestor:         '/home',
-              administrativo: '/home',
-            };
-            const destino = rotasPorTipo[tipo] || '/home';
-            this.router.navigateByUrl(destino);
-          } else {
-            this.router.navigateByUrl(this.returnUrl);
-          }
+          // Redirecionar para o home do usuário
+          const destino = (!this.returnUrl || this.returnUrl === '/')
+            ? '/home'
+            : this.returnUrl;
+          this.router.navigateByUrl(destino);
         } else {
           this.notify.error('Resposta de login inválida');
         }
