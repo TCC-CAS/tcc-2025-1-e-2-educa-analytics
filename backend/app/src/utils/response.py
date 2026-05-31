@@ -11,7 +11,7 @@ def _headers() -> dict:
     """Retorna headers HTTP com segurança"""
     headers = {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": Config.ALLOWED_ORIGINS,
+        "Access-Control-Allow-Origin": Config.ALLOWED_ORIGINS(),
         "Access-Control-Allow-Headers": "Content-Type,Authorization,X-CSRF-Token",
         "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
     }
