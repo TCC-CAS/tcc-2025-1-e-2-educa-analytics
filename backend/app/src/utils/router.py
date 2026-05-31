@@ -35,7 +35,16 @@ class Router:
             "http", {}
         ).get("method", "GET")
         raw_path = event.get("path") or event.get("rawPath", "/")
-        
+
+        # Remover prefixo do stage (HTTP API v2 inclui o stage no rawPath)
+        stage = event.get("requestContext", {}).get("stage", "")
+        if stage and raw_path.startswith(f"/{stage}/"):
+            raw_path = raw_path[len(f"/{stage}"):]
+
+        # Remover prefixo /api se presente
+        if raw_path.startswith("/api"):
+            raw_path = raw_path[4:] or "/"
+
         # Remover query parameters do path para matching de rotas
         path = raw_path.split('?')[0] if '?' in raw_path else raw_path
 
