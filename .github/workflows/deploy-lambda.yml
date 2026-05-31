@@ -19,13 +19,17 @@ jobs:
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Empacotar Lambda com dependencias e codigo da app
         run: |
           cd backend
           mkdir -p package
-          pip install -r requirements.txt -t package/ --quiet
+          pip install -r requirements.txt -t package/ --quiet \
+            --platform manylinux2014_x86_64 \
+            --implementation cp \
+            --python-version 312 \
+            --only-binary=:all:
           cp -r app package/
           cp lambda_function.py package/
           cd package
