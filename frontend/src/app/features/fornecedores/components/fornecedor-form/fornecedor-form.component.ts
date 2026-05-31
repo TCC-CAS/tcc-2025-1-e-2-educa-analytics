@@ -14,6 +14,8 @@ interface FornecedorForm {
   endereco: string;
   centroCusto: string;
   tipoDespesa: string;
+  qtdContratos: number;
+  observacoes: string;
 }
 
 @Component({
@@ -40,7 +42,9 @@ export class FornecedorFormComponent implements OnInit {
     cep: '',
     endereco: '',
     centroCusto: '',
-    tipoDespesa: ''
+    tipoDespesa: '',
+    qtdContratos: 0,
+    observacoes: ''
   };
 
   constructor(
@@ -72,7 +76,9 @@ export class FornecedorFormComponent implements OnInit {
           cep: dados.cep,
           endereco: dados.endereco,
           centroCusto: dados.centroCusto || '',
-          tipoDespesa: dados.tipoDespesa || dados.categoria
+          tipoDespesa: dados.tipoDespesa || dados.categoria,
+          qtdContratos: dados.qtdContratos || 0,
+          observacoes: dados.observacoes || ''
         };
       },
       error: () => this.showMessage('Erro ao carregar dados do fornecedor.', 'error')
@@ -134,7 +140,9 @@ export class FornecedorFormComponent implements OnInit {
       endereco: this.fornecedor.endereco,
       centroCusto: this.fornecedor.centroCusto,
       tipoDespesa: this.fornecedor.tipoDespesa,
-      categoria: this.fornecedor.tipoDespesa
+      categoria: this.fornecedor.tipoDespesa,
+      qtdContratos: this.fornecedor.qtdContratos || 0,
+      observacoes: this.fornecedor.observacoes || ''
     };
 
     const request$ = this.isEdicao

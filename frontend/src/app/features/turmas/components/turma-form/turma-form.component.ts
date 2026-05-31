@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TurmasService, Sala, Serie, Periodo, AnoLetivo } from '../../services/turmas.service';
+import { TurmasService, Serie, Periodo, AnoLetivo } from '../../services/turmas.service';
+import { SalasService, Sala } from '../../../salas/services/salas.service';
 
 type StatusTurma = 'planejada' | 'ativa' | 'encerrada' | 'cancelada' | 'suspensa';
 
@@ -61,6 +62,7 @@ export class TurmaFormComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private turmasService: TurmasService,
+    private salasService: SalasService,
   ) {}
 
   ngOnInit(): void {
@@ -95,12 +97,11 @@ export class TurmaFormComponent implements OnInit {
       error: () => this.showMessage('Erro ao carregar anos letivos', 'error')
     });
     
-    // Carregar salas
-    this.turmasService.listarSalas().subscribe({
-      next: (data) => { 
-        this.salas = data
-          .filter(s => s.status === 'ativa')
-          .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+    // Carregar salas — usa o mesmo SalasService que alimenta /salas
+    this.salasService.listarSalas().subscribe({
+      next: (resp) => {
+        const lista: Sala[] = Array.isArray(resp) ? resp : (resp?.data ?? []);
+        this.salas = lista.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
       },
       error: () => this.showMessage('Erro ao carregar salas', 'error')
     });
@@ -145,40 +146,15 @@ export class TurmaFormComponent implements OnInit {
     // Validar ano letivo
     if (this.model.anoLetivo && this.anosLetivos.length > 0) {
       const anoEncontrado = this.anosLetivos.find(a => a.ano === this.model.anoLetivo);
-      if (!anoEncontrado) {
-        this.alertaAnoLetivo = `⚠️ Ano letivo ${this.model.anoLetivo} não cadastrado. Anos disponíveis: ${this.anosLetivos.map(a => a.ano).join(', ')}`;
-      } else {
-        this.alertaAnoLetivo = '';
-      }
+      this.alertaAnoLetivo = anoEncontrado
+        ? ''
+        : `⚠️ Ano letivo ${this.model.anoLetivo} não cadastrado. Anos disponíveis: ${this.anosLetivos.map(a => a.ano).join(', ')}`;
     }
-    
-    // Validar ocupação da sala
-    if (this.model.idSala && this.model.idPeriodo && this.model.anoLetivo) {
-      // Buscar idAnoLetivo baseado no ano digitado
-      const anoEncontrado = this.anosLetivos.find(a => a.ano === this.model.anoLetivo);
-      if (anoEncontrado) {
-        this.turmasService.validarOcupacaoSala(
-          this.model.idSala,
-          this.model.idPeriodo,
-          anoEncontrado.idAnoLetivo,
-          this.turmaId ? +this.turmaId : undefined
-        ).subscribe({
-          next: (resp) => {
-            if (!resp.disponivel) {
-              this.alertaSala = `⚠️ Sala já ocupada pela turma ${resp.turma_existente?.codigo_automatico || 'outra turma'}`;
-            } else {
-              this.alertaSala = '';
-            }
-          },
-          error: () => {}
-        });
-      }
-    }
-    
+
     // Auto-preencher capacidade baseado na sala
     if (this.model.idSala && !this.turmaId) {
       const salaEscolhida = this.salas.find(s => s.id === this.model.idSala);
-      if (salaEscolhida && salaEscolhida.capacidade) {
+      if (salaEscolhida?.capacidade) {
         this.model.capacidade_maxima = salaEscolhida.capacidade;
       }
     }
@@ -192,11 +168,6 @@ export class TurmaFormComponent implements OnInit {
 
     if (this.alertaAnoLetivo) {
       this.showMessage('Ano letivo inválido. Verifique os anos disponíveis.', 'error');
-      return;
-    }
-
-    if (this.alertaSala) {
-      this.showMessage('Sala já está ocupada. Escolha outra sala ou período.', 'error');
       return;
     }
 

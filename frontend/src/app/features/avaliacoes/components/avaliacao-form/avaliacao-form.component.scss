@@ -237,12 +237,12 @@ $surface:    #ffffff;
 // ── Question area ─────────────────────────────
 .question-area {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 1.5rem 1.5rem 0;
+  justify-content: flex-start;
+  padding: 1.5rem 1.5rem 2rem;
   gap: 1rem;
   position: relative;
 }
@@ -547,14 +547,15 @@ $surface:    #ffffff;
   }
 }
 
-// ── Bottom bar ────────────────────────────────
-.bottom-bar {
-  flex-shrink: 0;
+// ── Navigation row (below question card) ─────
+.question-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem 1.25rem;
+  width: 100%;
+  max-width: 660px;
   gap: 1rem;
+  padding-top: .25rem;
 }
 
 .btn-prev {
@@ -647,9 +648,8 @@ $surface:    #ffffff;
 // ── Responsivo ────────────────────────────────
 @media (max-width: 600px) {
   .top-bar { padding: .7rem 1rem; }
-  .question-area { padding: 1rem 1rem 0; }
+  .question-area { padding: 1rem 1rem 1.25rem; }
   .question-card { padding: 1.5rem 1.25rem; }
-  .bottom-bar { padding: .85rem 1rem 1rem; }
   .xp-chip .xp-val { display: none; }
   .dot-track { max-width: 120px; }
   .scale-btn .scale-emoji { display: none; }

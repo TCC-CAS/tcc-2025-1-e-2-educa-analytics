@@ -1,0 +1,595 @@
+<div class="comp-page">
+
+  <!-- ── Cabeçalho ──────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Competências BNCC</h1>
+      <span class="page-subtitle">Avalie as competências da Base Nacional Comum Curricular por turma e disciplina.</span>
+    </div>
+    <button class="sidebar-toggle-btn" (click)="sidebarVisivel = !sidebarVisivel"
+      [title]="sidebarVisivel ? 'Ocultar lista de turmas' : 'Mostrar lista de turmas'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="comp-layout">
+
+    <!-- ── Sidebar: lista de turmas ────────────────────────────────────── -->
+    <aside class="turmas-sidebar" [class.sidebar-fechada]="!sidebarVisivel">
+
+      <div class="sidebar-header">
+        <span class="sidebar-titulo">Minhas Turmas</span>
+      </div>
+
+      <div class="sidebar-loading" *ngIf="carregando">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+        Carregando turmas...
+      </div>
+
+      <div class="sidebar-erro" *ngIf="erro && !carregando">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        {{ erro }}
+      </div>
+
+      <div class="turmas-lista" *ngIf="!carregando && !erro">
+
+        <div class="turma-item"
+          *ngFor="let t of turmas"
+          [class.selecionada]="turmaSelecionada?.id === t.id"
+          (click)="selecionarTurma(t)">
+          <div class="turma-item-head">
+            <span class="ti-codigo">{{ t.codigo || t.nome }}</span>
+            <span class="ti-status" [class.inativa]="t.status !== 'ativa'">{{ labelStatus(t.status) }}</span>
+          </div>
+          <div class="ti-nome">{{ t.nome }}</div>
+          <div class="ti-meta">
+            <span *ngIf="t.serie">{{ t.serie }}</span>
+            <span *ngIf="t.serie && t.turno">&bull;</span>
+            <span *ngIf="t.turno">{{ t.turno }}</span>
+          </div>
+        </div>
+
+        <div class="sidebar-empty" *ngIf="turmas.length === 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6M9 16h4"/>
+          </svg>
+          <p>Nenhuma turma encontrada.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── Painel principal ─────────────────────────────────────────────── -->
+    <main class="comp-detalhe">
+      <div class="detalhe-conteudo">
+
+        <!-- Nenhuma turma selecionada -->
+        <div class="detalhe-vazio" *ngIf="!turmaSelecionada">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6M9 16h4"/>
+          </svg>
+          <p>Selecione uma turma ao lado para iniciar a avaliação de competências BNCC.</p>
+        </div>
+
+        <!-- ── Turma selecionada ──────────────────────────────────────────── -->
+        <ng-container *ngIf="turmaSelecionada">
+
+          <!-- Cabeçalho da turma -->
+          <div class="detalhe-cabecalho">
+            <div>
+              <h2 class="detalhe-turma-titulo">{{ turmaSelecionada.nome }}</h2>
+              <div class="detalhe-turma-sub">
+                <span *ngIf="turmaSelecionada.serie">{{ turmaSelecionada.serie }}</span>
+                <span *ngIf="turmaSelecionada.serie && turmaSelecionada.turno">&bull;</span>
+                <span *ngIf="turmaSelecionada.turno">{{ turmaSelecionada.turno }}</span>
+                <span *ngIf="turmaSelecionada.anoLetivo">&bull; {{ turmaSelecionada.anoLetivo }}</span>
+              </div>
+            </div>
+            <span class="card-status" [class.inativa]="turmaSelecionada.status !== 'ativa'">
+              {{ labelStatus(turmaSelecionada.status) }}
+            </span>
+          </div>
+
+          <!-- Alerta quando usa disciplinas de fallback -->
+          <div class="aviso-fallback" *ngIf="usandoFallbackDisciplinas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Esta turma não tem disciplinas cadastradas no cronograma. Selecione abaixo a disciplina que você leciona nela.
+          </div>
+
+          <!-- Seleção de disciplina -->
+          <div class="disc-section">
+            <span class="disc-section-titulo">
+              {{ usandoFallbackDisciplinas ? 'Disciplina que você leciona nesta turma' : 'Selecione a disciplina para avaliar' }}
+            </span>
+            <div class="disc-cards-row">
+              <div class="disc-card"
+                *ngFor="let d of disciplinasEfetivas"
+                [class.disc-card-ativa]="disciplinaSelecionada?.idDisciplina === d.idDisciplina"
+                (click)="selecionarDisciplina(d)">
+                <div class="disc-card-nome">{{ d.disciplina }}</div>
+                <div class="disc-card-area" *ngIf="d.codDisciplina">{{ d.codDisciplina }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seletor de série manual quando a turma não tem série definida -->
+          <div class="serie-selector" *ngIf="disciplinaSelecionada && !turmaSelecionada.serie?.trim()">
+            <label class="serie-label">
+              Série da turma
+              <span class="obrigatoria">*</span>
+            </label>
+            <select class="serie-select" [(ngModel)]="serieManual" (change)="onSerieManualChange()">
+              <option value="">Selecione a série...</option>
+              <option *ngFor="let s of seriesDisponiveis" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+
+          <!-- Prompt quando não selecionou disciplina -->
+          <div class="disc-prompt" *ngIf="!disciplinaSelecionada">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+            <p>Clique em uma disciplina acima para iniciar a avaliação de competências BNCC.</p>
+          </div>
+
+          <!-- ── Formulário BNCC ──────────────────────────────────────────── -->
+          <ng-container *ngIf="disciplinaSelecionada && serieEfetiva">
+
+            <!-- Disciplina sem formulário BNCC mapeado -->
+            <div class="disc-indisponivel" *ngIf="!avaliacao">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <p>
+                A disciplina <strong>{{ disciplinaSelecionada.disciplina }}</strong> ainda não possui
+                formulário BNCC disponível para <strong>{{ serieEfetiva }}</strong>.
+              </p>
+              <p class="disc-indisponivel-hint">
+                Formulários disponíveis: Língua Portuguesa, Arte e Educação Física.
+              </p>
+            </div>
+
+            <!-- ── Tabs ──────────────────────────────────────────────────────── -->
+            <div class="bncc-tabs" *ngIf="avaliacao">
+              <button type="button" class="bncc-tab-btn" [class.ativa]="abaAtiva === 'avaliar'" (click)="abaAtiva = 'avaliar'">
+                <span>📋</span> Avaliar Educando
+              </button>
+              <button type="button" class="bncc-tab-btn" [class.ativa]="abaAtiva === 'estatisticas'" (click)="irParaEstatisticas()">
+                <span>📊</span> Estatísticas da Turma
+              </button>
+            </div>
+
+            <!-- ── ABA: Avaliar ─────────────────────────────────────────────── -->
+            <div class="bncc-container" *ngIf="avaliacao && abaAtiva === 'avaliar'">
+
+              <!-- ── Seleção de educando: lista de cards ──────────────────── -->
+              <div class="educando-selector" *ngIf="!educandoSelecionadoId">
+                <div class="es-header">
+                  <div class="es-titulo-row">
+                    <span class="es-titulo">Selecione o educando para avaliar</span>
+                    <span class="es-contagem" *ngIf="qtdAvaliados > 0">
+                      {{ qtdAvaliados }}/{{ educandos.length }} avaliados
+                    </span>
+                  </div>
+                  <div class="es-busca">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                      <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    <input
+                      type="text"
+                      class="es-input"
+                      placeholder="Buscar educando..."
+                      [(ngModel)]="filtroEducando"
+                      autocomplete="off">
+                  </div>
+                </div>
+
+                <div class="es-loading" *ngIf="carregandoEducandos">
+                  <div class="loading-dots"><span></span><span></span><span></span></div>
+                  Carregando educandos...
+                </div>
+
+                <div class="es-vazio" *ngIf="!carregandoEducandos && educandos.length === 0">
+                  Nenhum educando encontrado para esta turma.
+                </div>
+
+                <div class="es-lista" *ngIf="!carregandoEducandos && educandos.length > 0">
+                  <div class="es-card"
+                    *ngFor="let e of educandosFiltrados"
+                    (click)="selecionarEducando(e)">
+                    <div class="es-card-avatar">{{ e.nome.charAt(0).toUpperCase() }}</div>
+                    <div class="es-card-info">
+                      <span class="es-card-nome">{{ e.nome }}</span>
+                      <span class="es-card-sub" *ngIf="e.serie">{{ e.serie }}</span>
+                    </div>
+                    <span class="es-card-avaliado" *ngIf="educandosAvaliados[e.id]">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Avaliado
+                    </span>
+                    <svg class="es-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </div>
+                  <div class="es-sem-resultado" *ngIf="educandosFiltrados.length === 0">
+                    Nenhum educando encontrado para "{{ filtroEducando }}".
+                  </div>
+                </div>
+              </div>
+              <!-- /educando-selector -->
+
+              <!-- ── Educando selecionado: barra + seções ─────────────────── -->
+              <ng-container *ngIf="educandoSelecionadoId">
+
+                <!-- Barra do educando selecionado -->
+                <div class="educando-barra">
+                  <button class="eb-trocar" (click)="trocarEducando()" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                      <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                    Trocar
+                  </button>
+                  <div class="eb-avatar">{{ nomeEducandoSelecionado.charAt(0).toUpperCase() }}</div>
+                  <div class="eb-info">
+                    <span class="eb-nome">{{ nomeEducandoSelecionado }}</span>
+                    <span class="eb-progresso" *ngIf="avaliacao">
+                      {{ totalSecoesConcluidas }}/{{ totalSecoesAvaliacao }} seções salvas
+                    </span>
+                  </div>
+                  <button type="button" class="eb-stats-btn" (click)="irParaEstatisticas()">
+                    📊 Ver estatísticas
+                  </button>
+                </div>
+
+                <!-- Carregando avaliação salva -->
+                <div class="avaliacao-carregando" *ngIf="carregandoAvaliacaoSalva">
+                  <div class="loading-dots"><span></span><span></span><span></span></div>
+                  Carregando avaliação salva...
+                </div>
+
+                <!-- ── Seções independentes (accordion) ──────────────────── -->
+                <ng-container *ngIf="!carregandoAvaliacaoSalva && avaliacao">
+
+                  <div class="si-secao"
+                    *ngFor="let s of secoes"
+                    [class.si-expandida]="secaoExpandida[s.id]"
+                    [class.si-concluida]="secoesConcluidas[s.id]">
+
+                    <!-- Header da seção -->
+                    <div class="si-header" (click)="toggleSecao(s.id)">
+                      <div class="si-header-left">
+                        <span class="si-chevron">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+                            <polyline points="9 18 15 12 9 6"/>
+                          </svg>
+                        </span>
+                        <span class="si-icone">{{ s.icone }}</span>
+                        <div class="si-titulo-wrap">
+                          <span class="si-titulo">{{ s.titulo }}</span>
+                          <span class="si-contador" [class.si-contador-ok]="secaoCompleta(s)">
+                            {{ contarPreenchidosSecao(s) }}/{{ s.criterios.length }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="si-header-right" (click)="$event.stopPropagation()">
+                        <div class="si-data-wrap">
+                          <label class="si-data-label">Data</label>
+                          <input
+                            type="date"
+                            class="si-data-input"
+                            [(ngModel)]="datasSecao[s.id]"
+                            [class.si-data-erro]="errosSecao[s.id]">
+                        </div>
+                        <button
+                          type="button"
+                          class="si-btn-salvar"
+                          [class.si-btn-salvo]="secoesConcluidas[s.id]"
+                          [disabled]="salvandoSecao[s.id]"
+                          [title]="secoesConcluidas[s.id] ? 'Clique para atualizar a avaliação desta seção' : 'Salvar avaliação desta seção'"
+                          (click)="salvarSecao(s.id)">
+                          <ng-container *ngIf="salvandoSecao[s.id]">
+                            <span class="si-salvando-dot"></span> Salvando...
+                          </ng-container>
+                          <ng-container *ngIf="!salvandoSecao[s.id] && secoesConcluidas[s.id]">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span class="si-btn-salvo-texto">Salvo</span>
+                            <span class="si-btn-reeditar-texto">Atualizar</span>
+                          </ng-container>
+                          <ng-container *ngIf="!salvandoSecao[s.id] && !secoesConcluidas[s.id]">
+                            Salvar
+                          </ng-container>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Erro da seção -->
+                    <div class="si-erro" *ngIf="errosSecao[s.id]">{{ errosSecao[s.id] }}</div>
+
+                    <!-- Corpo da seção (colapsável) -->
+                    <div class="si-corpo" *ngIf="secaoExpandida[s.id]">
+                      <div class="criterios-lista">
+                        <div class="criterio-item"
+                          [class.criterio-excelente]="c.nivel === 'excelente'"
+                          [class.criterio-bom]="c.nivel === 'bom'"
+                          [class.criterio-regular]="c.nivel === 'regular'"
+                          [class.criterio-apoio]="c.nivel === 'precisa-apoio'"
+                          *ngFor="let c of s.criterios">
+                          <div class="criterio-texto">
+                            <span class="criterio-nome">{{ c.nome }}</span>
+                            <p class="criterio-descricao">{{ c.descricao }}</p>
+                          </div>
+                          <div class="nivel-btns">
+                            <button type="button"
+                              class="nivel-btn nivel-excelente"
+                              [class.ativo]="c.nivel === 'excelente'"
+                              (click)="setNivel(c, 'excelente')">Excelente</button>
+                            <button type="button"
+                              class="nivel-btn nivel-bom"
+                              [class.ativo]="c.nivel === 'bom'"
+                              (click)="setNivel(c, 'bom')">Bom</button>
+                            <button type="button"
+                              class="nivel-btn nivel-regular"
+                              [class.ativo]="c.nivel === 'regular'"
+                              (click)="setNivel(c, 'regular')">Regular</button>
+                            <button type="button"
+                              class="nivel-btn nivel-apoio"
+                              [class.ativo]="c.nivel === 'precisa-apoio'"
+                              (click)="setNivel(c, 'precisa-apoio')">Precisa de Apoio</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Síntese como seção independente -->
+                  <div class="si-secao"
+                    *ngIf="sinteseItens.length > 0"
+                    [class.si-expandida]="secaoExpandida['sintese']"
+                    [class.si-concluida]="secoesConcluidas['sintese']">
+
+                    <div class="si-header" (click)="toggleSecao('sintese')">
+                      <div class="si-header-left">
+                        <span class="si-chevron">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+                            <polyline points="9 18 15 12 9 6"/>
+                          </svg>
+                        </span>
+                        <span class="si-icone">📝</span>
+                        <div class="si-titulo-wrap">
+                          <span class="si-titulo">Síntese</span>
+                        </div>
+                      </div>
+                      <div class="si-header-right" (click)="$event.stopPropagation()">
+                        <div class="si-data-wrap">
+                          <label class="si-data-label">Data</label>
+                          <input
+                            type="date"
+                            class="si-data-input"
+                            [(ngModel)]="datasSecao['sintese']"
+                            [class.si-data-erro]="errosSecao['sintese']">
+                        </div>
+                        <button
+                          type="button"
+                          class="si-btn-salvar"
+                          [class.si-btn-salvo]="secoesConcluidas['sintese']"
+                          [disabled]="salvandoSecao['sintese']"
+                          [title]="secoesConcluidas['sintese'] ? 'Clique para atualizar a síntese' : 'Salvar síntese'"
+                          (click)="salvarSecao('sintese')">
+                          <ng-container *ngIf="salvandoSecao['sintese']">
+                            <span class="si-salvando-dot"></span> Salvando...
+                          </ng-container>
+                          <ng-container *ngIf="!salvandoSecao['sintese'] && secoesConcluidas['sintese']">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span class="si-btn-salvo-texto">Salvo</span>
+                            <span class="si-btn-reeditar-texto">Atualizar</span>
+                          </ng-container>
+                          <ng-container *ngIf="!salvandoSecao['sintese'] && !secoesConcluidas['sintese']">
+                            Salvar
+                          </ng-container>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="si-erro" *ngIf="errosSecao['sintese']">{{ errosSecao['sintese'] }}</div>
+
+                    <div class="si-corpo" *ngIf="secaoExpandida['sintese']">
+                      <div class="sintese-lista">
+                        <div class="sintese-item" *ngFor="let st of sinteseItens">
+                          <label class="sintese-label">{{ st.dimensao }}</label>
+                          <p class="sintese-indicadores" *ngIf="st.indicadores">{{ st.indicadores }}</p>
+                          <textarea
+                            class="sintese-textarea"
+                            [(ngModel)]="st.observacoes"
+                            rows="3"
+                            placeholder="Escreva suas observações sobre este aspecto..."></textarea>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- /sintese -->
+
+                </ng-container><!-- /!carregandoAvaliacaoSalva -->
+
+              </ng-container><!-- /educandoSelecionadoId -->
+
+            </div><!-- /.bncc-container -->
+
+            <!-- ── ABA: Estatísticas ─────────────────────────────────────────────── -->
+            <div class="stats-container" *ngIf="avaliacao && abaAtiva === 'estatisticas'">
+
+              <!-- Cabeçalho + filtro -->
+              <div class="stats-cabecalho">
+                <div>
+                  <h2 class="stats-titulo">Estatísticas da Turma</h2>
+                  <p class="stats-sub">{{ turmaSelecionada.nome }} — {{ disciplinaSelecionada.disciplina }}</p>
+                </div>
+                <div class="campo-select stats-data-sel">
+                  <label>Filtrar por bimestre/data</label>
+                  <input type="date" [(ngModel)]="dataFiltroEstatisticas" (change)="carregarEstatisticasTurma()">
+                </div>
+              </div>
+
+              <!-- Loading -->
+              <div class="stats-loading" *ngIf="carregandoEstatisticas">
+                <div class="loading-dots"><span></span><span></span><span></span></div>
+                Carregando estatísticas...
+              </div>
+
+              <!-- Vazio -->
+              <div class="stats-vazio" *ngIf="!carregandoEstatisticas && !estatisticasTurma">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40">
+                  <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z"/>
+                  <path d="M15 13v6a2 2 0 002 2h2a2 2 0 002-2v-6a2 2 0 00-2-2h-2a2 2 0 00-2 2z"/>
+                  <path d="M9 10V6a2 2 0 012-2h2a2 2 0 012 2v4"/>
+                </svg>
+                <p>Nenhuma avaliação registrada para este bimestre.</p>
+                <button type="button" class="btn-nav primary" style="margin-top:8px" (click)="abaAtiva = 'avaliar'">
+                  Iniciar avaliações →
+                </button>
+              </div>
+
+              <ng-container *ngIf="!carregandoEstatisticas && estatisticasTurma">
+
+                <!-- Cards de resumo sempre visíveis -->
+                <div class="stats-summary">
+                  <div class="stat-card">
+                    <span class="sc-numero">{{ estatisticasTurma.totalAvaliados }}</span>
+                    <span class="sc-de">de {{ educandos.length }}</span>
+                    <span class="sc-label">educandos avaliados</span>
+                  </div>
+                  <div class="stat-card" [style.borderTopColor]="corNivelMedia(estatisticasTurma.mediaGeral)">
+                    <span class="sc-numero" [style.color]="corNivelMedia(estatisticasTurma.mediaGeral)">{{ formatarMedia(estatisticasTurma.mediaGeral) }}</span>
+                    <span class="sc-de">/10</span>
+                    <span class="sc-label">média geral da turma</span>
+                    <span class="sc-nivel-badge" [style.background]="corNivelMedia(estatisticasTurma.mediaGeral)">
+                      {{ labelNivelMedia(estatisticasTurma.mediaGeral) }}
+                    </span>
+                  </div>
+                  <div class="stat-card">
+                    <span class="sc-numero">{{ estatisticasTurma.secoes.length }}</span>
+                    <span class="sc-label">seções avaliadas</span>
+                  </div>
+                </div>
+
+                <!-- Sub-abas: Visão Geral / Por Educando -->
+                <div class="stats-sub-tabs">
+                  <button type="button" class="sst-btn" [class.ativa]="statsSubAba === 'geral'" (click)="statsSubAba = 'geral'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                      <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6"/><path d="M15 19v-3a2 2 0 00-2-2H11a2 2 0 00-2 2v3"/>
+                      <path d="M21 19v-9a2 2 0 00-2-2h-2a2 2 0 00-2 2v9"/>
+                    </svg>
+                    Visão Geral
+                  </button>
+                  <button type="button" class="sst-btn" [class.ativa]="statsSubAba === 'educandos'" (click)="statsSubAba = 'educandos'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                    </svg>
+                    Por Educando
+                    <span class="sst-badge">{{ estatisticasEducandos.length }}</span>
+                  </button>
+                </div>
+
+                <!-- ── Visão Geral: Cards por seção ──────────────────────────────── -->
+                <ng-container *ngIf="statsSubAba === 'geral'">
+                  <div class="stats-secoes-grid">
+                    <div class="stats-secao-card" *ngFor="let secao of estatisticasTurma.secoes">
+                      <div class="ssc-topo">
+                        <span class="ssc-icone">{{ secao.icone }}</span>
+                        <div class="ssc-info">
+                          <span class="ssc-titulo">{{ secao.secaoTitulo }}</span>
+                          <span class="ssc-media" [style.color]="corNivelMedia(secao.mediaScore)">
+                            {{ labelNivelMedia(secao.mediaScore) }} &mdash; {{ formatarMedia(secao.mediaScore) }}/10
+                          </span>
+                        </div>
+                        <span class="ssc-total-badge">{{ secao.totalRespostas }} resp.</span>
+                      </div>
+                      <div class="ssc-dist">
+                        <div class="ssc-nivel-row" *ngFor="let d of secao.distribuicao">
+                          <span class="ssc-nivel-nome">{{ d.label }}</span>
+                          <div class="ssc-bar-track">
+                            <div class="ssc-bar-fill"
+                              [style.width.%]="secao.totalRespostas > 0 ? (d.count / secao.totalRespostas) * 100 : 0"
+                              [style.background]="d.cor">
+                            </div>
+                          </div>
+                          <span class="ssc-nivel-count">{{ d.count }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- ── Por Educando ──────────────────────────────────────────────── -->
+                <ng-container *ngIf="statsSubAba === 'educandos'">
+
+                  <div class="edu-stats-vazio" *ngIf="estatisticasEducandos.length === 0">
+                    Nenhum educando avaliado encontrado.
+                  </div>
+
+                  <div class="edu-stats-lista" *ngIf="estatisticasEducandos.length > 0">
+                    <div class="edu-stats-card" *ngFor="let edu of estatisticasEducandos">
+                      <div class="esc-topo">
+                        <div class="esc-avatar">{{ edu.nome.charAt(0).toUpperCase() }}</div>
+                        <div class="esc-info">
+                          <span class="esc-nome">{{ edu.nome }}</span>
+                          <span class="esc-id">Matrícula: {{ edu.idMatricula }}</span>
+                        </div>
+                        <div class="esc-media-badge" [style.background]="corNivelMedia(edu.mediaGeral) + '22'" [style.color]="corNivelMedia(edu.mediaGeral)" [style.borderColor]="corNivelMedia(edu.mediaGeral) + '55'">
+                          {{ formatarMedia(edu.mediaGeral) }}/10 &mdash; {{ labelNivelMedia(edu.mediaGeral) }}
+                        </div>
+                      </div>
+                      <div class="esc-secoes">
+                        <ng-container *ngIf="secoesAvaliadas(edu).length === 0">
+                          <span class="esc-sem-dados">Nenhuma seção avaliada ainda.</span>
+                        </ng-container>
+                        <div class="esc-secao-row" *ngFor="let s of secoesAvaliadas(edu)">
+                          <span class="esc-secao-icone">{{ s.icone }}</span>
+                          <span class="esc-secao-titulo">{{ s.secaoTitulo }}</span>
+                          <div class="esc-nivel-bar">
+                            <div class="esc-nivel-fill"
+                              [style.width.%]="(s.mediaScore / 10) * 100"
+                              [style.background]="s.nivelCor">
+                            </div>
+                          </div>
+                          <span class="esc-nivel-badge"
+                            [style.background]="s.nivelCor + '22'"
+                            [style.color]="s.nivelCor"
+                            [style.borderColor]="s.nivelCor + '55'">
+                            {{ s.nivelLabel }} · {{ formatarMedia(s.mediaScore) }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </ng-container>
+
+              </ng-container>
+
+            </div><!-- /.stats-container -->
+
+          </ng-container><!-- *ngIf disciplinaSelecionada && serieEfetiva -->
+
+        </ng-container><!-- *ngIf turmaSelecionada -->
+
+      </div><!-- /.detalhe-conteudo -->
+    </main><!-- /.comp-detalhe -->
+
+  </div><!-- /.comp-layout -->
+
+</div><!-- /.comp-page -->

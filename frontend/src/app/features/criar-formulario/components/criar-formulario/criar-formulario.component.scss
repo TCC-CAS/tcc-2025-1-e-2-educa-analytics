@@ -1,0 +1,445 @@
+@use 'sass:color';
+
+$primary:  #2563eb;
+$success:  #16a34a;
+$danger:   #dc2626;
+$border:   #e2e8f0;
+$text:     #1e293b;
+$muted:    #64748b;
+$bg-card:  #ffffff;
+$radius:   12px;
+
+// ── Layout ──────────────────────────────────────────────────────────────────
+
+.page-criar-formulario {
+  padding: 32px 24px;
+  max-width: 860px;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+  color: $text;
+}
+
+// ── Cabeçalho ───────────────────────────────────────────────────────────────
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-left: 4px solid $primary;
+  padding-left: 16px;
+  margin-bottom: 32px;
+
+  .header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba($primary, .1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    svg {
+      width: 24px;
+      height: 24px;
+      color: $primary;
+      stroke: $primary;
+    }
+  }
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .subtitle {
+    margin: 0;
+    color: $muted;
+    font-size: .9rem;
+  }
+}
+
+// ── Sucesso ──────────────────────────────────────────────────────────────────
+
+.sucesso-card {
+  background: $bg-card;
+  border: 1px solid #bbf7d0;
+  border-radius: $radius;
+  padding: 48px 32px;
+  text-align: center;
+
+  .sucesso-icon { font-size: 3rem; margin-bottom: 16px; }
+
+  h2 { color: $success; margin-bottom: 8px; }
+  p  { color: $muted; margin-bottom: 24px; }
+
+  .sucesso-acoes {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+// ── Formulário ───────────────────────────────────────────────────────────────
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.erros-box {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  padding: 16px;
+  color: $danger;
+  font-size: .875rem;
+
+  strong { display: block; margin-bottom: 8px; }
+  ul { margin: 0; padding-left: 20px; }
+  li { margin-bottom: 4px; }
+}
+
+// ── Seção ────────────────────────────────────────────────────────────────────
+
+.form-section {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: $radius;
+  padding: 28px;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 20px;
+  color: $text;
+}
+
+.section-hint {
+  margin: -12px 0 16px;
+  font-size: .85rem;
+  color: $muted;
+}
+
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+
+  .section-title { margin-bottom: 0; }
+}
+
+// ── Campo ────────────────────────────────────────────────────────────────────
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+
+  &:last-child { margin-bottom: 0; }
+
+  label {
+    font-size: .85rem;
+    font-weight: 500;
+    color: $muted;
+  }
+
+  input[type="text"],
+  textarea,
+  select {
+    border: 1px solid $border;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: .9rem;
+    font-family: inherit;
+    color: $text;
+    background: #f8fafc;
+    transition: border-color .2s, box-shadow .2s;
+
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, .12);
+      background: #fff;
+    }
+  }
+
+  textarea { resize: vertical; min-height: 80px; }
+  select   { cursor: pointer; }
+}
+
+.field-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.flex-1 { flex: 1; min-width: 200px; }
+
+.required { color: $danger; }
+
+// ── Ícones ───────────────────────────────────────────────────────────────────
+
+.icones-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.icone-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 2px solid $border;
+  background: #f8fafc;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: border-color .15s, transform .1s;
+
+  &:hover { border-color: $primary; transform: scale(1.1); }
+  &.selected { border-color: $primary; background: rgba($primary, .1); }
+}
+
+// ── Cores ────────────────────────────────────────────────────────────────────
+
+.cores-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cor-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .15s, border-color .15s;
+  font-size: .9rem;
+  color: #fff;
+  font-weight: 700;
+
+  &:hover   { transform: scale(1.15); }
+  &.selected { border-color: $text; }
+}
+
+// ── Público ──────────────────────────────────────────────────────────────────
+
+.publico-grid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.publico-card {
+  flex: 1;
+  min-width: 130px;
+  border: 2px solid $border;
+  border-radius: $radius;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  &:hover { border-color: $primary; }
+
+  &.selected {
+    border-color: $primary;
+    background: rgba($primary, .06);
+    box-shadow: 0 2px 10px rgba($primary, .15);
+  }
+
+  .publico-icon  { font-size: 1.8rem; }
+  .publico-label { font-size: .85rem; font-weight: 500; }
+}
+
+// ── Perguntas ────────────────────────────────────────────────────────────────
+
+.perguntas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.pergunta-card {
+  background: #f8fafc;
+  border: 1px solid $border;
+  border-radius: 10px;
+  padding: 20px;
+
+  .field-group { margin-bottom: 12px; }
+}
+
+.pergunta-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+
+  .pergunta-numero {
+    width: 28px;
+    height: 28px;
+    background: $primary;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .pergunta-acoes {
+    display: flex;
+    gap: 6px;
+  }
+}
+
+.pergunta-config {
+  align-items: flex-end;
+  gap: 16px;
+
+  .field-group { flex: 1; margin-bottom: 0; }
+}
+
+.obrigatoria-toggle {
+  min-width: 120px;
+  flex: 0 !important;
+}
+
+// ── Toggle ────────────────────────────────────────────────────────────────────
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+
+  input { opacity: 0; width: 0; height: 0; }
+
+  .slider {
+    position: absolute;
+    inset: 0;
+    background: #cbd5e1;
+    border-radius: 24px;
+    transition: background .2s;
+
+    &::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .2s;
+    }
+  }
+
+  input:checked + .slider {
+    background: $primary;
+    &::before { transform: translateX(20px); }
+  }
+}
+
+// ── Botões ────────────────────────────────────────────────────────────────────
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background .2s, opacity .2s, transform .1s;
+
+  &:active { transform: scale(.97); }
+  &:disabled { opacity: .6; cursor: not-allowed; }
+
+  &.btn-primary {
+    background: $primary;
+    color: #fff;
+    &:hover:not(:disabled) { background: color.adjust($primary, $lightness: -8%); }
+  }
+
+  &.btn-outline {
+    background: transparent;
+    border: 2px solid $primary;
+    color: $primary;
+    &:hover:not(:disabled) { background: rgba($primary, .06); }
+  }
+
+  &.btn-sm { padding: 7px 14px; font-size: .82rem; }
+
+  &.btn-add-full {
+    width: 100%;
+    justify-content: center;
+    border-style: dashed;
+  }
+}
+
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid $border;
+  background: #fff;
+  cursor: pointer;
+  font-size: .75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, border-color .15s;
+
+  &:hover:not(:disabled) { background: #f1f5f9; border-color: $primary; }
+  &:disabled { opacity: .35; cursor: not-allowed; }
+
+  &.icon-btn-danger:hover:not(:disabled) {
+    background: #fee2e2;
+    border-color: $danger;
+    color: $danger;
+  }
+}
+
+// ── Rodapé ───────────────────────────────────────────────────────────────────
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+
+  .btn-primary { padding: 12px 32px; font-size: 1rem; }
+}
+
+// ── Animação loading ──────────────────────────────────────────────────────────
+
+.loading-dots {
+  span {
+    animation: blink 1.2s infinite;
+    &:nth-child(2) { animation-delay: .2s; }
+    &:nth-child(3) { animation-delay: .4s; }
+  }
+}
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0; }
+  40%           { opacity: 1; }
+}

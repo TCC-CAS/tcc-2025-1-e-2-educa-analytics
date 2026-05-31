@@ -165,7 +165,25 @@ export class TurmasService {
   }
 
   listarSalas(): Observable<Sala[]> {
-    return this.http.get<Sala[]>(`${environment.apiUrl}/salas`);
+    return this.http.get<Sala[]>(`${environment.apiUrl}/salas`).pipe(
+      map((response: any) => {
+        console.log('[TURMAS-SERVICE] Resposta bruta da API /salas:', response);
+        console.log('[TURMAS-SERVICE] Tipo da resposta:', typeof response);
+        console.log('[TURMAS-SERVICE] É array?', Array.isArray(response));
+        
+        // Verificar se a resposta veio encapsulada em { data: [] } ou diretamente como array
+        const salas = Array.isArray(response) ? response : (response?.data || response || []);
+        
+        console.log('[TURMAS-SERVICE] Salas após processamento:', salas);
+        console.log('[TURMAS-SERVICE] Total de salas:', salas.length);
+        if (salas.length > 0) {
+          console.log('[TURMAS-SERVICE] Primeira sala:', salas[0]);
+          console.log('[TURMAS-SERVICE] Status das salas:', salas.map((s: any) => s.status));
+        }
+        
+        return salas;
+      })
+    );
   }
 
   // Novos métodos da estrutura profissional

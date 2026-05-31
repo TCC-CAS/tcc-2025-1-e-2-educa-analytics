@@ -297,6 +297,9 @@ $transition: 0.25s ease;
 
 .content-scroll {
   flex: 1;
+  min-height: 0;        /* permite encolher dentro do flex column */
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   padding: 24px;
 }

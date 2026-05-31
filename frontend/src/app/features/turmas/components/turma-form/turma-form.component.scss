@@ -12,10 +12,11 @@ $text:       #1e293b;
 $text-muted: #64748b;
 $radius:     10px;
 :host {
-  display: block !important;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100% !important;
+  overflow: visible !important;
+  flex: 1 0 auto !important;
   background-color: #f8fafc !important;
   background-image:
     linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
@@ -23,11 +24,11 @@ $radius:     10px;
   background-size: 50px 50px !important;
   box-sizing: border-box !important;
   font-family: 'Inter', 'Segoe UI', sans-serif !important;
-  flex-shrink: 1 !important;
 }
 .turma-form-page {
-  height: 100% !important;
-  overflow: hidden !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: flex-start !important;
@@ -37,7 +38,7 @@ $radius:     10px;
   margin: 0 !important;
   position: relative !important;
 
-  @media (max-width: 768px) { 
+  @media (max-width: 768px) {
     padding: 1rem !important;
   }
 }
@@ -145,8 +146,7 @@ $radius:     10px;
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: visible;
   min-height: 0;
   background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(252,252,253,0.95) 50%, rgba(248,250,252,0.92) 100%);
   backdrop-filter: blur(12px);

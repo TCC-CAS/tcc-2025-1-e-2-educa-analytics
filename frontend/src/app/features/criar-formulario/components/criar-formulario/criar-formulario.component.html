@@ -1,0 +1,178 @@
+<div class="page-criar-formulario">
+
+  <!-- ── Cabeçalho ──────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="12" y1="18" x2="12" y2="12"/>
+        <line x1="9"  y1="15" x2="15" y2="15"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Criar Formulário (Em breve)</h1>
+      <p class="subtitle">Crie um novo formulário de avaliação personalizado.</p>
+    </div>
+  </div>
+
+  <!-- ── Tela de Sucesso ────────────────────────────────────────────────────── -->
+  <div class="sucesso-card" *ngIf="sucesso">
+    <div class="sucesso-icon">✅</div>
+    <h2>Formulário criado com sucesso!</h2>
+    <p *ngIf="formularioCriado">
+      O formulário <strong>{{ formularioCriado.titulo }}</strong> já está disponível
+      em <em>/avaliacoes</em> para os usuários selecionados.
+    </p>
+    <div class="sucesso-acoes">
+      <button class="btn btn-outline" (click)="criarOutro()">Criar outro formulário</button>
+      <button class="btn btn-primary" (click)="voltarAoInicio()">Ir ao início</button>
+    </div>
+  </div>
+
+  <!-- ── Formulário ────────────────────────────────────────────────────────── -->
+  <div class="form-container" *ngIf="!sucesso">
+
+    <!-- Erros -->
+    <div class="erros-box" *ngIf="erros.length > 0">
+      <strong>Corrija os seguintes erros:</strong>
+      <ul>
+        <li *ngFor="let e of erros">{{ e }}</li>
+      </ul>
+    </div>
+
+    <!-- Seção 1: Identidade -->
+    <section class="form-section">
+      <h2 class="section-title">Identidade do formulário</h2>
+
+      <div class="field-group">
+        <label for="titulo">Título <span class="required">*</span></label>
+        <input id="titulo" type="text" [(ngModel)]="titulo"
+               placeholder="Ex: Avaliação do Clima Escolar 2025"
+               maxlength="200">
+      </div>
+
+      <div class="field-group">
+        <label for="descricao">Descrição</label>
+        <textarea id="descricao" rows="3" [(ngModel)]="descricao"
+                  placeholder="Descreva brevemente o objetivo deste formulário…"
+                  maxlength="500"></textarea>
+      </div>
+
+      <div class="field-row">
+        <!-- Ícone -->
+        <div class="field-group flex-1">
+          <label>Ícone</label>
+          <div class="icones-grid">
+            <button type="button"
+                    *ngFor="let ic of iconesDisponiveis"
+                    class="icone-btn"
+                    [class.selected]="icone === ic"
+                    (click)="icone = ic">{{ ic }}</button>
+          </div>
+        </div>
+
+        <!-- Cor -->
+        <div class="field-group flex-1">
+          <label>Cor de destaque</label>
+          <div class="cores-grid">
+            <button type="button"
+                    *ngFor="let c of coresDisponiveis"
+                    class="cor-btn"
+                    [class.selected]="cor === c.value"
+                    [style.background]="c.hex"
+                    [title]="c.label"
+                    (click)="cor = c.value">
+              <span class="check" *ngIf="cor === c.value">✓</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção 2: Destinatários -->
+    <section class="form-section">
+      <h2 class="section-title">Quem verá este formulário? <span class="required">*</span></h2>
+      <p class="section-hint">Selecione ao menos um tipo de usuário.</p>
+      <div class="publico-grid">
+        <label class="publico-card" [class.selected]="publicoSelecionado.educando">
+          <input type="checkbox" [(ngModel)]="publicoSelecionado.educando" hidden>
+          <span class="publico-icon">🎓</span>
+          <span class="publico-label">Educando</span>
+        </label>
+        <label class="publico-card" [class.selected]="publicoSelecionado.educador">
+          <input type="checkbox" [(ngModel)]="publicoSelecionado.educador" hidden>
+          <span class="publico-icon">👩‍🏫</span>
+          <span class="publico-label">Educador</span>
+        </label>
+        <label class="publico-card" [class.selected]="publicoSelecionado.responsavel">
+          <input type="checkbox" [(ngModel)]="publicoSelecionado.responsavel" hidden>
+          <span class="publico-icon">👨‍👩‍👧</span>
+          <span class="publico-label">Responsável</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Seção 3: Perguntas -->
+    <section class="form-section">
+      <div class="section-header-row">
+        <h2 class="section-title">Perguntas</h2>
+        <button type="button" class="btn btn-sm btn-outline" (click)="adicionarPergunta()">
+          + Adicionar pergunta
+        </button>
+      </div>
+
+      <div class="perguntas-list">
+        <div class="pergunta-card" *ngFor="let p of perguntas; let i = index; trackBy: trackByIndex">
+          <div class="pergunta-header">
+            <span class="pergunta-numero">{{ i + 1 }}</span>
+            <div class="pergunta-acoes">
+              <button type="button" class="icon-btn" title="Mover para cima"
+                      [disabled]="i === 0" (click)="moverPerguntaParaCima(i)">▲</button>
+              <button type="button" class="icon-btn" title="Mover para baixo"
+                      [disabled]="i === perguntas.length - 1" (click)="moverPerguntaParaBaixo(i)">▼</button>
+              <button type="button" class="icon-btn icon-btn-danger" title="Remover"
+                      [disabled]="perguntas.length === 1" (click)="removerPergunta(i)">✕</button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label>Texto da pergunta</label>
+            <input type="text" [(ngModel)]="p.texto"
+                   placeholder="Ex: Como você avalia o ambiente escolar?"
+                   maxlength="500">
+          </div>
+
+          <div class="field-row pergunta-config">
+            <div class="field-group">
+              <label>Tipo de resposta</label>
+              <select [(ngModel)]="p.tipo">
+                <option *ngFor="let t of tiposPerguntas" [value]="t.value">{{ t.label }}</option>
+              </select>
+            </div>
+            <div class="field-group obrigatoria-toggle">
+              <label>Obrigatória?</label>
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="p.obrigatoria">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-outline btn-add-full" (click)="adicionarPergunta()">
+        + Adicionar outra pergunta
+      </button>
+    </section>
+
+    <!-- Rodapé de ações -->
+    <div class="form-footer">
+      <button class="btn btn-primary" (click)="salvar()" [disabled]="enviando">
+        <span *ngIf="!enviando">Publicar formulário</span>
+        <span *ngIf="enviando" class="loading-dots">Publicando<span>.</span><span>.</span><span>.</span></span>
+      </button>
+    </div>
+
+  </div><!-- /form-container -->
+</div>

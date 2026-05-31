@@ -50,8 +50,16 @@ def listar_turmas(ano_letivo_id=None, serie_id=None, periodo_id=None, status=Non
         params = []
         
         if ano_letivo_id:
-            query += " AND t.idAnoLetivo = %s"
-            params.append(ano_letivo_id)
+            try:
+                val = int(ano_letivo_id)
+                # Se valor >= 2000, interpreta como ano (ex: 2026); senão como idAnoLetivo (ex: 2)
+                if val >= 2000:
+                    query += " AND al.ano = %s"
+                else:
+                    query += " AND al.idAnoLetivo = %s"
+                params.append(val)
+            except (ValueError, TypeError):
+                pass
         
         if serie_id:
             query += " AND t.idSerie = %s"

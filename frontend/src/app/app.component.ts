@@ -11,6 +11,7 @@ export class AppComponent implements OnInit {
   title = 'EducaAnalytics';
   menuAberto: boolean = false;
   menuExpandido: boolean = false;
+  modalLogoutAberto: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -47,13 +48,22 @@ export class AppComponent implements OnInit {
     return tipo !== null && tiposPermitidos.includes(tipo);
   }
 
+  get currentUserId(): string {
+    return this.authService.getCurrentUser()?.id || '';
+  }
+
   logout(): void {
-    if (confirm('Deseja realmente fazer logout?')) {
-      // Limpa a autenticação
-      this.authService.logout();
-      // Navega para login
-      this.router.navigate(['/login']);
-    }
+    this.modalLogoutAberto = true;
+  }
+
+  confirmarLogout(): void {
+    this.modalLogoutAberto = false;
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
+  cancelarLogout(): void {
+    this.modalLogoutAberto = false;
   }
 
   toggleMenuUsuario(): void {

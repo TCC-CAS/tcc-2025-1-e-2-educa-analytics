@@ -9,7 +9,7 @@ from ..models.models import (
     CronogramaModel,
     TurmaModel,
     SalaModel,
-    EducadorModel,
+    EducadorNovoModel,
     DisciplinaModel,
     PeriodoLetivoModel,
     DisponibilidadeEducadorModel,
@@ -265,42 +265,44 @@ class GeradorGradeAutomatica:
     def _encontrar_educador_disponivel(self, disciplina: Dict, dia: str, hora_inicio: str, hora_fim: str) -> Optional[int]:
         """
         Encontra um educador disponível que leciona a disciplina no turno correto
+        Considera: disponibilidade na tabela DisponibilidadeEducador e conflitos de horário
         """
-        # Busca educadores que lecionam esta disciplina
-        educadores = EducadorModel.find_by_disciplina(disciplina["idDisciplina"])
+        # Busca educadores da tabela Educadores (nova) que é referenciada pelo Cronograma
+        educadores = EducadorNovoModel.find_by_disciplina(disciplina["idDisciplina"])
         
         if not educadores:
+            print(f"[AVISO] Nenhum educador encontrado para disciplina {disciplina.get('nomeDisciplina', disciplina['idDisciplina'])}")
             return None
         
         turno_turma = self.turma.get("turno", "Manhã")
         
         for educador in educadores:
-            id_educador = educador.get("idEducador")
+            id_educador = educador.get("idEducador") or educador.get("idMatricula")
             if not id_educador:
                 continue
             
-            # Verifica se o educador trabalha neste turno
-            # (Simplificado: assume que se tem disponibilidade no horário, trabalha no turno)
+            # Verifica se está disponível no horário (consulta tabela DisponibilidadeEducador)
+            disponivel = DisponibilidadeEducadorModel.check_disponibilidade(
+                id_educador, dia, hora_inicio, hora_fim
+            )
             
-            # Verifica se está disponível no horário
-            try:
-                disponivel = DisponibilidadeEducadorModel.check_disponibilidade(
-                    id_educador, dia, hora_inicio, hora_fim
-                )
-                if not disponivel:
-                    continue
-            except Exception as e:
-                # Se o método não existir ou falhar, assume disponível
-                print(f"[AVISO] Erro ao verificar disponibilidade: {e}")
-                pass
+            if not disponivel:
+                print(f"[DEBUG] Educador {id_educador} não disponível em {dia} {hora_inicio}-{hora_fim}")
+                continue
             
-            # Verifica se não tem conflito
+            # Verifica se não tem conflito de horário (já tem outra aula neste horário)
             conflitos = CronogramaModel.find_conflitos_educador(
                 id_educador, dia, hora_inicio, hora_fim
             )
-            if not conflitos:
-                return id_educador
+            if conflitos:
+                print(f"[DEBUG] Educador {id_educador} tem conflito em {dia} {hora_inicio}-{hora_fim}: {conflitos[0].get('nomeTurma', 'turma desconhecida')}")
+                continue
+            
+            # Educador disponível encontrado!
+            print(f"[DEBUG] Educador {id_educador} disponível para {disciplina.get('nomeDisciplina')} em {dia} {hora_inicio}-{hora_fim}")
+            return id_educador
         
+        print(f"[AVISO] Nenhum educador disponível para {disciplina.get('nomeDisciplina')} em {dia} {hora_inicio}-{hora_fim}")
         return None
     
     def _encontrar_sala_disponivel(self, dia: str, hora_inicio: str, hora_fim: str) -> Optional[int]:

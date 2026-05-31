@@ -11,6 +11,14 @@ const routes: Routes = [
   {
     path: 'cronograma',
     component: CronogramaEducandoComponent
+  },
+  {
+    path: ':id',
+    component: PortalEducandoComponent
+  },
+  {
+    path: ':id/cronograma',
+    component: CronogramaEducandoComponent
   }
 ];
 

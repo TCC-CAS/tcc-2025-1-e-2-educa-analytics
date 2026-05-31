@@ -1,9 +1,31 @@
 <div class="cron-page">
 
+  <!-- ── Estados de carregamento / erro ────────────────────── -->
+  <div *ngIf="carregando" style="padding: 3rem; text-align: center; color: #666;">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2"
+         style="animation: spin 1s linear infinite; margin-bottom:.5rem">
+      <circle cx="12" cy="12" r="10" stroke-opacity=".2"/>
+      <path d="M12 2a10 10 0 0 1 10 10"/>
+    </svg>
+    <p>Carregando cronograma...</p>
+  </div>
+
+  <div *ngIf="erro && !carregando"
+       style="margin: 2rem; padding: 1rem 1.25rem; background: #fff3cd; border: 1px solid #ffc107;
+              border-radius: 8px; color: #856404; display: flex; align-items: center; gap: .5rem;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    {{ erro }}
+  </div>
+
+  <ng-container *ngIf="!carregando && !erro">
+
   <!-- ── Header ─────────────────────────────────────────────── -->
   <header class="page-header">
     <div class="header-info">
-      <div class="avatar">{{ educador.nome[0] }}</div>
+      <div class="avatar">{{ educador.nome ? educador.nome[0] : '?' }}</div>
       <div class="header-text">
         <h1>Meu Cronograma</h1>
         <p class="header-sub">{{ educador.nome }}</p>
@@ -150,5 +172,7 @@
 
     </div>
   </div>
+
+  </ng-container><!-- /ng-container !carregando && !erro -->
 
 </div>

@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClientModule } from '@angular/common/http';
 
 import { EducandosRoutingModule } from './educandos-routing.module';
 import { PortalEducandoComponent } from './components/portal-educando/portal-educando.component';
@@ -12,6 +13,7 @@ import { CronogramaEducandoComponent } from './components/cronograma-educando/cr
   ],
   imports: [
     CommonModule,
+    HttpClientModule,
     EducandosRoutingModule
   ]
 })

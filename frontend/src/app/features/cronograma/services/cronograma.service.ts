@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApiService } from '../../../core/services/api.service';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -213,11 +214,42 @@ export class CronogramaService {
   constructor(private api: ApiService) { }
 
   // ─────────────────────────────────────────────────────────────────────────
+  // TURMAS - Métodos auxiliares específicos para cronograma
+  // ─────────────────────────────────────────────────────────────────────────
+
+  listarTurmasPorAno(anoLetivo: number): Observable<any[]> {
+    console.log('[CronogramaService] Buscando turmas para ano:', anoLetivo);
+    const url = `/turmas?ano_letivo_id=${anoLetivo}`;
+    console.log('[CronogramaService] URL:', url);
+    
+    return this.api.get<any>(url).pipe(
+      map((response: any) => {
+        console.log('[CronogramaService] Resposta recebida:', response);
+        // O backend retorna { sucesso: true, turmas: [...], total: ... }
+        if (response && response.turmas) {
+          console.log('[CronogramaService] Retornando', response.turmas.length, 'turmas');
+          return response.turmas;
+        } else if (Array.isArray(response)) {
+          console.log('[CronogramaService] Resposta é array com', response.length, 'itens');
+          return response;
+        }
+        console.log('[CronogramaService] Nenhuma turma encontrada na resposta');
+        return [];
+      })
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
   // CRONOGRAMA - CRUD Básico
   // ─────────────────────────────────────────────────────────────────────────
 
   listarCronogramaTurma(turmaId: number): Observable<HorarioCronograma[]> {
-    return this.api.get<HorarioCronograma[]>(`/cronograma?turmaId=${turmaId}`);
+    return this.api.get<any>(`/cronograma?turmaId=${turmaId}`).pipe(
+      map((res: any) => {
+        if (Array.isArray(res)) return res;
+        return res?.horarios || res?.data || [];
+      })
+    );
   }
 
   listarCronogramaEducador(idEducador: string): Observable<HorarioCronograma[]> {

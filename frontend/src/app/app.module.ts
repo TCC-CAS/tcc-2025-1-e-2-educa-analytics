@@ -12,12 +12,14 @@ import { CoreModule } from './core/core.module';
 import { SharedModule } from './shared/shared.module';
 import { LoginComponent } from './features/login/login.component';
 import { CriarSenhaComponent } from './features/criar-senha/criar-senha.component';
+import { ResetarSenhaComponent } from './resetar-senha/resetar-senha.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
-    CriarSenhaComponent
+    CriarSenhaComponent,
+    ResetarSenhaComponent
   ],
   imports: [
     BrowserModule,

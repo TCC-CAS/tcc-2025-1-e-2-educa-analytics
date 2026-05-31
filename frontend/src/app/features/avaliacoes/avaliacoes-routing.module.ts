@@ -1,12 +1,25 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule, Routes, UrlMatcher, UrlSegment, UrlMatchResult } from '@angular/router';
 import { AvaliacoesListComponent } from './components/avaliacoes-list/avaliacoes-list.component';
 import { AvaliacaoFormComponent } from './components/avaliacao-form/avaliacao-form.component';
 import { AvaliacaoBnccFormComponent } from './components/avaliacao-bncc-form/avaliacao-bncc-form.component';
 
+/** Corresponde apenas a segmentos puramente numéricos (ex: 445700001). */
+export function matchNumericId(segments: UrlSegment[]): UrlMatchResult | null {
+  if (segments.length === 1 && /^\d+$/.test(segments[0].path)) {
+    return { consumed: segments, posParams: { id: segments[0] } };
+  }
+  return null;
+}
+
+
 const routes: Routes = [
   {
     path: '',
+    component: AvaliacoesListComponent
+  },
+  {
+    matcher: matchNumericId,
     component: AvaliacoesListComponent
   },
   {

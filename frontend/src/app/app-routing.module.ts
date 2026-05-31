@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './features/login/login.component';
 import { CriarSenhaComponent } from './features/criar-senha/criar-senha.component';
+import { ResetarSenhaComponent } from './resetar-senha/resetar-senha.component';
 import { AuthGuard } from './core/guards/auth.guard';
 import { RoleGuard } from './core/guards/role.guard';
 
@@ -18,6 +19,10 @@ const routes: Routes = [
   {
     path: 'criar-senha',
     component: CriarSenhaComponent
+  },
+  {
+    path: 'resetar-senha',
+    component: ResetarSenhaComponent
   },
   {
     path: 'home',
@@ -79,6 +84,12 @@ const routes: Routes = [
     data: { roles: ['gestor', 'administrativo', 'colaborador'] }
   },
   {
+    path: 'mensalidades',
+    loadChildren: () => import('./features/mensalidades/mensalidades.module').then(m => m.MensalidadesModule),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['gestor', 'administrativo', 'colaborador'] }
+  },
+  {
     path: 'fornecedores',
     loadChildren: () => import('./features/fornecedores/fornecedores.module').then(m => m.FornecedoresModule),
     canActivate: [AuthGuard, RoleGuard],
@@ -112,7 +123,7 @@ const routes: Routes = [
     path: 'avaliacoes',
     loadChildren: () => import('./features/avaliacoes/avaliacoes.module').then(m => m.AvaliacoesModule),
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: ['educando', 'educador', 'responsavel', 'colaborador'] }
+    data: { roles: ['educando', 'educador', 'responsavel'] }
   },
   {
     path: 'educandos',
@@ -133,10 +144,10 @@ const routes: Routes = [
     data: { roles: ['gestor', 'administrativo', 'educador', 'colaborador'] }
   },
   {
-    path: 'reposicoes',
-    loadChildren: () => import('./features/reposicoes/reposicoes.module').then(m => m.ReposicoesModule),
+    path: 'criar-formulario',
+    loadChildren: () => import('./features/criar-formulario/criar-formulario.module').then(m => m.CriarFormularioModule),
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: ['gestor', 'administrativo', 'educador'] }
+    data: { roles: ['gestor', 'colaborador', 'administrativo'] }
   }
 ];
 

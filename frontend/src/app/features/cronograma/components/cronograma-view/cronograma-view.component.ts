@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { SalasService } from '../../../salas/services/salas.service';
 import { Sala } from '../../../salas/services/salas.service';
-import { TurmasService } from '../../services/turmas.service';
+import { TurmasService, AnoLetivo } from '../../services/turmas.service';
 import { DisciplinasService, Disciplina } from '../../services/disciplinas.service';
 import { EducadoresService, Educador } from '../../services/educadores.service';
 import { CronogramaService, HorarioCronograma, CriarAulaRequest } from '../../services/cronograma.service';
@@ -39,13 +39,15 @@ const CORES = [
 
 // Interfaces para turmas (backend retorna diferente)
 interface TurmaBackend {
-  id: number;
-  codigo: string;
-  nome: string;
-  serie: string;
-  periodo: 'matutino' | 'vespertino' | 'noturno' | 'integral';
-  anoLetivo: number;
-  vagas: number;
+  idTurma: number;
+  codTurma: string;
+  nomeTurma: string;
+  serie_nome: string;
+  periodo_codigo: string;
+  periodo_nome: string;
+  ano_letivo: number;
+  qldVagas: number;
+  status: string;
 }
 
 interface TurmaLocal {
@@ -53,6 +55,7 @@ interface TurmaLocal {
   nome: string;
   serie: string;
   turno: 'Manhã' | 'Tarde' | 'Noite';
+  periodo: 'matutino' | 'vespertino' | 'noturno' | 'integral';
   anoLetivo: number;
   vagas: number;
 }
@@ -85,18 +88,29 @@ interface SalaSimples {
 export class CronogramaViewComponent implements OnInit {
 
   turmas: TurmaLocal[] = [];
+  todasTurmas: TurmaLocal[] = [];
   disciplinas: DisciplinaLocal[] = [];
   educadores: EducadorLocal[] = [];
   salas: SalaSimples[] = [];
   salasCarregando = false;
   dadosCarregando = false;
-  anosLetivos: number[] = [];
+  anosLetivos: AnoLetivo[] = [];
   salaConflito: { dia: DiaSemana; hora: string; salaId: number } | null = null;
 
   turmaSelecionadaId: string = '';
-  anoLetivo: number = 2026;
+  anoLetivo: number = 0;         // idAnoLetivo do banco (ex: 2)
+  anoLetivoExibicao: number = 0; // ano civil para exibição (ex: 2026)
+  periodoSelecionado: string = '';
   disciplinaSelecionadaId: string = '';
   educadoresDisponiveis: EducadorLocal[] = [];
+
+  periodos = [
+    { value: '', label: 'Todos os períodos' },
+    { value: 'matutino', label: 'Matutino' },
+    { value: 'vespertino', label: 'Vespertino' },
+    { value: 'noturno', label: 'Noturno' },
+    { value: 'integral', label: 'Integral' }
+  ];
 
   dias: { key: DiaSemana; label: string; abrev: string }[] = [
     { key: 'segunda', label: 'Segunda-feira', abrev: 'Seg' },
@@ -201,26 +215,31 @@ export class CronogramaViewComponent implements OnInit {
     }).subscribe({
       next: (dados) => {
         // Anos letivos
-        this.anosLetivos = dados.anosLetivos;
-        if (this.anosLetivos.length > 0) {
-          this.anoLetivo = this.anosLetivos[0];
+        this.anosLetivos = dados.anosLetivos || [];
+        if (this.anosLetivos.length === 0) {
+          // Fallback: criar entrada fake com o ano atual
+          const anoAtual = new Date().getFullYear();
+          this.anosLetivos = [{ id: anoAtual, ano: anoAtual }];
         }
+        // Não selecionar automaticamente - deixar o usuário escolher
+        this.anoLetivo = 0;
+        this.anoLetivoExibicao = 0;
 
         // Disciplinas
-        this.disciplinas = dados.disciplinas.map((d: Disciplina) => ({
+        this.disciplinas = (dados.disciplinas || []).map((d: Disciplina) => ({
           id: d.id.toString(),
           nome: d.nome
         }));
 
         // Educadores
-        this.educadores = dados.educadores.map((e: Educador) => ({
+        this.educadores = (dados.educadores || []).map((e: Educador) => ({
           id: e.id.toString(),
           nome: e.nome
         }));
         this.educadoresDisponiveis = [...this.educadores];
 
         // Salas
-        const salasAtivas = dados.salas.data.filter((sala: Sala) => sala.status === 'ativa');
+        const salasAtivas = dados.salas?.data?.filter((sala: Sala) => sala.status === 'ativa') || [];
         this.salas = salasAtivas.map((sala: Sala) => ({
           id: sala.id,
           nome: sala.nome,
@@ -229,18 +248,16 @@ export class CronogramaViewComponent implements OnInit {
           capacidade: sala.capacidade,
           status: sala.status
         }));
-
-        this.dadosCarregando = false;
         
-        // Carregar turmas do ano letivo selecionado
-        this.carregarTurmas();
-        
-        console.log('[Cronograma] Dados carregados:', {
+        console.log('[Cronograma] Dados iniciais carregados:', {
           anosLetivos: this.anosLetivos.length,
           disciplinas: this.disciplinas.length,
           educadores: this.educadores.length,
           salas: this.salas.length
         });
+
+        // NÃO carregar turmas automaticamente - aguardar seleção do ano
+        this.dadosCarregando = false;
       },
       error: (err) => {
         console.error('[Cronograma] Erro ao carregar dados:', err);
@@ -251,39 +268,121 @@ export class CronogramaViewComponent implements OnInit {
   }
 
   carregarTurmas(): void {
-    this.turmasService.listarTurmas(this.anoLetivo).subscribe({
-      next: (turmasBackend: TurmaBackend[]) => {
-        this.turmas = turmasBackend.map(t => ({
-          id: t.id.toString(),
-          nome: t.nome,
-          serie: t.serie,
-          turno: this.periodoParaTurno(t.periodo),
-          anoLetivo: t.anoLetivo,
-          vagas: t.vagas
-        }));
+    if (!this.anoLetivo || this.anoLetivo === 0) {
+      console.error('[Cronograma] Ano letivo não definido');
+      this.turmas = [];
+      this.todasTurmas = [];
+      return;
+    }
 
-        if (this.turmas.length > 0 && !this.turmaSelecionadaId) {
-          this.turmaSelecionadaId = this.turmas[0].id;
-          this.carregarCronogramaTurma();
+    console.log('[Cronograma] Carregando turmas para o ano:', this.anoLetivo);
+    
+    // O backend espera ano_letivo_id, não anoLetivo
+    this.cronogramaService.listarTurmasPorAno(this.anoLetivo).subscribe({
+      next: (turmasBackend: TurmaBackend[]) => {
+        console.log('[Cronograma] Resposta do backend:', turmasBackend);
+        console.log('[Cronograma] Turmas recebidas do backend:', turmasBackend?.length || 0);
+        
+        if (!turmasBackend || turmasBackend.length === 0) {
+          this.todasTurmas = [];
+          this.turmas = [];
+          console.log('[Cronograma] Nenhuma turma encontrada para o ano:', this.anoLetivo);
+          this.showMsg(`Nenhuma turma encontrada para o ano ${this.anoLetivo}`, 'error');
+          return;
         }
         
-        console.log('[Cronograma] Turmas carregadas:', this.turmas.length);
+        console.log('[Cronograma] Primeira turma (raw):', turmasBackend[0]);
+        
+        this.todasTurmas = turmasBackend.map(t => ({
+          id: t.idTurma.toString(),
+          nome: t.nomeTurma,
+          serie: t.serie_nome,
+          turno: this.periodoParaTurno(t.periodo_codigo),
+          periodo: this.codigoPeriodoParaPeriodo(t.periodo_codigo),
+          anoLetivo: t.ano_letivo,
+          vagas: t.qldVagas
+        }));
+
+        this.filtrarTurmasPorPeriodo();
+        
+        console.log('[Cronograma] Turmas processadas:', this.todasTurmas.length, 'Filtradas:', this.turmas.length);
       },
       error: (err) => {
         console.error('[Cronograma] Erro ao carregar turmas:', err);
         this.showMsg('Erro ao carregar turmas.', 'error');
+        this.turmas = [];
+        this.todasTurmas = [];
       }
     });
+  }
+
+  filtrarTurmasPorPeriodo(): void {
+    console.log('[Cronograma] Filtrando turmas. Período selecionado:', this.periodoSelecionado || 'Todos');
+    console.log('[Cronograma] Total de turmas antes do filtro:', this.todasTurmas.length);
+    
+    if (!this.periodoSelecionado) {
+      this.turmas = [...this.todasTurmas];
+    } else {
+      this.turmas = this.todasTurmas.filter(t => {
+        console.log('[Cronograma] Comparando turma:', t.nome, 'periodo:', t.periodo, 'com filtro:', this.periodoSelecionado);
+        return t.periodo === this.periodoSelecionado;
+      });
+    }
+
+    console.log('[Cronograma] Turmas após filtro:', this.turmas.length);
+
+    // Selecionar a primeira turma se houver turmas disponíveis
+    if (this.turmas.length > 0) {
+      // Se a turma atualmente selecionada não está na lista filtrada, selecionar a primeira
+      const turmaSelecionadaExiste = this.turmas.find(t => t.id === this.turmaSelecionadaId);
+      if (!turmaSelecionadaExiste) {
+        this.turmaSelecionadaId = this.turmas[0].id;
+        console.log('[Cronograma] Turma selecionada:', this.turmas[0].nome);
+        this.carregarCronogramaTurma();
+      }
+    } else {
+      this.turmaSelecionadaId = '';
+      this.slots = [];
+      console.log('[Cronograma] Nenhuma turma disponível após filtro');
+    }
+  }
+
+  onPeriodoChange(): void {
+    console.log('[Cronograma] onPeriodoChange chamado. Período:', this.periodoSelecionado);
+    console.log('[Cronograma] Ano letivo atual:', this.anoLetivo);
+    
+    // Só filtrar se já tiver um ano selecionado
+    if (this.anoLetivo && this.anoLetivo !== 0) {
+      this.filtrarTurmasPorPeriodo();
+    }
   }
 
   periodoParaTurno(periodo: string): 'Manhã' | 'Tarde' | 'Noite' {
     const mapa: Record<string, 'Manhã' | 'Tarde' | 'Noite'> = {
       'matutino': 'Manhã',
+      'MAT': 'Manhã',
       'vespertino': 'Tarde',
+      'VES': 'Tarde',
       'noturno': 'Noite',
-      'integral': 'Manhã'
+      'NOT': 'Noite',
+      'integral': 'Manhã',
+      'INT': 'Manhã'
     };
     return mapa[periodo] || 'Manhã';
+  }
+
+  codigoPeriodoParaPeriodo(codigo: string): 'matutino' | 'vespertino' | 'noturno' | 'integral' {
+    const mapa: Record<string, 'matutino' | 'vespertino' | 'noturno' | 'integral'> = {
+      'MAT': 'matutino',
+      'VES': 'vespertino',
+      'NOT': 'noturno',
+      'INT': 'integral',
+      'matutino': 'matutino',
+      'vespertino': 'vespertino',
+      'noturno': 'noturno',
+      'integral': 'integral'
+    };
+    return mapa[codigo] || 'matutino';
   }
 
   onTurmaSelecionada(): void {
@@ -291,8 +390,30 @@ export class CronogramaViewComponent implements OnInit {
   }
 
   onAnoLetivoChange(): void {
+    // anoLetivo agora contém o idAnoLetivo (ex: 2), não o ano civil
+    const idSelecionado = Number(this.anoLetivo);
+
+    if (!idSelecionado || idSelecionado === 0) {
+      this.turmaSelecionadaId = '';
+      this.periodoSelecionado = '';
+      this.slots = [];
+      this.turmas = [];
+      this.todasTurmas = [];
+      this.anoLetivo = 0;
+      this.anoLetivoExibicao = 0;
+      return;
+    }
+
+    // Atualiza o id e o ano civil correspondente
+    this.anoLetivo = idSelecionado;
+    const anoObj = this.anosLetivos.find(a => a.id === idSelecionado);
+    this.anoLetivoExibicao = anoObj?.ano || idSelecionado;
+
+    // Resetar seleções
     this.turmaSelecionadaId = '';
+    this.periodoSelecionado = '';
     this.slots = [];
+
     this.carregarTurmas();
   }
 

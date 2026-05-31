@@ -115,8 +115,9 @@ def criar_matricula(body: str | dict) -> dict:
     id_turma = turma["idTurma"]
 
     # Verifica capacidade
+    capacidade = int(turma.get("qldVagas") or turma.get("capacidade_maxima") or 30)
     ocupadas = HistoricoEscolarModel.count_by_turma(id_turma)
-    if ocupadas >= turma["qldVagas"]:
+    if ocupadas >= capacidade:
         raise ValueError(f"Turma {escolar['codTurma']} não possui vagas disponíveis")
 
     # Resolve responsável (pode já existir pelo CPF)
@@ -330,9 +331,11 @@ def listar_turmas(
     turmas = TurmaModel.find_filtered(ano_letivo, serie, periodo)
     result = []
     for t in turmas:
+        total = int(t.get("qldVagas") or t.get("capacidade_maxima") or 30)
+        t["qldVagas"] = total
         ocupadas = HistoricoEscolarModel.count_by_turma(t["idTurma"])
         t["vagasOcupadas"]  = list(range(1, ocupadas + 1))
-        t["vagasDisponiveis"] = max(0, t["qldVagas"] - ocupadas)
+        t["vagasDisponiveis"] = max(0, total - ocupadas)
         result.append(t)
     return result
 
@@ -363,7 +366,7 @@ def _endereco_dict(enderecos: list[dict], tipo: str) -> dict:
 
 
 def _enrich_historico(historico_rows: list[dict]) -> list[dict]:
-    """Enriquece itens de histórico com disciplinas, notas e frequência do banco."""
+    """Enriquece itens de histórico com disciplinas, notas (n1-n4) e frequência do banco."""
     if not historico_rows:
         return []
 
@@ -375,27 +378,29 @@ def _enrich_historico(historico_rows: list[dict]) -> list[dict]:
 
     ph = ",".join(["%s"] * len(edu_ids))
 
-    # Notas: média por (idMatricula, idTurma, idDisciplina)
+    # Notas individuais ordenadas por data — usadas para n1, n2, n3, n4
     notas_rows = _q(
         f"""
         SELECT n.idMatricula, n.idTurma, n.idDisciplina,
                d.nomeDisciplina,
-               AVG(n.notaEducando) AS media
+               COALESCE(a.dataAtividade, '1900-01-01') AS dataAtividade,
+               n.notaEducando
         FROM Notas n
         JOIN Disciplinas d ON d.idDisciplina = n.idDisciplina
+        LEFT JOIN Atividades a ON a.idAtividade = n.idAtividade
         WHERE n.idMatricula IN ({ph})
-        GROUP BY n.idMatricula, n.idTurma, n.idDisciplina, d.nomeDisciplina
+        ORDER BY n.idMatricula, n.idTurma, n.idDisciplina, a.dataAtividade
         """,
         tuple(edu_ids),
     )
 
-    # Frequência: % por (idMatricula, idDisciplina) — usa prcFreq se preenchido,
+    # Frequência: % por (idMatricula, idDisciplina) — usa média de prcFreq se preenchido,
     # senão calcula via presença
     freq_rows = _q(
         f"""
         SELECT idMatricula, idDisciplina,
                COALESCE(
-                   MAX(prcFreq),
+                   AVG(CASE WHEN prcFreq IS NOT NULL THEN prcFreq END),
                    ROUND(SUM(presenca) * 100.0 / COUNT(*), 1)
                ) AS frequencia
         FROM Frequencia
@@ -405,34 +410,58 @@ def _enrich_historico(historico_rows: list[dict]) -> list[dict]:
         tuple(edu_ids),
     )
 
-    # Mapas de lookup: (idMatricula, idTurma) -> [notas_row]
-    notas_map: dict[tuple, list] = {}
+    # Agrupa notas por (idMatricula, idTurma, idDisciplina) preservando ordem
+    notas_map: dict[tuple, dict] = {}
     for n in notas_rows:
-        key = (n["idMatricula"], n["idTurma"])
-        notas_map.setdefault(key, []).append(n)
+        key = (n["idMatricula"], n["idTurma"], n["idDisciplina"])
+        if key not in notas_map:
+            notas_map[key] = {
+                "nomeDisciplina": n["nomeDisciplina"],
+                "notas": [],
+            }
+        notas_map[key]["notas"].append(float(n["notaEducando"]))
 
-    # (idMatricula, idDisciplina) -> frequencia
+    # (idMatricula, idDisciplina) -> frequencia %
     freq_map: dict[tuple, float | None] = {
         (f["idMatricula"], f["idDisciplina"]): float(f["frequencia"])
         if f["frequencia"] is not None else None
         for f in freq_rows
     }
 
+    # Agrupa chaves de notas por (idMatricula, idTurma) para lookup rápido
+    turma_disc_map: dict[tuple, list[tuple]] = {}
+    for key in notas_map:
+        edu_id, turma_id, disc_id = key
+        tk = (edu_id, turma_id)
+        turma_disc_map.setdefault(tk, []).append(key)
+
     result = []
     for h in historico_rows:
-        key = (h.get("idMatricula"), h.get("idTurma"))
-        disciplinas_db = notas_map.get(key, [])
+        tk = (h.get("idMatricula"), h.get("idTurma"))
+        disc_keys = turma_disc_map.get(tk, [])
 
         disciplinas = []
-        for nd in disciplinas_db:
-            freq_disc = freq_map.get((nd["idMatricula"], nd["idDisciplina"]))
-            media = round(float(nd["media"]), 1) if nd["media"] is not None else None
+        for key in disc_keys:
+            edu_id, turma_id, disc_id = key
+            info = notas_map[key]
+            notas_list = info["notas"]
+
+            n1 = notas_list[0] if len(notas_list) > 0 else None
+            n2 = notas_list[1] if len(notas_list) > 1 else None
+            n3 = notas_list[2] if len(notas_list) > 2 else None
+            n4 = notas_list[3] if len(notas_list) > 3 else None
+
+            valid = [x for x in [n1, n2, n3, n4] if x is not None]
+            media = round(sum(valid) / len(valid), 1) if valid else None
+
+            freq_disc = freq_map.get((edu_id, disc_id))
+
             disciplinas.append({
-                "nome":       nd.get("nomeDisciplina", ""),
-                "n1":         None,
-                "n2":         None,
-                "n3":         None,
-                "n4":         None,
+                "nome":       info["nomeDisciplina"],
+                "n1":         n1,
+                "n2":         n2,
+                "n3":         n3,
+                "n4":         n4,
                 "media":      media,
                 "frequencia": round(freq_disc, 1) if freq_disc is not None else None,
                 "situacao":   "Aprovado" if (media is not None and media >= 5) else
@@ -461,7 +490,7 @@ def _build_hist_item(h: dict, _unused: dict) -> dict:
         "serie":       h.get("serie") or "",
         "turma":       h.get("codTurma") or "",
         "sala":        h.get("sala") or "",
-        "periodo":     h.get("periodo") or "",
+        "periodo":     _map_periodo(h.get("periodo")),
         "situacao":    _map_situacao(h.get("situacao")),
         "mediaGeral":  None,
         "frequencia":  None,
@@ -513,6 +542,16 @@ def _format_record(row: dict, end_edu: dict, resp: dict | None, end_resp: dict, 
         # Histórico
         "historico": historico,
     }
+
+
+def _map_periodo(p: str | None) -> str:
+    mapa = {
+        "matutino":    "Manhã",
+        "vespertino":  "Tarde",
+        "noturno":     "Noite",
+        "integral":    "Integral",
+    }
+    return mapa.get(p or "", p or "")
 
 
 def _map_situacao(s: str | None) -> str:

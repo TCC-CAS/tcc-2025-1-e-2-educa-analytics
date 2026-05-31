@@ -14,7 +14,7 @@ interface DisciplinaFiltro {
   selector: 'app-disciplinas-list',
   templateUrl: './disciplinas-list.component.html',
   styleUrls: ['./disciplinas-list.component.scss'],
-  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
+  host: { style: 'display:flex;flex-direction:column;min-height:100%;overflow:visible;flex:1 0 auto;width:100%;box-sizing:border-box;' }
 })
 export class DisciplinasListComponent implements OnInit {
   disciplinas: Disciplina[] = [];

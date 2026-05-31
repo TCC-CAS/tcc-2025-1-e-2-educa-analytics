@@ -1,13 +1,28 @@
 <div class="cron-page">
 
-  <!-- ── Header do responsável ──────────────────────────────── -->
+  <!-- ── Carregando ────────────────────────────────────────── -->
+  <div class="loading-state" *ngIf="carregando">
+    <div class="spinner"></div>
+    <p>Carregando cronograma...</p>
+  </div>
+
+  <!-- ── Erro ──────────────────────────────────────────────── -->
+  <div class="error-state" *ngIf="!carregando && erro">
+    <p>{{ erro }}</p>
+  </div>
+
+  <!-- ── Sem educandos ─────────────────────────────────────── -->
+  <div class="empty-state" *ngIf="!carregando && !erro && educandos.length === 0">
+    <p>Nenhum educando vinculado encontrado.</p>
+  </div>
+
+  <ng-container *ngIf="!carregando && !erro && educandos.length > 0">
+
+  <!-- ── Header ──────────────────────────────────────────────── -->
   <header class="page-header">
     <div class="header-info">
-      <div class="avatar resp">{{ responsavel.nome[0] }}</div>
       <div class="header-text">
         <h1>Cronograma Escolar</h1>
-        <p class="header-sub">{{ responsavel.nome }}</p>
-        <span class="badge resp-badge">Responsável</span>
       </div>
     </div>
     <div class="filhos-count">
@@ -122,5 +137,7 @@
 
     </div>
   </div>
+
+  </ng-container>
 
 </div>

@@ -90,7 +90,7 @@
             {{ sala.nome }} (Cap: {{ sala.capacidade }})
           </option>
         </select>
-        <span class="field-hint error" *ngIf="alertaSala">{{ alertaSala }}</span>
+        <span class="field-hint">Escolha uma sala cadastrada para esta turma</span>
       </label>
       
       <!-- Capacidade Máxima -->
@@ -158,7 +158,7 @@
 
     <div class="form-actions">
       <button type="button" class="ghost" (click)="cancel()">Cancelar</button>
-      <button type="submit" class="primary" [disabled]="salvando || alertaSala || alertaAnoLetivo">
+      <button type="submit" class="primary" [disabled]="salvando || alertaAnoLetivo">
         {{ salvando ? 'Salvando...' : (turmaId ? 'Salvar alterações' : 'Cadastrar turma') }}
       </button>
     </div>

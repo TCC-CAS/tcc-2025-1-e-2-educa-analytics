@@ -126,7 +126,7 @@
   <header class="page-header">
     <div class="page-header-info">
       <h1>Cronograma de Aulas</h1>
-      <p>Monte e visualize o cronograma semanal por turma.</p>
+      <p>Monte a grade horária das turmas para o ano letivo. Selecione o ano, período e turma para começar.</p>
     </div>
     <div class="page-header-stats" *ngIf="turmaSelecionada">
       <span class="stat-chip">
@@ -153,23 +153,36 @@
   <div class="toolbar">
     <div class="toolbar-left">
       <div class="select-group">
-        <label>Turma</label>
+        <label>Ano letivo</label>
         <div class="select-wrapper">
-          <select [(ngModel)]="turmaSelecionadaId" (ngModelChange)="onTurmaSelecionada()" [disabled]="dadosCarregando || turmas.length === 0">
-            <option value="" *ngIf="turmas.length === 0">{{ dadosCarregando ? 'Carregando...' : 'Nenhuma turma disponível' }}</option>
-            <option *ngFor="let t of turmas" [value]="t.id">
-              {{ t.serie }} — {{ t.nome }} &bull; {{ t.turno }}
-            </option>
+          <select [(ngModel)]="anoLetivo" (change)="onAnoLetivoChange()" [disabled]="dadosCarregando || anosLetivos.length === 0">
+            <option [value]="0">Selecione o ano letivo</option>
+            <option *ngFor="let a of anosLetivos" [value]="a.id">{{ a.ano }}</option>
           </select>
         </div>
       </div>
 
       <div class="select-group">
-        <label>Ano letivo</label>
+        <label>Período</label>
         <div class="select-wrapper">
-          <select [(ngModel)]="anoLetivo" (ngModelChange)="onAnoLetivoChange()" [disabled]="dadosCarregando || anosLetivos.length === 0">
-            <option *ngIf="anosLetivos.length === 0" [value]="2026">2026</option>
-            <option *ngFor="let ano of anosLetivos" [value]="ano">{{ ano }}</option>
+          <select [(ngModel)]="periodoSelecionado" (change)="onPeriodoChange()" [disabled]="anoLetivo === 0 || dadosCarregando">
+            <option value="">Todos os períodos</option>
+            <option value="matutino">Matutino</option>
+            <option value="vespertino">Vespertino</option>
+            <option value="noturno">Noturno</option>
+            <option value="integral">Integral</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="select-group">
+        <label>Turma</label>
+        <div class="select-wrapper">
+          <select [(ngModel)]="turmaSelecionadaId" (ngModelChange)="onTurmaSelecionada()" [disabled]="anoLetivo === 0 || dadosCarregando">
+            <option value="">{{ anoLetivo === 0 ? 'Selecione o ano letivo primeiro' : (dadosCarregando ? 'Carregando...' : (turmas.length === 0 ? 'Nenhuma turma disponível' : 'Selecione uma turma')) }}</option>
+            <option *ngFor="let t of turmas" [value]="t.id">
+              {{ t.serie }} — {{ t.nome }} &bull; {{ t.turno }}
+            </option>
           </select>
         </div>
       </div>

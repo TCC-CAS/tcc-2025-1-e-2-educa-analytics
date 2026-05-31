@@ -94,6 +94,18 @@
         </select>
       </label>
 
+      <label class="field">
+        <span>Quantidade de Contratos</span>
+        <input type="number" name="qtdContratos" [(ngModel)]="fornecedor.qtdContratos"
+          min="0" placeholder="0">
+      </label>
+
+      <label class="field full-width">
+        <span>Observações</span>
+        <textarea name="observacoes" [(ngModel)]="fornecedor.observacoes"
+          rows="3" placeholder="Informações adicionais sobre o fornecedor..."></textarea>
+      </label>
+
     </div>
 
     <!-- Endereço -->

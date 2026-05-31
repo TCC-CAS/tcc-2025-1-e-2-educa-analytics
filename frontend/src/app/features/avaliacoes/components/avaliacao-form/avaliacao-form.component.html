@@ -5,28 +5,6 @@
     <h1 class="completion-title">Avaliação Concluída!</h1>
     <p class="completion-sub">Obrigado pela sua participação. Sua opinião é muito importante!</p>
 
-    <div class="xp-burst">
-      <span class="xp-plus">+{{ xpEarned }}</span>
-      <span class="xp-label-big">XP conquistados</span>
-    </div>
-
-    <div class="stats-row">
-      <div class="stat-item">
-        <span class="stat-val">{{ totalQuestions }}</span>
-        <span class="stat-lbl">Respostas</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat-item">
-        <span class="stat-val">{{ maxStreak }}</span>
-        <span class="stat-lbl">Maior sequência</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat-item">
-        <span class="stat-val">{{ progresso }}%</span>
-        <span class="stat-lbl">Completado</span>
-      </div>
-    </div>
-
     <button class="btn-return" (click)="voltarParaLista()">
       Ver minhas avaliações
     </button>
@@ -152,36 +130,36 @@
 
     </div><!-- /.question-card -->
 
-  </div><!-- /.question-area -->
+    <!-- ── Navegação ── -->
+    <div class="question-nav">
+      <button class="btn-prev"
+              (click)="goToPrevious()"
+              [disabled]="isFirstQuestion">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Anterior
+      </button>
 
-  <!-- ── Bottom bar ── -->
-  <div class="bottom-bar">
-    <button class="btn-prev"
-            (click)="goToPrevious()"
-            [disabled]="isFirstQuestion || autoAdvancing">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="15 18 9 12 15 6"/>
-      </svg>
-      Anterior
-    </button>
+      <div class="dot-track">
+        <span *ngFor="let p of avaliacao?.perguntas; let i = index"
+              class="dot"
+              [class.active]="i === currentQuestionIndex"
+              [class.done]="respostas[p.id] !== undefined && respostas[p.id] !== ''">
+        </span>
+      </div>
 
-    <div class="dot-track">
-      <span *ngFor="let p of avaliacao?.perguntas; let i = index"
-            class="dot"
-            [class.active]="i === currentQuestionIndex"
-            [class.done]="respostas[p.id] !== undefined && respostas[p.id] !== ''">
-      </span>
+      <button class="btn-next"
+              (click)="goToNext()"
+              [disabled]="!canAdvance || autoAdvancing"
+              [class.pulse]="canAdvance && !autoAdvancing">
+        {{ isLastQuestion ? 'Concluir 🎯' : 'Continuar' }}
+        <svg *ngIf="!isLastQuestion" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
     </div>
 
-    <button class="btn-next"
-            (click)="goToNext()"
-            [disabled]="!canAdvance || autoAdvancing"
-            [class.pulse]="canAdvance && !autoAdvancing">
-      {{ isLastQuestion ? 'Concluir 🎯' : 'Continuar' }}
-      <svg *ngIf="!isLastQuestion" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="9 18 15 12 9 6"/>
-      </svg>
-    </button>
-  </div>
+  </div><!-- /.question-area -->
 
 </div>

@@ -42,7 +42,12 @@ try:
     _add_col_if_missing("Caixa", "descricao",   "VARCHAR(200) DEFAULT NULL")
     _add_col_if_missing("Caixa", "fornecedor",  "VARCHAR(150) DEFAULT NULL")
     _add_col_if_missing("Caixa", "usuario",     "VARCHAR(100) DEFAULT NULL")
-    _add_col_if_missing("Caixa", "projetado",   "TINYINT(1) NOT NULL DEFAULT 0")
+    _add_col_if_missing("Caixa", "projetado",        "TINYINT(1) NOT NULL DEFAULT 0")
+    _add_col_if_missing("Caixa", "tipoRecebimento",  "VARCHAR(20) DEFAULT NULL")
+    _add_col_if_missing("Caixa", "idEducando",       "VARCHAR(30) DEFAULT NULL")
+    _add_col_if_missing("Caixa", "nomeEducando",     "VARCHAR(200) DEFAULT NULL")
+    _add_col_if_missing("Caixa", "mesReferencia",    "VARCHAR(7) DEFAULT NULL")
+    _add_col_if_missing("Caixa", "anoLetivo",        "VARCHAR(4) DEFAULT NULL")
 
     # Converte tipoOperacao de ENUM para VARCHAR para aceitar 'entrada'/'saida'
     rows = execute_query(
@@ -75,11 +80,16 @@ def _format_item(row: dict) -> dict:
         "formaPagamento": row.get("formaPagamento") or "",
         "centroCusto": row.get("centroCusto") or "",
         "descricao": row.get("descricao") or "",
-        "fornecedor": row.get("fornecedor") or "N/A",
+        "fornecedor": row.get("fornecedor") or "",
         "valor": float(row.get("valorDespesa") or 0),
         "usuario": row.get("usuario") or "",
-        "tipoDespesa": row.get("tipoDespesa") or "",
-        "projetado": bool(row.get("projetado") or 0),
+        "tipoDespesa":      row.get("tipoDespesa") or "",
+        "projetado":        bool(row.get("projetado") or 0),
+        "tipoRecebimento":  row.get("tipoRecebimento") or "",
+        "idEducando":       row.get("idEducando") or "",
+        "nomeEducando":     row.get("nomeEducando") or "",
+        "mesReferencia":    row.get("mesReferencia") or "",
+        "anoLetivo":        row.get("anoLetivo") or "",
     }
 
 
@@ -132,8 +142,9 @@ def criar_lancamento(body: str | dict) -> dict:
         """
         INSERT INTO Caixa
             (data, tipoOperacao, formaPagamento, tipoDespesa,
-             centroCusto, descricao, fornecedor, valorDespesa, usuario, projetado)
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+             centroCusto, descricao, fornecedor, valorDespesa, usuario, projetado,
+             tipoRecebimento, idEducando, nomeEducando, mesReferencia, anoLetivo)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """,
         (
             data["data"],
@@ -142,10 +153,15 @@ def criar_lancamento(body: str | dict) -> dict:
             data.get("tipoDespesa") or None,
             data.get("centroCusto") or None,
             data["descricao"],
-            data.get("fornecedor") or "N/A",
+            data.get("fornecedor") or None,
             float(data["valor"]),
             data.get("usuario") or None,
             1 if data.get("projetado") else 0,
+            data.get("tipoRecebimento") or None,
+            data.get("idEducando") or None,
+            data.get("nomeEducando") or None,
+            data.get("mesReferencia") or None,
+            data.get("anoLetivo") or None,
         ),
     )
     return buscar_lancamento(id_lancamento)
@@ -161,7 +177,8 @@ def atualizar_lancamento(id_lancamento: int, body: str | dict) -> dict:
         """
         UPDATE Caixa SET
             data=%s, tipoOperacao=%s, formaPagamento=%s, tipoDespesa=%s,
-            centroCusto=%s, descricao=%s, fornecedor=%s, valorDespesa=%s, usuario=%s, projetado=%s
+            centroCusto=%s, descricao=%s, fornecedor=%s, valorDespesa=%s, usuario=%s, projetado=%s,
+            tipoRecebimento=%s, idEducando=%s, nomeEducando=%s, mesReferencia=%s, anoLetivo=%s
         WHERE idLancamento = %s
         """,
         (
@@ -171,10 +188,15 @@ def atualizar_lancamento(id_lancamento: int, body: str | dict) -> dict:
             data.get("tipoDespesa") or None,
             data.get("centroCusto") or None,
             data.get("descricao"),
-            data.get("fornecedor") or "N/A",
+            data.get("fornecedor") or None,
             float(data.get("valor") or 0),
             data.get("usuario") or None,
             1 if data.get("projetado") else 0,
+            data.get("tipoRecebimento") or None,
+            data.get("idEducando") or None,
+            data.get("nomeEducando") or None,
+            data.get("mesReferencia") or None,
+            data.get("anoLetivo") or None,
             id_lancamento,
         ),
     )

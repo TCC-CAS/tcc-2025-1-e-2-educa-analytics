@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
+import { AvaliacaoApiService } from '../../services/avaliacao-api.service';
 
 interface Avaliacao {
   id: string;
@@ -24,11 +26,70 @@ interface Avaliacao {
 export class AvaliacoesListComponent implements OnInit {
   avaliacoes: Avaliacao[] = [];
   usuarioTipo: string = 'educador';
+  carregandoRespondidas = false;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private authService: AuthService,
+    private avaliacaoApi: AvaliacaoApiService
+  ) {}
 
   ngOnInit(): void {
+    const user = this.authService.getCurrentUser();
+    this.usuarioTipo = user?.tipo || 'educador';
+
+    // Redireciona para /avaliacoes/:id se o ID não estiver na URL
+    const idNaRota = this.route.snapshot.paramMap.get('id');
+    if (!idNaRota && user?.id) {
+      this.router.navigate(['/avaliacoes', user.id], { replaceUrl: true });
+      return;
+    }
+
     this.carregarAvaliacoes();
+    this.carregarRespondidas();
+    this.carregarFormulariosCustomizados();
+  }
+
+  carregarRespondidas(): void {
+    this.carregandoRespondidas = true;
+    this.avaliacaoApi.getRespondidas().subscribe({
+      next: (res) => {
+        this.carregandoRespondidas = false;
+        const respondidas = res.respondidas || [];
+        respondidas.forEach(r => {
+          const av = this.avaliacoes.find(a => a.id === r.tipo);
+          if (av) {
+            av.respondida = true;
+            if (r.dataResposta) av.dataResposta = r.dataResposta;
+          }
+        });
+      },
+      error: () => { this.carregandoRespondidas = false; }
+    });
+  }
+
+  carregarFormulariosCustomizados(): void {
+    this.avaliacaoApi.getFormulariosCustomizados().subscribe(res => {
+      const forms = res.formularios || [];
+      forms.forEach(f => {
+        if (!this.avaliacoes.find(a => a.id === f.id)) {
+          this.avaliacoes.push({
+            id: f.id,
+            titulo: f.titulo,
+            descricao: f.descricao,
+            publico: f.publico || [],
+            icone: f.icone || '📋',
+            cor: f.cor || 'azul',
+            respondida: false,
+            xpRecompensa: 0,
+            categoria: 'institucional'
+          });
+        }
+      });
+      // Re-aplica estado de respondidas para os novos formulários
+      this.carregarRespondidas();
+    });
   }
 
   get avaliacoesBncc(): Avaliacao[] {
@@ -62,8 +123,7 @@ export class AvaliacoesListComponent implements OnInit {
         publico: ['educador'],
         icone: '📖',
         cor: 'verde',
-        respondida: true,
-        dataResposta: '10/05/2026',
+        respondida: false,
         xpRecompensa: 0,
         categoria: 'bncc',
         disciplina: 'Língua Portuguesa',
@@ -692,7 +752,7 @@ export class AvaliacoesListComponent implements OnInit {
         id: 'condicoes-trabalho',
         titulo: 'Condições de Trabalho',
         descricao: 'Avalie os ambientes, recursos e equipamentos oferecidos pela instituição.',
-        publico: ['educador'],
+        publico: ['administrativo'],
         icone: '💼',
         cor: 'azul',
         respondida: false,
@@ -703,11 +763,10 @@ export class AvaliacoesListComponent implements OnInit {
         id: 'participacao-educandos',
         titulo: 'Participação dos Educandos',
         descricao: 'Avalie o engajamento e participação nas atividades escolares.',
-        publico: ['educador'],
+        publico: ['administrativo'],
         icone: '🎓',
         cor: 'verde',
-        respondida: true,
-        dataResposta: '15/02/2026',
+        respondida: false,
         xpRecompensa: 700,
         categoria: 'institucional'
       },
@@ -737,7 +796,7 @@ export class AvaliacoesListComponent implements OnInit {
         id: 'autonomia',
         titulo: 'Autonomia',
         descricao: 'Avalie a liberdade para iniciativas e tomada de decisões.',
-        publico: ['educador', 'administrativo'],
+        publico: ['administrativo'],
         icone: '🚀',
         cor: 'roxo',
         respondida: false,
@@ -748,11 +807,10 @@ export class AvaliacoesListComponent implements OnInit {
         id: 'gestao-escolar',
         titulo: 'Gestão Escolar',
         descricao: 'Avalie a efetividade da administração e liderança.',
-        publico: ['educador', 'responsavel', 'administrativo'],
+        publico: ['educador', 'educando', 'responsavel', 'administrativo'],
         icone: '⚙️',
         cor: 'cinza',
-        respondida: true,
-        dataResposta: '10/02/2026',
+        respondida: false,
         xpRecompensa: 700,
         categoria: 'institucional'
       },
@@ -760,7 +818,7 @@ export class AvaliacoesListComponent implements OnInit {
         id: 'qualidade-ensino',
         titulo: 'Qualidade de Ensino',
         descricao: 'Avalie aulas, conteúdos e metodologias de ensino.',
-        publico: ['educando', 'responsavel', 'administrativo'],
+        publico: ['educador', 'educando', 'responsavel', 'administrativo'],
         icone: '📚',
         cor: 'laranja',
         respondida: false,
@@ -817,14 +875,13 @@ export class AvaliacoesListComponent implements OnInit {
   // ── Actions ───────────────────────────────────────────────────────────────
 
   responderAvaliacao(avaliacao: Avaliacao): void {
+    if (avaliacao.respondida && avaliacao.categoria !== 'bncc') {
+      return; // Formulários institucionais não permitem reedição
+    }
     this.router.navigate([`/avaliacoes/${avaliacao.id}`]);
   }
 
   visualizarResposta(avaliacao: Avaliacao): void {
-    this.router.navigate([`/avaliacoes/${avaliacao.id}`]);
-  }
-
-  editarResposta(avaliacao: Avaliacao): void {
     this.router.navigate([`/avaliacoes/${avaliacao.id}`]);
   }
 }

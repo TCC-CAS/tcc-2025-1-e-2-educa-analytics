@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 
 import { CronogramaRoutingModule } from './cronograma-routing.module';
 import { CronogramaViewComponent } from './components/cronograma-view/cronograma-view.component';
@@ -22,6 +23,7 @@ import { CronogramaResponsavelComponent } from './components/cronograma-responsa
   imports: [
     CommonModule,
     FormsModule,
+    HttpClientModule,
     CronogramaRoutingModule
   ]
 })

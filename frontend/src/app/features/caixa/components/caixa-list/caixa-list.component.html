@@ -103,7 +103,6 @@
       <div class="fluxo-titulo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         <span>Fluxo Projetado — Próximos 30 dias</span>
-        <span class="fluxo-badge">IA Preditiva</span>
       </div>
       <div class="fluxo-resumo">
         <div class="fluxo-item-resumo">
@@ -236,6 +235,22 @@
           <input type="text" placeholder="Digite o fornecedor" [(ngModel)]="filtroFornecedor" (input)="aplicarFiltros()" [class.active]="filtroFornecedor">
         </div>
       </div>
+      <div class="filtro-field">
+        <label>Tipo de Recebimento</label>
+        <div class="input-wrapper">
+          <select [(ngModel)]="filtroRecebimento" (change)="aplicarFiltros()" [class.active]="filtroRecebimento">
+            <option value="">Todos</option>
+            <option value="matricula">Matrícula</option>
+            <option value="mensalidade">Mensalidade</option>
+          </select>
+        </div>
+      </div>
+      <div class="filtro-field">
+        <label>Educando</label>
+        <div class="input-wrapper">
+          <input type="text" placeholder="Nome ou matrícula" [(ngModel)]="filtroEducando" (input)="aplicarFiltros()" [class.active]="filtroEducando">
+        </div>
+      </div>
     </div>
   </div>
 
@@ -265,7 +280,7 @@
             <th><div class="th-content">Centro de Custo</div></th>
             <th><div class="th-content">Forma de Pgto.</div></th>
             <th><div class="th-content">Descrição</div></th>
-            <th><div class="th-content">Fornecedor</div></th>
+            <th><div class="th-content">Fornecedor / Educando</div></th>
             <th><div class="th-content th-right">Valor</div></th>
             <th><div class="th-content">Usuário</div></th>
             <th><div class="th-content">Ações</div></th>
@@ -285,7 +300,20 @@
             <td><span class="badge-cc">{{ lancamento.centroCusto }}</span></td>
             <td><span class="td-text">{{ getFormaPagamentoLabel(lancamento.formaPagamento) }}</span></td>
             <td><span class="td-text td-bold">{{ lancamento.descricao }}</span></td>
-            <td><span class="td-text">{{ lancamento.fornecedor }}</span></td>
+            <td>
+              <ng-container *ngIf="lancamento.tipoRecebimento && lancamento.nomeEducando; else showFornecedor">
+                <div class="td-educando">
+                  <span class="badge-recebimento" [class.badge-matricula]="lancamento.tipoRecebimento === 'matricula'" [class.badge-mensalidade]="lancamento.tipoRecebimento === 'mensalidade'">
+                    {{ getTipoRecebimentoLabel(lancamento.tipoRecebimento) }}
+                  </span>
+                  <span class="td-educando-nome">{{ lancamento.nomeEducando }}</span>
+                  <span class="td-educando-id">{{ lancamento.idEducando }}</span>
+                </div>
+              </ng-container>
+              <ng-template #showFornecedor>
+                <span class="td-text">{{ (lancamento.fornecedor && lancamento.fornecedor !== 'N/A') ? lancamento.fornecedor : '—' }}</span>
+              </ng-template>
+            </td>
             <td class="td-right">
               <span class="td-valor" [class.valor-entrada]="lancamento.tipoConta === 'entrada'" [class.valor-saida]="lancamento.tipoConta === 'saida'">
                 {{ lancamento.tipoConta === 'saida' ? '-' : '+' }} R$ {{ lancamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}

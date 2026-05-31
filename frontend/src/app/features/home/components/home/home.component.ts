@@ -1,180 +1,81 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { AuthService, UserType, User } from '../../../../core/services/auth.service';
+import { environment } from '../../../../../environments/environment';
 
-interface QuickAccessItem {
-  titulo: string;
-  icone: string;
-  rota: string;
+interface StatCard {
+  label: string;
+  valor: number | string;
   cor: string;
-  descricao: string;
+  icone: string;
+  sufixo: string;
 }
 
-interface Estatistica {
-  titulo: string;
-  valor: number;
+interface UserPresentation {
+  saudacao: string;
   icone: string;
-  cor: 'verde' | 'azul' | 'amarelo' | 'vermelho' | 'roxo' | 'laranja';
-}
-
-interface UserHome {
-  titulo: string;
-  subtitulo: string;
-  icone: string;
-  stats: Estatistica[];
-  atalhos: QuickAccessItem[];
 }
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss'],
-  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
+  styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
   usuarioAtual: User | null = null;
   tipoUsuario: UserType | null = null;
-  configs: UserHome = {} as UserHome;
+  apresentacao: UserPresentation = { saudacao: '', icone: '' };
 
-  private configsPorTipo: { [key in UserType]: UserHome } = {
-    educador: {
-      titulo: 'Bem-vindo, Educador!',
-      subtitulo: 'Gerencie suas turmas e acompanhe o desempenho dos educandos',
-      icone: '👨‍🏫',
-      stats: [
-        { titulo: 'Minhas Turmas', valor: 5, icone: '👥', cor: 'azul' },
-        { titulo: 'Total de Educandos', valor: 157, icone: '📚', cor: 'verde' },
-        { titulo: 'Atividades Pendentes', valor: 8, icone: '✏️', cor: 'amarelo' },
-        { titulo: 'Avaliações para Gravar', valor: 23, icone: '📝', cor: 'laranja' }
-      ],
-      atalhos: [
-        { titulo: 'Minhas Turmas', icone: '👥', rota: '/turmas', cor: 'azul', descricao: 'Gerenciar turmas' },
-        { titulo: 'Frequência', icone: '✅', rota: '/frequencia', cor: 'verde', descricao: 'Registrar presença' },
-        { titulo: 'Notas', icone: '📊', rota: '/notas', cor: 'laranja', descricao: 'Lançar avaliações' },
-        { titulo: 'Avaliações', icone: '📋', rota: '/avaliacoes', cor: 'roxo', descricao: 'Responder feedback' },
-        { titulo: 'Meu Desempenho', icone: '📈', rota: '/dashboard-escolar', cor: 'azul', descricao: 'Ver indicadores' },
-        { titulo: 'Eventos', icone: '📅', rota: '/eventos', cor: 'amarelo', descricao: 'Calendário escolar' }
-      ]
-    },
-    educando: {
-      titulo: 'Bem-vindo, Educando!',
-      subtitulo: 'Acompanhe suas notas, frequência e progresso escolar',
-      icone: '👨‍🎓',
-      stats: [
-        { titulo: 'Média Geral', valor: 8, icone: '⭐', cor: 'verde' },
-        { titulo: 'Frequência', valor: 94, icone: '✅', cor: 'azul' },
-        { titulo: 'Tarefas Pendentes', valor: 3, icone: '📝', cor: 'vermelho' },
-        { titulo: 'Avaliações Respondidas', valor: 2, icone: '✔️', cor: 'roxo' }
-      ],
-      atalhos: [
-        { titulo: 'Meu Boletim', icone: '📄', rota: '/notas', cor: 'azul', descricao: 'Ver minhas notas' },
-        { titulo: 'Minha Frequência', icone: '✅', rota: '/frequencia', cor: 'verde', descricao: 'Acompanhar presença' },
-        { titulo: 'Minhas Disciplinas', icone: '📚', rota: '/disciplinas', cor: 'laranja', descricao: 'Ver disciplinas' },
-        { titulo: 'Responder Avaliações', icone: '📋', rota: '/avaliacoes', cor: 'roxo', descricao: 'Feedback institucional' },
-        { titulo: 'Calendário', icone: '📅', rota: '/eventos', cor: 'amarelo', descricao: 'Eventos importantes' },
-        { titulo: 'Dashboard', icone: '📊', rota: '/dashboard-escolar', cor: 'azul', descricao: 'Indicadores gerais' }
-      ]
-    },
-    responsavel: {
-      titulo: 'Bem-vindo, Responsável!',
-      subtitulo: 'Acompanhe o desenvolvimento e desempenho do seu educando',
-      icone: '👨‍👩‍👧',
-      stats: [
-        { titulo: 'Educandos Associados', valor: 2, icone: '👶', cor: 'roxo' },
-        { titulo: 'Frequência Média', valor: 92, icone: '✅', cor: 'verde' },
-        { titulo: 'Média de Notas', valor: 7, icone: '📊', cor: 'azul' },
-        { titulo: 'Comunicados Pendentes', valor: 1, icone: '📢', cor: 'amarelo' }
-      ],
-      atalhos: [
-        { titulo: 'Acompanhar Notas', icone: '📋', rota: '/educandos', cor: 'azul', descricao: 'Ver boletim' },
-        { titulo: 'Frequência Educandos', icone: '✅', rota: '/educandos', cor: 'verde', descricao: 'Presença registrada' },
-        { titulo: 'Comunicados', icone: '📬', rota: '/eventos', cor: 'vermelho', descricao: 'Mensagens da escola' },
-        { titulo: 'Dashboard Educandos', icone: '📊', rota: '/dashboard-escolar', cor: 'azul', descricao: 'Desempenho escolar' },
-        { titulo: 'Responder Avaliações', icone: '📋', rota: '/avaliacoes', cor: 'roxo', descricao: 'Feedback institucional' },
-        { titulo: 'Área do Responsável', icone: '👨‍👩‍👧', rota: '/responsaveis', cor: 'amarelo', descricao: 'Minha área' }
-      ]
-    },
-    colaborador: {
-      titulo: 'Bem-vindo, Colaborador!',
-      subtitulo: 'Gerencie atividades administrativas e financeiras',
-      icone: '💼',
-      stats: [
-        { titulo: 'Fornecedores Ativos', valor: 12, icone: '🏢', cor: 'azul' },
-        { titulo: 'Movimentações Hoje', valor: 45, icone: '💳', cor: 'verde' },
-        { titulo: 'Pendências', valor: 3, icone: '⏰', cor: 'amarelo' },
-        { titulo: 'Eventos Programados', valor: 8, icone: '📅', cor: 'roxo' }
-      ],
-      atalhos: [
-        { titulo: 'Gestão de Caixa', icone: '🏦', rota: '/caixa', cor: 'verde', descricao: 'Movimentação financeira' },
-        { titulo: 'Fornecedores', icone: '🏭', rota: '/fornecedores', cor: 'azul', descricao: 'Gerenciar fornecedores' },
-        { titulo: 'Eventos', icone: '📅', rota: '/eventos', cor: 'amarelo', descricao: 'Calendário institucional' },
-        { titulo: 'Dashboard Financeiro', icone: '💰', rota: '/dashboard-financeiro', cor: 'verde', descricao: 'Análise financeira' }
-      ]
-    },
-    gestor: {
-      titulo: 'Bem-vindo, Gestor!',
-      subtitulo: 'Visão completa da instituição com acesso total ao sistema',
-      icone: '👔',
-      stats: [
-        { titulo: 'Total de Matrículas', valor: 1250, icone: '📚', cor: 'azul' },
-        { titulo: 'Turmas Ativas', valor: 45, icone: '👥', cor: 'verde' },
-        { titulo: 'Receita Mensal', valor: 320, icone: '💰', cor: 'verde' },
-        { titulo: 'Colaboradores', valor: 98, icone: '🧑‍💼', cor: 'laranja' }
-      ],
-      atalhos: [
-        { titulo: 'Dashboard Financeiro', icone: '💰', rota: '/dashboard-financeiro', cor: 'verde', descricao: 'Análise financeira' },
-        { titulo: 'Dashboard Escolar', icone: '📊', rota: '/dashboard-escolar', cor: 'azul', descricao: 'Indicadores educacionais' },
-        { titulo: 'Gerenciar Matrículas', icone: '📝', rota: '/matricula', cor: 'laranja', descricao: 'Matrícula de educandos' },
-        { titulo: 'Turmas', icone: '👥', rota: '/turmas', cor: 'azul', descricao: 'Gestão de turmas' },
-        { titulo: 'Educadores', icone: '👨‍🏫', rota: '/educadores', cor: 'roxo', descricao: 'Equipe docente' },
-        { titulo: 'Cronograma', icone: '📅', rota: '/cronograma', cor: 'amarelo', descricao: 'Grade de horários' }
-      ]
-    },
-    administrativo: {
-      titulo: 'Bem-vindo, Administrador!',
-      subtitulo: 'Gerencie todas as operações da instituição com dados em tempo real',
-      icone: '⚙️',
-      stats: [
-        { titulo: 'Total de Matrículas', valor: 1250, icone: '📚', cor: 'azul' },
-        { titulo: 'Turmas Ativas', valor: 45, icone: '👥', cor: 'verde' },
-        { titulo: 'Colaboradores', valor: 98, icone: '🧑‍💼', cor: 'laranja' },
-        { titulo: 'Fornecedores Ativos', valor: 12, icone: '🏢', cor: 'roxo' }
-      ],
-      atalhos: [
-        { titulo: 'Dashboard Financeiro', icone: '💰', rota: '/dashboard-financeiro', cor: 'verde', descricao: 'Análise financeira' },
-        { titulo: 'Dashboard Escolar', icone: '📊', rota: '/dashboard-escolar', cor: 'azul', descricao: 'Indicadores educacionais' },
-        { titulo: 'Gerenciar Matrículas', icone: '📝', rota: '/matricula', cor: 'laranja', descricao: 'Matrícula de educandos' },
-        { titulo: 'Gestão de Caixa', icone: '🏦', rota: '/caixa', cor: 'verde', descricao: 'Movimentação financeira' },
-        { titulo: 'Fornecedores', icone: '🏭', rota: '/fornecedores', cor: 'vermelho', descricao: 'Gerenciar fornecedores' },
-        { titulo: 'Colaboradores', icone: '👨‍💼', rota: '/colaboradores', cor: 'amarelo', descricao: 'Equipe institucional' }
-      ]
-    }
+  nomeReal: string | null = null;
+  stats: StatCard[] = [];
+  infoExtra: any = {};
+  carregandoPerfil = true;
+
+  private apresentacaoPorTipo: { [key in UserType]: UserPresentation } = {
+    educador:      { saudacao: 'Olá, Educador(a)!',     icone: 'educator'  },
+    educando:      { saudacao: 'Olá, Educando(a)!',     icone: 'student'   },
+    responsavel:   { saudacao: 'Olá, Responsável!',     icone: 'family'    },
+    colaborador:   { saudacao: 'Olá, Colaborador(a)!',  icone: 'briefcase' },
+    gestor:        { saudacao: 'Olá, Gestor(a)!',       icone: 'director'  },
+    administrativo:{ saudacao: 'Olá, Administrador(a)!',icone: 'admin'     },
   };
 
-  userTypes: UserType[] = ['educador', 'educando', 'responsavel', 'colaborador', 'gestor', 'administrativo'];
-
-  infoCards = [
-    { icone: '🎯', titulo: 'Gestão Integrada', descricao: 'Toda a informação da instituição em um único lugar' },
-    { icone: '📊', titulo: 'Análise de Dados', descricao: 'Visualize dashboards e indicadores em tempo real' },
-    { icone: '💬', titulo: 'Feedback Contínuo', descricao: 'Sistema de avaliações para melhoria contínua' }
-  ];
-
-  constructor(private authService: AuthService) {
-    this.usuarioAtual = this.authService.getCurrentUser();
-    this.tipoUsuario = this.authService.getUserType();
-  }
+  constructor(private authService: AuthService, private http: HttpClient) {}
 
   ngOnInit(): void {
-    if (this.tipoUsuario) {
-      this.configs = this.configsPorTipo[this.tipoUsuario];
-    }
+    this.usuarioAtual = this.authService.getCurrentUser();
+    this.tipoUsuario  = this.authService.getUserType();
+    const tipo = this.tipoUsuario || 'gestor';
+
+    this.apresentacao = this.apresentacaoPorTipo[tipo];
+
+    const matricula = this.usuarioAtual?.matricula || '';
+    this.http.get<any>(`${environment.apiUrl}/home/perfil?tipo=${tipo}&matricula=${matricula}`)
+      .subscribe({
+        next: (res) => {
+          this.nomeReal  = res.nome  || null;
+          this.stats     = res.stats || [];
+          this.infoExtra = res.info  || {};
+          this.carregandoPerfil = false;
+        },
+        error: () => {
+          this.carregandoPerfil = false;
+        }
+      });
   }
 
-  trocarTipoUsuario(tipo: UserType): void {
-    this.authService.loginMock(tipo);
-    this.usuarioAtual = this.authService.getCurrentUser();
-    this.tipoUsuario = this.authService.getUserType();
-    if (this.tipoUsuario) {
-      this.configs = this.configsPorTipo[this.tipoUsuario];
+  get saudacaoPersonalizada(): string {
+    if (this.nomeReal) {
+      const primeiroNome = this.nomeReal.split(' ')[0];
+      return `Bem-vindo(a), ${primeiroNome}!`;
     }
+    return this.apresentacao.saudacao;
+  }
+
+  statCorClass(cor: string): string {
+    const mapa: Record<string, string> = {
+      azul: 'stat-azul', verde: 'stat-verde', roxo: 'stat-roxo', laranja: 'stat-laranja'
+    };
+    return mapa[cor] || 'stat-azul';
   }
 }

@@ -72,6 +72,29 @@ class EducandoResponsavelModel(BaseModel):
             "SELECT * FROM EducandoResponsavel WHERE tipoUsuario = 'educando' ORDER BY nomeCompleto"
         )
 
+    @classmethod
+    def find_by_responsavel(cls, id_responsavel: str) -> list[dict]:
+        """Retorna educandos vinculados a um responsável via HistoricoEscolar.idResponsavel."""
+        return execute_query(
+            """
+            SELECT er.idMatricula, er.nomeCompleto,
+                   h.idTurma, h.serie, h.anoLetivo,
+                   t.codTurma, t.nomeTurma, t.periodo
+            FROM HistoricoEscolar h
+            JOIN EducandoResponsavel er ON er.idMatricula = h.idMatricula
+            JOIN Turmas t ON t.idTurma = h.idTurma
+            WHERE h.idResponsavel = %s
+              AND h.situacao = 'cursando'
+              AND h.idHistorico = (
+                  SELECT h2.idHistorico FROM HistoricoEscolar h2
+                  WHERE h2.idMatricula = er.idMatricula
+                  ORDER BY h2.anoLetivo DESC, h2.idHistorico DESC LIMIT 1
+              )
+            ORDER BY er.nomeCompleto
+            """,
+            (id_responsavel,),
+        )
+
     # Constante SQL reutilizada por listar_matriculas
     _LIST_SQL = """
         SELECT
@@ -262,6 +285,39 @@ class LoginModel(BaseModel):
         )
         return rows[0] if rows else None
 
+    @classmethod
+    def find_by_email_or_id(cls, email_ou_id: str) -> list:
+        """
+        Busca login por email ou ID de matrícula.
+        Retorna uma lista de resultados (pode estar vazia).
+        
+        Args:
+            email_ou_id: Email ou ID de matrícula
+            
+        Returns:
+            Lista com dicionários de usuários encontrados
+        """
+        # Buscar tanto por email quanto por ID
+        # Tabelas corretas: EducandoResponsavel (educandos), Colaborador, Educador
+        rows = execute_query(
+            """
+            SELECT
+                l.idMatricula,
+                l.email,
+                l.senha,
+                l.senha_definida,
+                COALESCE(er.nomeCompleto, col.nomeCompleto, edu.nomeCompleto, l.email) AS nome
+            FROM Login l
+            LEFT JOIN EducandoResponsavel er  ON l.idMatricula = er.idMatricula
+            LEFT JOIN Colaborador          col ON l.idMatricula = col.idMatricula
+            LEFT JOIN Educador             edu ON l.idMatricula = edu.idMatricula
+            WHERE l.email = %s OR l.idMatricula = %s
+            LIMIT 1
+            """,
+            (email_ou_id, email_ou_id),
+        )
+        return rows if rows else []
+
 
 # â”€â”€ Turmas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -290,7 +346,7 @@ class TurmaModel(BaseModel):
         serie: str | None = None,
         periodo: str | None = None,
     ) -> list[dict]:
-        conditions = ["t.status = 'ativa'"]
+        conditions = ["t.status NOT IN ('encerrada', 'cancelada')"]
         params: list = []
         if ano_letivo:
             conditions.append("t.anoLetivo = %s")
@@ -304,7 +360,9 @@ class TurmaModel(BaseModel):
         where = " AND ".join(conditions)
         return execute_query(
             f"""
-            SELECT t.*, s.nomeSala
+            SELECT t.*,
+                   s.nomeSala,
+                   COALESCE(t.qldVagas, t.capacidade_maxima, 30) AS qldVagas
             FROM Turmas t
             LEFT JOIN Salas s ON s.idSala = t.idSala
             WHERE {where}
@@ -318,7 +376,7 @@ class TurmaModel(BaseModel):
         rows = execute_query(
             """
             SELECT DISTINCT serie FROM Turmas
-            WHERE anoLetivo = %s AND status = 'ativa' AND serie IS NOT NULL
+            WHERE anoLetivo = %s AND status NOT IN ('encerrada', 'cancelada') AND serie IS NOT NULL
             ORDER BY serie
             """,
             (ano_letivo,),
@@ -330,7 +388,7 @@ class TurmaModel(BaseModel):
         rows = execute_query(
             """
             SELECT DISTINCT periodo FROM Turmas
-            WHERE anoLetivo = %s AND serie = %s AND status = 'ativa'
+            WHERE anoLetivo = %s AND serie = %s AND status NOT IN ('encerrada', 'cancelada')
             ORDER BY periodo
             """,
             (ano_letivo, serie),
@@ -701,6 +759,24 @@ class EducadorDisciplinaModel(BaseModel):
             (id_matricula,),
         )
         return [r["idDisciplina"] for r in rows]
+    
+    @classmethod
+    def find_by_educador(cls, id_matricula: str) -> list[dict]:
+        """Busca todas as relações educador-disciplina-turma pela matrícula do educador."""
+        rows = execute_query(
+            """
+            SELECT ed.idMatricula, ed.idDisciplina, ed.idTurma,
+                   d.nomeDisciplina, d.codDisciplina,
+                   t.codTurma, t.nomeTurma
+            FROM EducadorDisciplina ed
+            LEFT JOIN Disciplinas d ON ed.idDisciplina = d.idDisciplina
+            LEFT JOIN Turmas t ON ed.idTurma = t.idTurma
+            WHERE ed.idMatricula = %s
+            ORDER BY t.nomeTurma, d.nomeDisciplina
+            """,
+            (id_matricula,),
+        )
+        return rows
 
     @classmethod
     def replace_all(cls, id_matricula: str, ids_disciplinas: list[int]) -> None:
@@ -1219,16 +1295,16 @@ class CronogramaModel(BaseModel):
             SELECT c.*,
                    t.codTurma, t.nomeTurma, t.qldVagas,
                    d.codDisciplina, d.nomeDisciplina, d.areaConhecimento,
-                   e.matricula AS educadorMatricula, e.nomeCompleto AS educadorNome,
+                   e.idMatricula AS educadorMatricula, e.nomeCompleto AS educadorNome,
                    s.codSala, s.nomeSala, s.capacidade AS salaCapacidade,
                    s.tipoSala, s.recursos AS salaRecursos
             FROM Cronograma c
             JOIN Turmas t ON c.idTurma = t.idTurma
             JOIN Disciplinas d ON c.idDisciplina = d.idDisciplina
-            JOIN Educadores e ON c.idEducador = e.idEducador
+            LEFT JOIN Educador e ON c.idEducador = e.idMatricula
             LEFT JOIN Salas s ON c.idSala = s.idSala
             WHERE c.idTurma = %s
-            ORDER BY 
+            ORDER BY
                 FIELD(c.diaSemana, 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'),
                 c.horaInicio
             """,
@@ -1251,49 +1327,51 @@ class CronogramaModel(BaseModel):
             JOIN Turmas t ON c.idTurma = t.idTurma
             WHERE c.idSala = %s
               AND c.diaSemana = %s
-              AND (
-                  (c.horaInicio < %s AND c.horaFim > %s) OR
-                  (c.horaInicio >= %s AND c.horaInicio < %s) OR
-                  (c.horaFim > %s AND c.horaFim <= %s)
-              )
+              AND c.status = 'ativa'
+              AND c.horaInicio < %s
+              AND c.horaFim > %s
         """
-        params = [id_sala, dia_semana, hora_fim, hora_inicio, hora_inicio, hora_fim, hora_inicio, hora_fim]
-        
+        params = [id_sala, dia_semana, hora_fim, hora_inicio]
+
         if exclude_id:
             query += " AND c.idCronograma != %s"
             params.append(exclude_id)
-        
+
         return execute_query(query, tuple(params))
 
     @classmethod
     def find_conflitos_educador(
         cls,
-        id_educador: int,
+        id_educador: str,
         dia_semana: str,
         hora_inicio: str,
         hora_fim: str,
         exclude_id: int | None = None
     ) -> list[dict]:
         """Verifica se há conflito de horário para um educador"""
+        # Condição de sobreposição de intervalos: [A,B) ∩ [C,D) ≠ ∅
+        # ⟺  A < D  AND  B > C
         query = """
             SELECT c.*, t.codTurma, t.nomeTurma
             FROM Cronograma c
             JOIN Turmas t ON c.idTurma = t.idTurma
             WHERE c.idEducador = %s
               AND c.diaSemana = %s
-              AND (
-                  (c.horaInicio < %s AND c.horaFim > %s) OR
-                  (c.horaInicio >= %s AND c.horaInicio < %s) OR
-                  (c.horaFim > %s AND c.horaFim <= %s)
-              )
+              AND c.status = 'ativa'
+              AND c.horaInicio < %s
+              AND c.horaFim > %s
         """
-        params = [id_educador, dia_semana, hora_fim, hora_inicio, hora_inicio, hora_fim, hora_inicio, hora_fim]
-        
+        params = [id_educador, dia_semana, hora_fim, hora_inicio]
+
         if exclude_id:
             query += " AND c.idCronograma != %s"
             params.append(exclude_id)
-        
-        return execute_query(query, tuple(params))
+
+        print(f"[CONFLITO_EDU] idEducador={id_educador!r} dia={dia_semana!r} "
+              f"inicio={hora_inicio!r} fim={hora_fim!r} exclude={exclude_id}")
+        result = execute_query(query, tuple(params))
+        print(f"[CONFLITO_EDU] → {len(result)} conflito(s) encontrado(s)")
+        return result
 
     @classmethod
     def create(cls, data: dict) -> int:
@@ -1753,3 +1831,249 @@ class MatrizCurricularModel(BaseModel):
             if "1146" in str(exc) or "doesn't exist" in str(exc).lower():
                 return []
             raise
+
+
+# ── Métodos adicionais de CronogramaModel ──────────────────────────────────────────
+
+def _patch_cronograma_model():
+    """Adiciona métodos ao CronogramaModel que dependem de joins existentes."""
+
+    @classmethod  # type: ignore
+    def find_by_educador(cls, id_educador) -> list:
+        try:
+            return execute_query(
+                """
+                SELECT c.*,
+                       t.codTurma, t.nomeTurma,
+                       d.nomeDisciplina, d.codDisciplina,
+                       s.nomeSala
+                FROM Cronograma c
+                JOIN Turmas t ON c.idTurma = t.idTurma
+                JOIN Disciplinas d ON c.idDisciplina = d.idDisciplina
+                LEFT JOIN Salas s ON c.idSala = s.idSala
+                WHERE c.idEducador = %s
+                ORDER BY FIELD(c.diaSemana,'segunda','terca','quarta','quinta','sexta','sabado'), c.horaInicio
+                """,
+                (id_educador,)
+            )
+        except Exception:
+            return []
+
+    @classmethod  # type: ignore
+    def find_by_sala(cls, id_sala: int) -> list:
+        try:
+            return execute_query(
+                """
+                SELECT c.*,
+                       t.codTurma, t.nomeTurma,
+                       d.nomeDisciplina
+                FROM Cronograma c
+                JOIN Turmas t ON c.idTurma = t.idTurma
+                JOIN Disciplinas d ON c.idDisciplina = d.idDisciplina
+                WHERE c.idSala = %s
+                ORDER BY FIELD(c.diaSemana,'segunda','terca','quarta','quinta','sexta','sabado'), c.horaInicio
+                """,
+                (id_sala,)
+            )
+        except Exception:
+            return []
+
+    @classmethod  # type: ignore
+    def find_conflitos_turma(cls, id_turma: int, dia_semana: str, hora_inicio: str,
+                             hora_fim: str, exclude_id=None) -> list:
+        query = """
+            SELECT c.*, d.nomeDisciplina
+            FROM Cronograma c
+            JOIN Disciplinas d ON c.idDisciplina = d.idDisciplina
+            WHERE c.idTurma = %s
+              AND c.diaSemana = %s
+              AND (
+                  (c.horaInicio < %s AND c.horaFim > %s) OR
+                  (c.horaInicio >= %s AND c.horaInicio < %s) OR
+                  (c.horaFim > %s AND c.horaFim <= %s)
+              )
+        """
+        params = [id_turma, dia_semana, hora_fim, hora_inicio, hora_inicio, hora_fim, hora_inicio, hora_fim]
+        if exclude_id:
+            query += " AND c.idCronograma != %s"
+            params.append(exclude_id)
+        try:
+            return execute_query(query, tuple(params))
+        except Exception:
+            return []
+
+    CronogramaModel.find_by_educador = find_by_educador
+    CronogramaModel.find_by_sala = find_by_sala
+    CronogramaModel.find_conflitos_turma = find_conflitos_turma
+
+
+_patch_cronograma_model()
+
+
+# ── Modelos auxiliares do sistema de cronograma avançado ──────────────────────────
+
+class PeriodoLetivoModel(BaseModel):
+    """Períodos letivos (bimestres) — tabela PeriodosLetivos."""
+    TABLE = "PeriodosLetivos"
+
+    @classmethod
+    def find_by_id(cls, id_periodo: int):
+        try:
+            rows = execute_query(
+                "SELECT * FROM PeriodosLetivos WHERE idPeriodo = %s LIMIT 1", (id_periodo,)
+            )
+            return rows[0] if rows else None
+        except Exception:
+            return None
+
+    @classmethod
+    def find_atual(cls):
+        try:
+            rows = execute_query(
+                "SELECT * FROM PeriodosLetivos WHERE status = 'ativo' ORDER BY dataInicio DESC LIMIT 1"
+            )
+            return rows[0] if rows else None
+        except Exception:
+            return None
+
+    @classmethod
+    def find_all(cls, ano_letivo: int | None = None, status: str | None = None):
+        """Lista todos os períodos letivos, opcionalmente filtrados por ano letivo e/ou status."""
+        try:
+            query = "SELECT * FROM PeriodosLetivos WHERE 1=1"
+            params = []
+            
+            if ano_letivo:
+                query += " AND anoLetivo = %s"
+                params.append(ano_letivo)
+            
+            if status:
+                query += " AND status = %s"
+                params.append(status)
+            
+            query += " ORDER BY dataInicio DESC"
+            
+            return execute_query(query, tuple(params) if params else None)
+        except Exception as e:
+            print(f"[ERROR PeriodoLetivoModel.find_all] {e}")
+            return []
+
+
+class DisponibilidadeEducadorModel(BaseModel):
+    """Disponibilidade semanal de educadores — tabela DisponibilidadeEducador."""
+    TABLE = "DisponibilidadeEducador"
+
+    @classmethod
+    def check_disponibilidade(cls, id_educador, dia_semana: str,
+                              hora_inicio: str, hora_fim: str) -> bool:
+        try:
+            rows = execute_query(
+                """
+                SELECT idDisponibilidade
+                FROM DisponibilidadeEducador
+                WHERE idEducador = %s
+                  AND diaSemana = %s
+                  AND horaInicio <= %s
+                  AND horaFim >= %s
+                LIMIT 1
+                """,
+                (id_educador, dia_semana, hora_inicio, hora_fim)
+            )
+            # Se não há registro de disponibilidade, assume disponível
+            return len(rows) > 0 if rows is not None else True
+        except Exception:
+            return True
+
+
+class EventoEscolarModel(BaseModel):
+    """Eventos escolares — tabela EventosEscolares."""
+    TABLE = "EventosEscolares"
+
+    @classmethod
+    def find_all(cls, filtros: dict | None = None) -> list:
+        try:
+            return execute_query("SELECT * FROM EventosEscolares ORDER BY dataInicio")
+        except Exception:
+            return []
+
+    @classmethod
+    def find_by_turma(cls, id_turma: int) -> list:
+        try:
+            return execute_query(
+                "SELECT * FROM EventosEscolares WHERE idTurma = %s ORDER BY dataInicio",
+                (id_turma,)
+            )
+        except Exception:
+            return []
+
+
+class ConflitoHorarioModel(BaseModel):
+    """Conflitos de horário detectados — tabela ConflitosHorario."""
+    TABLE = "ConflitosHorario"
+
+    @classmethod
+    def find_all_pendentes(cls) -> list:
+        try:
+            return execute_query(
+                "SELECT * FROM ConflitosHorario WHERE resolvido = 0 ORDER BY detectedAt DESC"
+            )
+        except Exception:
+            return []
+
+
+class AuditoriaCronogramaModel(BaseModel):
+    """Auditoria de alterações no cronograma — tabela AuditoriaCronograma."""
+    TABLE = "AuditoriaCronograma"
+
+    @classmethod
+    def create_log(cls, id_cronograma: int, operacao: str, campo: str = "",
+                   valor_antigo: str = "", valor_novo: str = "",
+                   id_usuario: int | None = None) -> None:
+        try:
+            execute_write(
+                """
+                INSERT INTO AuditoriaCronograma
+                    (idCronograma, operacao, campoAlterado, valorAntigo, valorNovo, idUsuario)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+                (id_cronograma, operacao, campo, valor_antigo, valor_novo, id_usuario)
+            )
+        except Exception:
+            pass
+
+    @classmethod
+    def find_by_cronograma(cls, id_cronograma: int) -> list:
+        try:
+            return execute_query(
+                "SELECT * FROM AuditoriaCronograma WHERE idCronograma = %s ORDER BY createdAt DESC",
+                (id_cronograma,)
+            )
+        except Exception:
+            return []
+
+
+class BloqueioHorarioModel(BaseModel):
+    """Bloqueios de datas (feriados, recesso) — tabela BloqueiosHorario."""
+    TABLE = "BloqueiosHorario"
+
+    @classmethod
+    def find_all_ativos(cls) -> list:
+        try:
+            return execute_query("SELECT * FROM BloqueiosHorario WHERE ativo = 1")
+        except Exception:
+            return []
+
+
+class HorarioTemplateModel(BaseModel):
+    """Templates de horários por turno — tabela HorariosTemplate."""
+    TABLE = "HorariosTemplate"
+
+    @classmethod
+    def find_by_turno(cls, turno: str) -> list:
+        try:
+            return execute_query(
+                "SELECT * FROM HorariosTemplate WHERE turno = %s ORDER BY horaInicio",
+                (turno,)
+            )
+        except Exception:
+            return []

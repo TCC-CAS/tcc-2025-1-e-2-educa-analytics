@@ -263,6 +263,19 @@
           </a>
         </li>
 
+        <!-- Item: Controle de Pagamentos -->
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/mensalidades" routerLinkActive="nav-link-ativo"
+             [title]="menuRecolhido ? 'Controle de Pagamentos' : ''">
+            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <polyline points="16 11 18 13 22 9"/>
+            </svg>
+            <span class="nav-label" *ngIf="!menuRecolhido">Controle de Pagamentos</span>
+          </a>
+        </li>
+
         <!-- Item: Contas a Pagar -->
         <li class="nav-item">
           <a class="nav-link" routerLink="/contas-pagar" routerLinkActive="nav-link-ativo"

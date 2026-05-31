@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { CronogramaService } from '../../../cronograma/services/cronograma.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 type DiaSemana = 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta';
 
@@ -43,50 +46,18 @@ const CORES = [
   { bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4' },
 ];
 
-function c(i: number) { return { corBg: CORES[i].bg, corText: CORES[i].text, corBorder: CORES[i].border }; }
-
-function slotsAna(turmaId: string): AulaSlot[] {
-  return [
-    { id: 'a1',  turmaId, disciplinaId: 'mat', disciplina: 'Matemática',  educador: 'Prof. Ana Silva',      sala: 'Sala 101',      diaSemana: 'segunda', horaInicio: '07:00', horaFim: '08:00', ...c(0) },
-    { id: 'a2',  turmaId, disciplinaId: 'por', disciplina: 'Português',   educador: 'Prof. Carlos Souza',   sala: 'Sala 101',      diaSemana: 'segunda', horaInicio: '08:00', horaFim: '09:00', ...c(1) },
-    { id: 'a3',  turmaId, disciplinaId: 'fis', disciplina: 'Física',      educador: 'Prof. Maria Santos',   sala: 'Lab. Ciências', diaSemana: 'segunda', horaInicio: '09:00', horaFim: '10:00', ...c(2) },
-    { id: 'a4',  turmaId, disciplinaId: 'ing', disciplina: 'Inglês',      educador: 'Prof. João Lima',      sala: 'Sala 101',      diaSemana: 'segunda', horaInicio: '10:00', horaFim: '11:00', ...c(3) },
-    { id: 'a5',  turmaId, disciplinaId: 'por', disciplina: 'Português',   educador: 'Prof. Carlos Souza',   sala: 'Sala 101',      diaSemana: 'terca',   horaInicio: '07:00', horaFim: '08:00', ...c(1) },
-    { id: 'a6',  turmaId, disciplinaId: 'mat', disciplina: 'Matemática',  educador: 'Prof. Ana Silva',      sala: 'Sala 101',      diaSemana: 'terca',   horaInicio: '08:00', horaFim: '09:00', ...c(0) },
-    { id: 'a7',  turmaId, disciplinaId: 'bio', disciplina: 'Biologia',    educador: 'Prof. Lúcia Ferreira', sala: 'Lab. Ciências', diaSemana: 'terca',   horaInicio: '09:00', horaFim: '10:00', ...c(4) },
-    { id: 'a8',  turmaId, disciplinaId: 'ef',  disciplina: 'Ed. Física',  educador: 'Prof. Roberto Alves',  sala: 'Quadra',        diaSemana: 'terca',   horaInicio: '10:00', horaFim: '11:00', ...c(5) },
-    { id: 'a9',  turmaId, disciplinaId: 'fis', disciplina: 'Física',      educador: 'Prof. Maria Santos',   sala: 'Lab. Ciências', diaSemana: 'quarta',  horaInicio: '07:00', horaFim: '08:00', ...c(2) },
-    { id: 'a10', turmaId, disciplinaId: 'mat', disciplina: 'Matemática',  educador: 'Prof. Ana Silva',      sala: 'Sala 101',      diaSemana: 'quarta',  horaInicio: '09:00', horaFim: '10:00', ...c(0) },
-    { id: 'a11', turmaId, disciplinaId: 'art', disciplina: 'Artes',       educador: 'Prof. Lúcia Ferreira', sala: 'Sala 101',      diaSemana: 'quarta',  horaInicio: '10:00', horaFim: '11:00', ...c(6) },
-    { id: 'a12', turmaId, disciplinaId: 'ing', disciplina: 'Inglês',      educador: 'Prof. João Lima',      sala: 'Sala 101',      diaSemana: 'quinta',  horaInicio: '07:00', horaFim: '08:00', ...c(3) },
-    { id: 'a13', turmaId, disciplinaId: 'por', disciplina: 'Português',   educador: 'Prof. Carlos Souza',   sala: 'Sala 101',      diaSemana: 'quinta',  horaInicio: '08:00', horaFim: '09:00', ...c(1) },
-    { id: 'a14', turmaId, disciplinaId: 'mat', disciplina: 'Matemática',  educador: 'Prof. Ana Silva',      sala: 'Sala 101',      diaSemana: 'quinta',  horaInicio: '09:00', horaFim: '10:00', ...c(0) },
-    { id: 'a15', turmaId, disciplinaId: 'his', disciplina: 'História',    educador: 'Prof. João Lima',      sala: 'Sala 101',      diaSemana: 'quinta',  horaInicio: '10:00', horaFim: '11:00', ...c(7) },
-    { id: 'a16', turmaId, disciplinaId: 'bio', disciplina: 'Biologia',    educador: 'Prof. Lúcia Ferreira', sala: 'Lab. Ciências', diaSemana: 'sexta',   horaInicio: '07:00', horaFim: '08:00', ...c(4) },
-    { id: 'a17', turmaId, disciplinaId: 'fis', disciplina: 'Física',      educador: 'Prof. Maria Santos',   sala: 'Lab. Ciências', diaSemana: 'sexta',   horaInicio: '08:00', horaFim: '09:00', ...c(2) },
-    { id: 'a18', turmaId, disciplinaId: 'his', disciplina: 'História',    educador: 'Prof. João Lima',      sala: 'Sala 101',      diaSemana: 'sexta',   horaInicio: '09:00', horaFim: '10:00', ...c(7) },
-    { id: 'a19', turmaId, disciplinaId: 'ing', disciplina: 'Inglês',      educador: 'Prof. João Lima',      sala: 'Sala 101',      diaSemana: 'sexta',   horaInicio: '10:00', horaFim: '11:00', ...c(3) },
-  ];
+function stripSeconds(hora: string | undefined): string {
+  if (!hora) return '';
+  // "07:00:00" → "07:00"
+  return hora.length > 5 ? hora.substring(0, 5) : hora;
 }
 
-function slotsCarlos(turmaId: string): AulaSlot[] {
-  return [
-    { id: 'c1',  turmaId, disciplinaId: 'mat', disciplina: 'Matemática',  educador: 'Prof. Ana Silva',      sala: 'Sala 302',      diaSemana: 'segunda', horaInicio: '12:00', horaFim: '13:00', ...c(0) },
-    { id: 'c2',  turmaId, disciplinaId: 'his', disciplina: 'História',    educador: 'Prof. João Lima',      sala: 'Sala 302',      diaSemana: 'segunda', horaInicio: '13:00', horaFim: '14:00', ...c(7) },
-    { id: 'c3',  turmaId, disciplinaId: 'ef',  disciplina: 'Ed. Física',  educador: 'Prof. Roberto Alves',  sala: 'Quadra',        diaSemana: 'segunda', horaInicio: '14:00', horaFim: '15:00', ...c(5) },
-    { id: 'c4',  turmaId, disciplinaId: 'por', disciplina: 'Português',   educador: 'Prof. Carlos Souza',   sala: 'Sala 302',      diaSemana: 'terca',   horaInicio: '12:00', horaFim: '13:00', ...c(1) },
-    { id: 'c5',  turmaId, disciplinaId: 'mat', disciplina: 'Matemática',  educador: 'Prof. Ana Silva',      sala: 'Sala 302',      diaSemana: 'terca',   horaInicio: '13:00', horaFim: '14:00', ...c(0) },
-    { id: 'c6',  turmaId, disciplinaId: 'qui', disciplina: 'Química',     educador: 'Prof. Maria Santos',   sala: 'Lab. Química',  diaSemana: 'terca',   horaInicio: '14:00', horaFim: '15:00', ...c(2) },
-    { id: 'c7',  turmaId, disciplinaId: 'geo', disciplina: 'Geografia',   educador: 'Prof. Lúcia Ferreira', sala: 'Sala 302',      diaSemana: 'quarta',  horaInicio: '12:00', horaFim: '13:00', ...c(6) },
-    { id: 'c8',  turmaId, disciplinaId: 'mat', disciplina: 'Matemática',  educador: 'Prof. Ana Silva',      sala: 'Sala 302',      diaSemana: 'quarta',  horaInicio: '13:00', horaFim: '14:00', ...c(0) },
-    { id: 'c9',  turmaId, disciplinaId: 'ing', disciplina: 'Inglês',      educador: 'Prof. João Lima',      sala: 'Sala 302',      diaSemana: 'quarta',  horaInicio: '14:00', horaFim: '15:00', ...c(3) },
-    { id: 'c10', turmaId, disciplinaId: 'qui', disciplina: 'Química',     educador: 'Prof. Maria Santos',   sala: 'Lab. Química',  diaSemana: 'quinta',  horaInicio: '12:00', horaFim: '13:00', ...c(2) },
-    { id: 'c11', turmaId, disciplinaId: 'por', disciplina: 'Português',   educador: 'Prof. Carlos Souza',   sala: 'Sala 302',      diaSemana: 'quinta',  horaInicio: '13:00', horaFim: '14:00', ...c(1) },
-    { id: 'c12', turmaId, disciplinaId: 'his', disciplina: 'História',    educador: 'Prof. João Lima',      sala: 'Sala 302',      diaSemana: 'quinta',  horaInicio: '14:00', horaFim: '15:00', ...c(7) },
-    { id: 'c13', turmaId, disciplinaId: 'geo', disciplina: 'Geografia',   educador: 'Prof. Lúcia Ferreira', sala: 'Sala 302',      diaSemana: 'sexta',   horaInicio: '12:00', horaFim: '13:00', ...c(6) },
-    { id: 'c14', turmaId, disciplinaId: 'mat', disciplina: 'Matemática',  educador: 'Prof. Ana Silva',      sala: 'Sala 302',      diaSemana: 'sexta',   horaInicio: '13:00', horaFim: '14:00', ...c(0) },
-    { id: 'c15', turmaId, disciplinaId: 'ing', disciplina: 'Inglês',      educador: 'Prof. João Lima',      sala: 'Sala 302',      diaSemana: 'sexta',   horaInicio: '15:00', horaFim: '16:00', ...c(3) },
-  ];
+function periodoToTurno(periodo: string | undefined): 'Manhã' | 'Tarde' | 'Noite' {
+  if (!periodo) return 'Manhã';
+  const p = periodo.toLowerCase();
+  if (p.includes('tard')) return 'Tarde';
+  if (p.includes('noit')) return 'Noite';
+  return 'Manhã';
 }
 
 @Component({
@@ -96,7 +67,7 @@ function slotsCarlos(turmaId: string): AulaSlot[] {
 })
 export class CronogramaResponsavelComponent implements OnInit {
 
-  readonly responsavel = { id: 10, nome: 'Maria Ferreira' };
+  responsavel = { id: '', nome: '' };
 
   dias: { key: DiaSemana; label: string; abrev: string }[] = [
     { key: 'segunda', label: 'Segunda-feira', abrev: 'Seg' },
@@ -112,57 +83,107 @@ export class CronogramaResponsavelComponent implements OnInit {
   educandos: EducandoCard[] = [];
   selecionado!: EducandoCard;
 
+  carregando = false;
+  erro: string | null = null;
+
+  constructor(
+    private cronogramaService: CronogramaService,
+    private authService: AuthService,
+    private route: ActivatedRoute
+  ) {}
+
   ngOnInit(): void {
     for (let h = 7; h <= 22; h++) {
       this.horas.push(`${h.toString().padStart(2, '0')}:00`);
     }
-
     const diasMap: Record<number, DiaSemana> = { 1: 'segunda', 2: 'terca', 3: 'quarta', 4: 'quinta', 5: 'sexta' };
     this.hojeKey = diasMap[new Date().getDay()] ?? null;
 
-    // Load from localStorage, fall back to mock
-    let storedAll: any[] = [];
-    try {
-      const stored = localStorage.getItem('cronograma_slots_v2');
-      if (stored) storedAll = JSON.parse(stored);
-    } catch {}
+    const idRota = this.route.snapshot.paramMap.get('id');
+    const user   = this.authService.getCurrentUser();
+    const idResponsavel = idRota || user?.id || null;
 
-    const cardsConfig = [
-      { id: 1, nome: 'Ana Paula Ferreira', turma: { id: 't1', codigo: '1A', serie: '1º Ano', turno: 'Manhã' as const, anoLetivo: '2026' }, fallback: slotsAna },
-      { id: 2, nome: 'Carlos Ferreira',    turma: { id: 't3', codigo: '3B', serie: '3º Ano', turno: 'Tarde' as const, anoLetivo: '2026' }, fallback: slotsCarlos },
-    ];
+    if (!idResponsavel) {
+      this.erro = 'Usuário não autenticado.';
+      return;
+    }
 
-    this.educandos = cardsConfig.map(cfg => {
-      const fromStorage = storedAll.filter(s => s.turmaId === cfg.turma.id);
-      return {
-        id:    cfg.id,
-        nome:  cfg.nome,
-        turma: cfg.turma,
-        slots: fromStorage.length > 0 ? fromStorage : cfg.fallback(cfg.turma.id),
-      };
+    this.responsavel = { id: idResponsavel, nome: user?.nome || idResponsavel };
+    this.carregando = true;
+
+    this.cronogramaService.listarCronogramaResponsavel(idResponsavel).subscribe({
+      next: (res) => {
+        this.carregando = false;
+        const discColorMap = new Map<string, number>();
+
+        this.educandos = (res.filhos || []).map((item, idx) => {
+          const turmaInfo: TurmaInfo = {
+            id: String(item.turma.idTurma),
+            codigo: (item.turma as any).codTurma || '',
+            serie: (item.turma as any).serie || item.turma.nomeTurma || '',
+            turno: periodoToTurno((item.turma as any).periodo),
+            anoLetivo: (item.turma as any).anoLetivo || '',
+          };
+
+          const slots: AulaSlot[] = (item.horarios || []).map(h => {
+            const discId = String(h.idDisciplina);
+            if (!discColorMap.has(discId)) {
+              discColorMap.set(discId, discColorMap.size % CORES.length);
+            }
+            const cor = CORES[discColorMap.get(discId)!];
+            const diaSemana = h.diaSemana as DiaSemana;
+            return {
+              id: String(h.id ?? h.idCronograma ?? Math.random()),
+              turmaId: String(h.idTurma),
+              disciplinaId: discId,
+              disciplina: (h as any).disciplina?.nome || (h as any).nomeDisciplina || '',
+              educador: (h as any).educador?.nome || (h as any).educadorNome || '',
+              sala: (h as any).sala?.nome || (h as any).nomeSala || '',
+              diaSemana,
+              horaInicio: stripSeconds(h.horaInicio),
+              horaFim: stripSeconds(h.horaFim),
+              corBg: cor.bg,
+              corText: cor.text,
+              corBorder: cor.border,
+            };
+          });
+
+          return {
+            id: idx + 1,
+            nome: item.filho.nomeCompleto,
+            turma: turmaInfo,
+            slots,
+          };
+        });
+
+        this.selecionado = this.educandos[0] ?? { id: 0, nome: '', turma: { id: '', codigo: '', serie: '', turno: 'Manhã', anoLetivo: '' }, slots: [] };
+      },
+      error: (err) => {
+        this.carregando = false;
+        this.erro = 'Não foi possível carregar o cronograma. Tente novamente.';
+        console.error('[CronogramaResponsavel]', err);
+      }
     });
-
-    this.selecionado = this.educandos[0];
   }
 
   selecionar(e: EducandoCard): void { this.selecionado = e; }
 
   get horasFiltradas(): string[] {
-    const turno = this.selecionado.turma.turno;
+    const turno = this.selecionado?.turma?.turno;
     if (turno === 'Tarde') return this.horas.filter(h => parseInt(h) >= 12 && parseInt(h) <= 18);
     if (turno === 'Noite') return this.horas.filter(h => parseInt(h) >= 18);
     return this.horas.filter(h => parseInt(h) >= 7 && parseInt(h) <= 12);
   }
 
-  get totalAulas(): number { return this.selecionado.slots.length; }
+  get totalAulas(): number { return this.selecionado?.slots?.length ?? 0; }
 
   get disciplinasCount(): number {
-    return new Set(this.selecionado.slots.map(s => s.disciplinaId)).size;
+    return new Set(this.selecionado?.slots?.map(s => s.disciplinaId)).size;
   }
 
   get legenda(): { disciplinaId: string; disciplina: string; corBg: string; corBorder: string }[] {
     const seen = new Set<string>();
-    return this.selecionado.slots.filter(s => {
+    return (this.selecionado?.slots || []).filter(s => {
       if (seen.has(s.disciplinaId)) return false;
       seen.add(s.disciplinaId);
       return true;
@@ -170,7 +191,7 @@ export class CronogramaResponsavelComponent implements OnInit {
   }
 
   getSlot(dia: DiaSemana, hora: string): AulaSlot | undefined {
-    return this.selecionado.slots.find(s => s.diaSemana === dia && s.horaInicio === hora);
+    return this.selecionado?.slots?.find(s => s.diaSemana === dia && s.horaInicio === hora);
   }
 
   isHoje(dia: DiaSemana): boolean { return dia === this.hojeKey; }
@@ -179,3 +200,4 @@ export class CronogramaResponsavelComponent implements OnInit {
   trackByDia(_: number, d: { key: string }) { return d.key; }
   trackById(_: number, e: EducandoCard) { return e.id; }
 }
+

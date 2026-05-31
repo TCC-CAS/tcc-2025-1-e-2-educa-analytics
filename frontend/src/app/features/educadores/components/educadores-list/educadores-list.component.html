@@ -35,10 +35,12 @@
     <div class="page-title">
       <h1>Educadores</h1>
       <span class="page-subtitle">Gerencie o quadro de educadores da instituição</span>
-      <button class="btn btn-primary" (click)="novo()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Novo Educador
-      </button>
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="novo()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo Educador
+        </button>
+      </div>
     </div>
   </div>
 
@@ -95,9 +97,9 @@
         <div class="select-wrapper">
           <select [(ngModel)]="filtroTurno" (ngModelChange)="onFiltroChange()" [class.active]="filtroTurno">
             <option value="">Todos os turnos</option>
-            <option value="Matutino">Matutino</option>
-            <option value="Vespertino">Vespertino</option>
-            <option value="Noturno">Noturno</option>
+            <option value="Manhã">Manhã</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noite">Noite</option>
             <option value="Integral">Integral</option>
           </select>
         </div>
@@ -297,12 +299,14 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div class="pagination-pages">
-          <button type="button" class="pagination-page"
-            *ngFor="let page of paginasVisiveis; trackBy: trackByIndex"
-            [class.active]="page === paginaAtual"
-            (click)="irParaPagina(page)">
-            {{ page }}
-          </button>
+          <ng-container *ngFor="let page of paginasVisiveis; trackBy: trackByIndex">
+            <span *ngIf="page === -1" class="pagination-dots">…</span>
+            <button type="button" class="pagination-page" *ngIf="page !== -1"
+              [class.active]="page === paginaAtual"
+              (click)="irParaPagina(page)">
+              {{ page }}
+            </button>
+          </ng-container>
         </div>
         <button type="button" class="pagination-btn" [disabled]="paginaAtual === totalPaginas" (click)="irParaPagina(paginaAtual + 1)" title="Próxima página">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>

@@ -113,16 +113,6 @@
       </div>
     </div>
 
-    <div class="summary-card card-score">
-      <div class="card-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      </div>
-      <div class="card-info">
-        <span class="card-label">Score Médio Geral</span>
-        <span class="card-value">{{ scoreGeral }}</span>
-        <span class="card-sub">avaliação de fornecedores</span>
-      </div>
-    </div>
   </div>
 
   <!-- Filtros -->
@@ -217,9 +207,9 @@
             <th><div class="th-content">Tipo</div></th>
             <th><div class="th-content">Nome / Razão Social</div></th>
             <th><div class="th-content">Centro de Custo</div></th>
-            <th><div class="th-content th-right">Valor Mensal Médio</div></th>
+            <th><div class="th-content">Contratos</div></th>
             <th><div class="th-content">Último Pagamento</div></th>
-            <th><div class="th-content">Score</div></th>
+            <th><div class="th-content">Observações</div></th>
             <th><div class="th-content">Status</div></th>
             <th><div class="th-content">Ações</div></th>
           </tr>
@@ -241,45 +231,21 @@
             </td>
             <td>
               <span class="badge-cc">{{ fornecedor.centroCusto }}</span>
-              <div class="td-contratos" *ngIf="fornecedor.qtdContratos > 0">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                {{ fornecedor.qtdContratos }} contrato(s)
-              </div>
             </td>
-            <td class="td-right">
-              <span class="td-valor-mensal">R$ {{ fornecedor.valorMensalMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+            <td>
+              <span *ngIf="fornecedor.qtdContratos > 0" class="td-contratos-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                {{ fornecedor.qtdContratos }}
+              </span>
+              <span *ngIf="!fornecedor.qtdContratos" class="td-muted">—</span>
             </td>
             <td>
               <span *ngIf="fornecedor.ultimoPagamento" class="td-text">{{ fornecedor.ultimoPagamento | date:'dd/MM/yyyy' }}</span>
               <span *ngIf="!fornecedor.ultimoPagamento" class="td-muted">—</span>
             </td>
-            <td>
-              <div class="score-display">
-                <div class="score-numero" [class]="getScoreClass(getScoreGeral(fornecedor))">{{ getScoreGeral(fornecedor) }}</div>
-                <div class="score-details">
-                  <div class="score-item">
-                    <span>Entrega</span>
-                    <div class="score-bar">
-                      <div class="score-fill" [style.width.%]="fornecedor.scoreEntrega * 10" [class]="getScoreClass(fornecedor.scoreEntrega)"></div>
-                    </div>
-                    <span class="score-val">{{ fornecedor.scoreEntrega }}</span>
-                  </div>
-                  <div class="score-item">
-                    <span>Pontual.</span>
-                    <div class="score-bar">
-                      <div class="score-fill" [style.width.%]="fornecedor.scorePontualidade * 10" [class]="getScoreClass(fornecedor.scorePontualidade)"></div>
-                    </div>
-                    <span class="score-val">{{ fornecedor.scorePontualidade }}</span>
-                  </div>
-                  <div class="score-item">
-                    <span>Qualidade</span>
-                    <div class="score-bar">
-                      <div class="score-fill" [style.width.%]="fornecedor.scoreQualidade * 10" [class]="getScoreClass(fornecedor.scoreQualidade)"></div>
-                    </div>
-                    <span class="score-val">{{ fornecedor.scoreQualidade }}</span>
-                  </div>
-                </div>
-              </div>
+            <td class="td-obs">
+              <span *ngIf="fornecedor.observacoes" class="td-obs-text" [title]="fornecedor.observacoes">{{ fornecedor.observacoes }}</span>
+              <span *ngIf="!fornecedor.observacoes" class="td-muted">—</span>
             </td>
             <td>
               <span class="status-badge" [class.status-ativa]="fornecedor.ativo" [class.status-inativa]="!fornecedor.ativo">

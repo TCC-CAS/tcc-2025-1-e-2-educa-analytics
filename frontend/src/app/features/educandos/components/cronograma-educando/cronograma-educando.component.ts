@@ -1,17 +1,20 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
+import { AuthService } from '../../../../core/services/auth.service';
 
 type DiaSemana = 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta';
 
 interface AulaSlot {
   id: string;
-  turmaId: string;
   disciplinaId: string;
   disciplina: string;
   educador: string;
   sala: string;
   diaSemana: DiaSemana;
-  horaInicio: string;
-  horaFim: string;
+  horaInicio: string; // "07:00"
+  horaFim: string;    // "08:00"
   corBg: string;
   corText: string;
   corBorder: string;
@@ -28,30 +31,11 @@ const CORES = [
   { bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4' },
 ];
 
-function c(i: number) { return { corBg: CORES[i].bg, corText: CORES[i].text, corBorder: CORES[i].border }; }
-
-function buildMockSlots(turmaId: string): AulaSlot[] {
-  return [
-    { id: 'e1', turmaId, disciplinaId: 'mat', disciplina: 'Matemática',   educador: 'Prof. Ana Silva',      sala: 'Sala 101',       diaSemana: 'segunda', horaInicio: '07:00', horaFim: '08:00', ...c(0) },
-    { id: 'e2', turmaId, disciplinaId: 'por', disciplina: 'Português',     educador: 'Prof. Carlos Souza',   sala: 'Sala 101',       diaSemana: 'segunda', horaInicio: '08:00', horaFim: '09:00', ...c(1) },
-    { id: 'e3', turmaId, disciplinaId: 'fis', disciplina: 'Física',        educador: 'Prof. Maria Santos',   sala: 'Lab. Ciências',  diaSemana: 'segunda', horaInicio: '09:00', horaFim: '10:00', ...c(2) },
-    { id: 'e4', turmaId, disciplinaId: 'ing', disciplina: 'Inglês',        educador: 'Prof. João Lima',      sala: 'Sala 101',       diaSemana: 'segunda', horaInicio: '10:00', horaFim: '11:00', ...c(3) },
-    { id: 'e5', turmaId, disciplinaId: 'por', disciplina: 'Português',     educador: 'Prof. Carlos Souza',   sala: 'Sala 101',       diaSemana: 'terca',   horaInicio: '07:00', horaFim: '08:00', ...c(1) },
-    { id: 'e6', turmaId, disciplinaId: 'mat', disciplina: 'Matemática',    educador: 'Prof. Ana Silva',      sala: 'Sala 101',       diaSemana: 'terca',   horaInicio: '08:00', horaFim: '09:00', ...c(0) },
-    { id: 'e7', turmaId, disciplinaId: 'bio', disciplina: 'Biologia',      educador: 'Prof. Lúcia Ferreira', sala: 'Lab. Ciências',  diaSemana: 'terca',   horaInicio: '09:00', horaFim: '10:00', ...c(4) },
-    { id: 'e8', turmaId, disciplinaId: 'ef',  disciplina: 'Ed. Física',    educador: 'Prof. Roberto Alves',  sala: 'Quadra',         diaSemana: 'terca',   horaInicio: '10:00', horaFim: '11:00', ...c(5) },
-    { id: 'e9', turmaId, disciplinaId: 'fis', disciplina: 'Física',        educador: 'Prof. Maria Santos',   sala: 'Lab. Ciências',  diaSemana: 'quarta',  horaInicio: '07:00', horaFim: '08:00', ...c(2) },
-    { id: 'e10',turmaId, disciplinaId: 'mat', disciplina: 'Matemática',    educador: 'Prof. Ana Silva',      sala: 'Sala 101',       diaSemana: 'quarta',  horaInicio: '09:00', horaFim: '10:00', ...c(0) },
-    { id: 'e11',turmaId, disciplinaId: 'art', disciplina: 'Artes',         educador: 'Prof. Lúcia Ferreira', sala: 'Sala 101',       diaSemana: 'quarta',  horaInicio: '10:00', horaFim: '11:00', ...c(6) },
-    { id: 'e12',turmaId, disciplinaId: 'ing', disciplina: 'Inglês',        educador: 'Prof. João Lima',      sala: 'Sala 101',       diaSemana: 'quinta',  horaInicio: '07:00', horaFim: '08:00', ...c(3) },
-    { id: 'e13',turmaId, disciplinaId: 'por', disciplina: 'Português',     educador: 'Prof. Carlos Souza',   sala: 'Sala 101',       diaSemana: 'quinta',  horaInicio: '08:00', horaFim: '09:00', ...c(1) },
-    { id: 'e14',turmaId, disciplinaId: 'mat', disciplina: 'Matemática',    educador: 'Prof. Ana Silva',      sala: 'Sala 101',       diaSemana: 'quinta',  horaInicio: '09:00', horaFim: '10:00', ...c(0) },
-    { id: 'e15',turmaId, disciplinaId: 'his', disciplina: 'História',      educador: 'Prof. João Lima',      sala: 'Sala 101',       diaSemana: 'quinta',  horaInicio: '10:00', horaFim: '11:00', ...c(7) },
-    { id: 'e16',turmaId, disciplinaId: 'bio', disciplina: 'Biologia',      educador: 'Prof. Lúcia Ferreira', sala: 'Lab. Ciências',  diaSemana: 'sexta',   horaInicio: '07:00', horaFim: '08:00', ...c(4) },
-    { id: 'e17',turmaId, disciplinaId: 'fis', disciplina: 'Física',        educador: 'Prof. Maria Santos',   sala: 'Lab. Ciências',  diaSemana: 'sexta',   horaInicio: '08:00', horaFim: '09:00', ...c(2) },
-    { id: 'e18',turmaId, disciplinaId: 'his', disciplina: 'História',      educador: 'Prof. João Lima',      sala: 'Sala 101',       diaSemana: 'sexta',   horaInicio: '09:00', horaFim: '10:00', ...c(7) },
-    { id: 'e19',turmaId, disciplinaId: 'ing', disciplina: 'Inglês',        educador: 'Prof. João Lima',      sala: 'Sala 101',       diaSemana: 'sexta',   horaInicio: '10:00', horaFim: '11:00', ...c(3) },
-  ];
+/** "7:00:00" ou "07:00:00" → "07:00" */
+function normHora(h: string): string {
+  if (!h) return '';
+  const p = String(h).split(':');
+  return p[0].padStart(2, '0') + ':' + (p[1] || '00');
 }
 
 @Component({
@@ -61,17 +45,8 @@ function buildMockSlots(turmaId: string): AulaSlot[] {
 })
 export class CronogramaEducandoComponent implements OnInit {
 
-  readonly educando = {
-    id: 1,
-    nome: 'Ana Paula Ferreira',
-    turma: {
-      id: 't1',
-      codigo: '1A',
-      serie: '1º Ano',
-      turno: 'Manhã' as 'Manhã' | 'Tarde' | 'Noite',
-      anoLetivo: '2026'
-    }
-  };
+  educando = { id: '', nome: '' };
+  turma: { idTurma: number; codTurma: string; nomeTurma: string; periodo: string; anoLetivo: string } | null = null;
 
   dias: { key: DiaSemana; label: string; abrev: string }[] = [
     { key: 'segunda', label: 'Segunda-feira', abrev: 'Seg' },
@@ -85,33 +60,116 @@ export class CronogramaEducandoComponent implements OnInit {
   slots: AulaSlot[] = [];
   hojeKey: DiaSemana | null = null;
 
+  carregando = false;
+  erro = '';
+
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+    private route: ActivatedRoute
+  ) {}
+
   ngOnInit(): void {
-    for (let h = 7; h <= 22; h++) {
+    for (let h = 6; h <= 23; h++) {
       this.horas.push(`${h.toString().padStart(2, '0')}:00`);
     }
 
-    try {
-      const stored = localStorage.getItem('cronograma_slots_v2');
-      if (stored) {
-        const all: any[] = JSON.parse(stored);
-        this.slots = all.filter(s => s.turmaId === this.educando.turma.id);
-      }
-    } catch {}
-
-    if (this.slots.length === 0) {
-      this.slots = buildMockSlots(this.educando.turma.id);
-    }
-
-    const diasMap: Record<number, DiaSemana> = { 1: 'segunda', 2: 'terca', 3: 'quarta', 4: 'quinta', 5: 'sexta' };
+    const diasMap: Record<number, DiaSemana> = {
+      1: 'segunda', 2: 'terca', 3: 'quarta', 4: 'quinta', 5: 'sexta'
+    };
     this.hojeKey = diasMap[new Date().getDay()] ?? null;
+
+    // ID pode vir do parâmetro de rota (:id/cronograma) ou do usuário logado
+    const idRota = this.route.snapshot.paramMap.get('id');
+    const user   = this.authService.getCurrentUser();
+    const idMatricula = idRota || user?.id || null;
+
+    if (idMatricula) {
+      this.educando = { id: idMatricula, nome: user?.nome || '' };
+      this.carregarCronograma(idMatricula);
+    } else {
+      this.erro = 'Usuário não identificado.';
+    }
+  }
+
+  carregarCronograma(idMatricula: string): void {
+    this.carregando = true;
+    this.erro = '';
+
+    this.http.get<any>(`${environment.apiUrl}/cronograma/educando/${idMatricula}`)
+      .subscribe({
+        next: (res) => {
+          this.turma  = res.turma  || null;
+          const lista: any[] = res.horarios || [];
+          this.slots  = this.mapearSlots(lista);
+          this.carregando = false;
+        },
+        error: () => {
+          this.erro = 'Não foi possível carregar o cronograma.';
+          this.carregando = false;
+        }
+      });
+  }
+
+  private mapearSlots(lista: any[]): AulaSlot[] {
+    // Cor por disciplina (consistente)
+    const discCorMap = new Map<string, number>();
+    let idx = 0;
+
+    return lista
+      .filter(r => r.status !== 'cancelada' && r.status !== 'suspensa')
+      .map(r => {
+        const discId = String(r.idDisciplina);
+        if (!discCorMap.has(discId)) {
+          discCorMap.set(discId, idx % CORES.length);
+          idx++;
+        }
+        const cor = CORES[discCorMap.get(discId)!];
+
+        return {
+          id:          String(r.idCronograma ?? r.id ?? Math.random()),
+          disciplinaId: discId,
+          disciplina:  r.nomeDisciplina || r.codDisciplina || '—',
+          educador:    r.educadorNome   || '',
+          sala:        r.nomeSala       || '',
+          diaSemana:   r.diaSemana as DiaSemana,
+          horaInicio:  normHora(r.horaInicio),
+          horaFim:     normHora(r.horaFim),
+          corBg:       cor.bg,
+          corText:     cor.text,
+          corBorder:   cor.border,
+        } as AulaSlot;
+      });
+  }
+
+  // ── Período / horas visíveis ──────────────────────────────────────────────
+
+  get periodoLabel(): string {
+    if (!this.turma?.periodo) return '';
+    const p = this.turma.periodo.toLowerCase();
+    if (p.includes('matut') || p === 'm') return 'Manhã';
+    if (p.includes('vespert') || p.includes('tarde') || p === 'v' || p === 't') return 'Tarde';
+    if (p.includes('notur') || p.includes('noite') || p === 'n') return 'Noite';
+    if (p.includes('integral') || p === 'i') return 'Integral';
+    return this.turma.periodo;
   }
 
   get horasFiltradas(): string[] {
-    const turno = this.educando.turma.turno;
-    if (turno === 'Tarde') return this.horas.filter(h => parseInt(h) >= 12 && parseInt(h) <= 18);
-    if (turno === 'Noite') return this.horas.filter(h => parseInt(h) >= 18);
+    if (this.slots.length > 0) {
+      const horasComAula = new Set(this.slots.map(s => parseInt(s.horaInicio)));
+      const min = Math.max(Math.min(...horasComAula) - 1, 6);
+      const max = Math.min(Math.max(...horasComAula) + 2, 23);
+      return this.horas.filter(h => { const v = parseInt(h); return v >= min && v <= max; });
+    }
+    const p = (this.turma?.periodo || '').toLowerCase();
+    if (p.includes('vespert') || p.includes('tarde') || p === 'v' || p === 't')
+      return this.horas.filter(h => parseInt(h) >= 12 && parseInt(h) <= 18);
+    if (p.includes('notur') || p.includes('noite') || p === 'n')
+      return this.horas.filter(h => parseInt(h) >= 18);
     return this.horas.filter(h => parseInt(h) >= 7 && parseInt(h) <= 12);
   }
+
+  // ── Derivados ────────────────────────────────────────────────────────────
 
   get totalAulas(): number { return this.slots.length; }
 

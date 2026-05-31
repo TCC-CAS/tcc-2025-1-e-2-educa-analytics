@@ -1,138 +1,185 @@
-<div class="container-resetar-senha">
-  <!-- Loading State -->
-  <div *ngIf="validando" class="loading-state">
-    <div class="spinner"></div>
-    <p>Validando link...</p>
-  </div>
-  
-  <!-- Token Inválido ou Expirado -->
-  <div *ngIf="!validando && !tokenValido" class="invalid-state">
-    <div class="icon-error">
-      <i class="icon-x-circle"></i>
+<div class="criar-senha-page">
+  <div class="criar-senha-card" role="main">
+
+    <div class="logo-row">
+      <div class="avatar" aria-hidden="true">EA</div>
+      <div class="brand">EducaAnalytics</div>
     </div>
-    
-    <h2>Link Inválido</h2>
-    <p class="error-message">{{ erro }}</p>
-    
-    <button 
-      *ngIf="tokenExpirado" 
-      (click)="solicitarNovoLink()" 
-      class="btn-primary"
-    >
-      Solicitar Novo Link
-    </button>
-    
-    <a routerLink="/login" class="link-voltar">Voltar para login</a>
-  </div>
-  
-  <!-- Formulário de Reset -->
-  <div *ngIf="!validando && tokenValido && !sucesso" class="form-container">
-    <div class="header">
-      <div class="icon-success">
-        <i class="icon-check-circle"></i>
+
+    <!-- Validando token -->
+    <div *ngIf="state === 'validating'" class="state-block" role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="#dadce0" stroke-width="2"/>
+          <path d="M12 2a10 10 0 0110 10" stroke="url(#grad)" stroke-width="2" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#667eea"/>
+              <stop offset="100%" stop-color="#764ba2"/>
+            </linearGradient>
+          </defs>
+        </svg>
       </div>
-      <h2>Redefinir Senha</h2>
-      <p class="subtitle">Escolha uma nova senha forte</p>
+      <p class="state-msg">Verificando seu link...</p>
     </div>
-    
-    <form (ngSubmit)="onSubmit()">
-      <!-- Nova Senha -->
-      <div class="form-group">
-        <label for="novaSenha">Nova Senha</label>
-        <div class="input-wrapper">
-          <input
-            id="novaSenha"
-            [type]="mostrarSenha ? 'text' : 'password'"
-            [(ngModel)]="novaSenha"
-            name="novaSenha"
-            placeholder="Mínimo 8 caracteres"
-            required
-          />
-          <button
-            type="button"
-            (click)="toggleMostrarSenha()"
-            class="toggle-password"
-            [attr.aria-label]="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'"
-          >
-            <i [class]="mostrarSenha ? 'icon-eye-off' : 'icon-eye'"></i>
-          </button>
+
+    <!-- Token inválido -->
+    <div *ngIf="state === 'invalid'" class="state-block" role="alert">
+      <div class="state-icon error-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1>Link inválido</h1>
+      <p class="state-desc">Este link não é válido ou já foi utilizado. Solicite um novo link de recuperação.</p>
+      <button class="primary" type="button" (click)="requestNewLink()">Solicitar novo link</button>
+    </div>
+
+    <!-- Token expirado -->
+    <div *ngIf="state === 'expired'" class="state-block" role="alert">
+      <div class="state-icon warn-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 20h20L12 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M12 9v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1>Link expirado</h1>
+      <p class="state-desc">Seu link de recuperação expirou (válido por 1 hora). Solicite um novo link.</p>
+      <button class="primary" type="button" (click)="requestNewLink()">Solicitar novo link</button>
+    </div>
+
+    <!-- Formulário de redefinição -->
+    <ng-container *ngIf="state === 'ready'">
+      <h1>Redefinir senha</h1>
+      <p class="subtitle">Crie uma nova senha segura para sua conta</p>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="senha-form" novalidate>
+
+        <div class="field">
+          <label for="senha">Nova senha</label>
+          <div class="input-wrapper">
+            <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input
+              formControlName="senha"
+              id="senha"
+              [type]="showPassword ? 'text' : 'password'"
+              placeholder="Mínimo 8 caracteres"
+              autocomplete="new-password"
+              [attr.aria-invalid]="showSenhaError()"
+              [attr.aria-describedby]="showSenhaError() ? 'senha-error' : 'senha-hint'"
+            />
+            <button
+              type="button"
+              class="toggle-visibility"
+              (click)="showPassword = !showPassword"
+              [attr.aria-label]="showPassword ? 'Ocultar senha' : 'Mostrar senha'"
+              tabindex="0"
+            >
+              <svg *ngIf="!showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <svg *ngIf="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <div *ngIf="senha.value" class="strength-bar" aria-hidden="true">
+            <div class="strength-track">
+              <div class="strength-fill" [class]="passwordStrength"></div>
+            </div>
+            <span class="strength-label" [class]="passwordStrength">{{ passwordStrengthLabel }}</span>
+          </div>
+
+          <span *ngIf="showSenhaError()" id="senha-error" class="error-message" role="alert" aria-live="polite">
+            {{ getSenhaError() }}
+          </span>
+          <span *ngIf="!showSenhaError()" id="senha-hint" class="helper-text">
+            Use letras maiúsculas, minúsculas e números
+          </span>
         </div>
-      </div>
-      
-      <!-- Confirmar Senha -->
-      <div class="form-group">
-        <label for="confirmarSenha">Confirmar Senha</label>
-        <div class="input-wrapper">
-          <input
-            id="confirmarSenha"
-            [type]="mostrarConfirmar ? 'text' : 'password'"
-            [(ngModel)]="confirmarSenha"
-            name="confirmarSenha"
-            placeholder="Digite a senha novamente"
-            required
-          />
-          <button
-            type="button"
-            (click)="toggleMostrarConfirmar()"
-            class="toggle-password"
-            [attr.aria-label]="mostrarConfirmar ? 'Ocultar senha' : 'Mostrar senha'"
-          >
-            <i [class]="mostrarConfirmar ? 'icon-eye-off' : 'icon-eye'"></i>
-          </button>
+
+        <div class="field">
+          <label for="confirmar">Confirmar senha</label>
+          <div class="input-wrapper">
+            <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input
+              formControlName="confirmar"
+              id="confirmar"
+              [type]="showConfirm ? 'text' : 'password'"
+              placeholder="Repita a senha"
+              autocomplete="new-password"
+              [attr.aria-invalid]="showConfirmarError()"
+              [attr.aria-describedby]="showConfirmarError() ? 'confirmar-error' : null"
+            />
+            <button
+              type="button"
+              class="toggle-visibility"
+              (click)="showConfirm = !showConfirm"
+              [attr.aria-label]="showConfirm ? 'Ocultar confirmação' : 'Mostrar confirmação'"
+              tabindex="0"
+            >
+              <svg *ngIf="!showConfirm" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <svg *ngIf="showConfirm" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <span *ngIf="showConfirmarError()" id="confirmar-error" class="error-message" role="alert" aria-live="polite">
+            {{ getConfirmarError() }}
+          </span>
         </div>
+
+        <div *ngIf="errorMsg" class="api-error" role="alert" aria-live="assertive">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ errorMsg }}
+        </div>
+
+        <button class="primary" type="submit" [disabled]="loading" [attr.aria-busy]="loading">
+          <span *ngIf="!loading">Redefinir senha</span>
+          <span *ngIf="loading" class="loading-spinner" aria-live="polite">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+              <path d="M12 2a10 10 0 0110 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Salvando...
+          </span>
+        </button>
+      </form>
+    </ng-container>
+
+    <!-- Sucesso -->
+    <div *ngIf="state === 'success'" class="state-block" role="status" aria-live="polite">
+      <div class="state-icon success-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M8 12l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </div>
-      
-      <!-- Erro -->
-      <div *ngIf="erro" class="alert alert-error">
-        <i class="icon-alert-circle"></i>
-        <span>{{ erro }}</span>
-      </div>
-      
-      <!-- Requisitos de Senha -->
-      <div class="password-requirements">
-        <p class="requirements-title">
-          <i class="icon-info"></i>
-          Sua senha deve conter:
-        </p>
-        <ul>
-          <li [class.met]="novaSenha.length >= 8">
-            Mínimo 8 caracteres
-          </li>
-          <li [class.met]="novaSenha === confirmarSenha && novaSenha.length > 0">
-            Senhas devem coincidir
-          </li>
-        </ul>
-      </div>
-      
-      <!-- Submit -->
-      <button
-        type="submit"
-        class="btn-submit"
-        [disabled]="salvando || !novaSenha || !confirmarSenha"
-      >
-        <span *ngIf="!salvando">Redefinir Senha</span>
-        <span *ngIf="salvando">
-          <span class="spinner-sm"></span>
-          Salvando...
-        </span>
-      </button>
-    </form>
-  </div>
-  
-  <!-- Sucesso -->
-  <div *ngIf="sucesso" class="success-state">
-    <div class="icon-success animated">
-      <i class="icon-check-circle"></i>
+      <h1>Senha redefinida!</h1>
+      <p class="state-desc">Sua senha foi alterada com sucesso. Você será redirecionado para o login em instantes.</p>
+      <button class="primary" type="button" (click)="goToLogin()">Ir para o login</button>
     </div>
-    
-    <h2>Senha Redefinida!</h2>
-    <p class="success-message">
-      Sua senha foi alterada com sucesso.
-    </p>
-    <p class="redirect-message">
-      Redirecionando para o login...
-    </p>
-    
-    <div class="spinner"></div>
+
+    <div class="footer-note">
+      <span>EducaAnalytics &copy; {{ year }}</span>
+    </div>
   </div>
 </div>

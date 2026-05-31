@@ -462,85 +462,29 @@ h1 {
   font-style: italic;
 }
 
-.td-contratos {
-  display: flex;
-  align-items: center;
-  gap: .25rem;
-  font-size: .72rem;
-  color: $accent;
-  margin-top: .2rem;
-  svg { width: 11px; height: 11px; stroke: $accent; }
-}
-
-.td-valor-mensal {
-  font-weight: 700;
-  font-size: .95rem;
-  color: $text;
-}
-
-// ── Score ─────────────────────────────────────────────────
-.score-display {
-  display: flex;
-  align-items: center;
-  gap: .75rem;
-  min-width: 160px;
-}
-
-.score-numero {
-  font-size: 1.4rem;
-  font-weight: 900;
-  line-height: 1;
-  min-width: 36px;
-  text-align: center;
-
-  &.score-excelente { color: $success; }
-  &.score-bom       { color: $primary; }
-  &.score-regular   { color: $warning; }
-  &.score-ruim      { color: $danger; }
-}
-
-.score-details {
-  display: flex;
-  flex-direction: column;
-  gap: .2rem;
-  flex: 1;
-}
-
-.score-item {
-  display: flex;
+.td-contratos-badge {
+  display: inline-flex;
   align-items: center;
   gap: .3rem;
-  font-size: .68rem;
+  font-size: .8rem;
+  font-weight: 600;
+  color: $accent;
+  svg { width: 13px; height: 13px; stroke: $accent; flex-shrink: 0; }
+}
+
+.td-obs {
+  max-width: 180px;
+}
+
+.td-obs-text {
+  display: block;
+  font-size: .82rem;
   color: $text-muted;
   white-space: nowrap;
-
-  > span:first-child { width: 44px; flex-shrink: 0; }
-}
-
-.score-bar {
-  flex: 1;
-  height: 4px;
-  background: #e2e8f0;
-  border-radius: 2px;
   overflow: hidden;
-}
-
-.score-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width .4s ease;
-  &.score-excelente { background: $success; }
-  &.score-bom       { background: $primary; }
-  &.score-regular   { background: $warning; }
-  &.score-ruim      { background: $danger; }
-}
-
-.score-val {
-  font-size: .7rem;
-  font-weight: 700;
-  min-width: 22px;
-  text-align: right;
-  color: $text;
+  text-overflow: ellipsis;
+  max-width: 170px;
+  cursor: default;
 }
 
 // ── Badges ─────────────────────────────────────────────────

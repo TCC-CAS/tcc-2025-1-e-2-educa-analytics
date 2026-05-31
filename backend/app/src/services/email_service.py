@@ -176,3 +176,97 @@ def enviar_boas_vindas(
     except Exception as exc:
         # Falha no e-mail não deve desfazer a matrícula
         print(f"[EmailService] ERRO ao enviar para {destinatario}: {exc}")
+
+
+def _html_reset_senha(nome: str, link: str, id_matricula: str) -> str:
+    """Template HTML para recuperação de senha."""
+    return f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recuperação de Senha - Educa Analytics</title></head>
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:32px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+
+        <!-- Cabeçalho -->
+        <tr><td style="background:#1a56db;padding:28px 40px;">
+          <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">Educa Analytics</h1>
+          <p style="margin:4px 0 0;color:#bfdbfe;font-size:13px;">Sistema de Gestão Escolar</p>
+        </td></tr>
+
+        <!-- Corpo -->
+        <tr><td style="padding:36px 40px;">
+          <h2 style="margin:0 0 8px;color:#111827;font-size:18px;">Olá{', ' + nome if nome else ''}!</h2>
+          <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.6;">
+            Recebemos uma solicitação para redefinir a senha da sua conta no Educa Analytics.
+          </p>
+          <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6;">
+            Para criar uma nova senha, clique no botão abaixo.
+            Este link é válido por <strong>1 hora</strong>.
+          </p>
+
+          <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
+            <tr><td style="background:#1a56db;border-radius:6px;">
+              <a href="{link}" style="display:inline-block;padding:12px 32px;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;">
+                Redefinir Senha
+              </a>
+            </td></tr>
+          </table>
+
+          <p style="margin:0 0 12px;color:#6b7280;font-size:13px;line-height:1.6;">
+            Se você não solicitou a redefinição de senha, ignore este e-mail.
+            Sua senha permanecerá inalterada.
+          </p>
+          <p style="margin:0;color:#9ca3af;font-size:12px;">
+            ID da solicitação: {id_matricula}
+          </p>
+        </td></tr>
+
+        <!-- Rodapé -->
+        <tr><td style="padding:20px 40px;background:#f9fafb;border-top:1px solid #e5e7eb;">
+          <p style="margin:0;color:#6b7280;font-size:12px;text-align:center;">
+            Se o botão não funcionar, copie e cole este link no navegador:<br>
+            <a href="{link}" style="color:#1a56db;word-break:break-all;">{link}</a>
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+
+def _texto_reset_senha(nome: str, link: str, id_matricula: str) -> str:
+    """Template texto puro para recuperação de senha."""
+    return (
+        f"Educa Analytics - Recuperação de Senha\n\n"
+        f"Olá{', ' + nome if nome else ''},\n\n"
+        f"Recebemos uma solicitação para redefinir a senha da sua conta no Educa Analytics.\n\n"
+        f"Para criar uma nova senha, acesse o link abaixo (válido por 1 hora):\n"
+        f"{link}\n\n"
+        f"Se você não solicitou a redefinição de senha, ignore este e-mail.\n"
+        f"Sua senha permanecerá inalterada.\n\n"
+        f"ID da solicitação: {id_matricula}\n\n"
+        f"Educa Analytics — Sistema de Gestão Escolar"
+    )
+
+
+def enviar_reset_senha(
+    destinatario: str,
+    link: str,
+    id_matricula: str,
+    nome: str = ""
+) -> None:
+    """Envia o e-mail de recuperação de senha."""
+    assunto = "Recuperação de Senha - Educa Analytics"
+    html  = _html_reset_senha(nome, link, id_matricula)
+    texto = _texto_reset_senha(nome, link, id_matricula)
+
+    try:
+        _enviar(destinatario, assunto, html, texto)
+        print(f"[EmailService] Email de reset de senha enviado para: {destinatario}")
+    except Exception as exc:
+        print(f"[EmailService] ERRO ao enviar reset de senha para {destinatario}: {exc}")
+        raise

@@ -12,6 +12,9 @@ interface Lancamento {
   fornecedor: string;
   valor: number;
   usuario: string;
+  tipoRecebimento?: string;
+  idEducando?: string;
+  nomeEducando?: string;
   selected?: boolean;
 }
 
@@ -27,7 +30,7 @@ interface FluxoProjetado {
   selector: 'app-caixa-list',
   templateUrl: './caixa-list.component.html',
   styleUrls: ['./caixa-list.component.scss'],
-  host: { style: 'display:block;width:100%;margin:0;text-align:left;' }
+  host: { style: 'display:flex;flex-direction:column;min-height:100%;overflow:visible;flex:1 0 auto;width:100%;box-sizing:border-box;' }
 })
 export class CaixaListComponent implements OnInit {
   lancamentos: Lancamento[] = [];
@@ -41,6 +44,8 @@ export class CaixaListComponent implements OnInit {
   filtroFornecedor      = '';
   filtroFormaPagamento  = '';
   filtroCentroCusto     = '';
+  filtroRecebimento     = '';
+  filtroEducando        = '';
 
   totalEntradas = 0;
   totalSaidas   = 0;
@@ -108,6 +113,9 @@ export class CaixaListComponent implements OnInit {
             fornecedor: l.fornecedor,
             valor: l.valor,
             usuario: l.usuario,
+            tipoRecebimento: l.tipoRecebimento || '',
+            idEducando: l.idEducando || '',
+            nomeEducando: l.nomeEducando || '',
             selected: false
           }));
         this.aplicarFiltros();
@@ -129,7 +137,9 @@ export class CaixaListComponent implements OnInit {
       const matchFornecedor    = !this.filtroFornecedor    || l.fornecedor.toLowerCase().includes(this.filtroFornecedor.toLowerCase());
       const matchFormaPagamento = !this.filtroFormaPagamento || l.formaPagamento === this.filtroFormaPagamento;
       const matchCC            = !this.filtroCentroCusto   || l.centroCusto === this.filtroCentroCusto;
-      return matchMes && matchData && matchTipo && matchFornecedor && matchFormaPagamento && matchCC;
+      const matchRecebimento   = !this.filtroRecebimento   || l.tipoRecebimento === this.filtroRecebimento;
+      const matchEducando      = !this.filtroEducando      || (l.nomeEducando || '').toLowerCase().includes(this.filtroEducando.toLowerCase()) || (l.idEducando || '').toLowerCase().includes(this.filtroEducando.toLowerCase());
+      return matchMes && matchData && matchTipo && matchFornecedor && matchFormaPagamento && matchCC && matchRecebimento && matchEducando;
     });
     this.calcularTotais();
   }
@@ -147,12 +157,15 @@ export class CaixaListComponent implements OnInit {
     this.filtroFornecedor     = '';
     this.filtroFormaPagamento = '';
     this.filtroCentroCusto    = '';
+    this.filtroRecebimento    = '';
+    this.filtroEducando       = '';
     this.aplicarFiltros();
   }
 
   get filtrosAtivos(): number {
     return (this.filtroMes ? 1 : 0) + (this.filtroData ? 1 : 0) + (this.filtroTipo ? 1 : 0) +
-           (this.filtroFornecedor ? 1 : 0) + (this.filtroFormaPagamento ? 1 : 0) + (this.filtroCentroCusto ? 1 : 0);
+           (this.filtroFornecedor ? 1 : 0) + (this.filtroFormaPagamento ? 1 : 0) + (this.filtroCentroCusto ? 1 : 0) +
+           (this.filtroRecebimento ? 1 : 0) + (this.filtroEducando ? 1 : 0);
   }
 
   get algumSelecionado(): boolean { return this.lancamentosFiltrados.some(l => l.selected); }
@@ -235,6 +248,11 @@ export class CaixaListComponent implements OnInit {
   get saidasFluxo(): FluxoProjetado[] { return this.fluxoProjetado.filter(f => f.tipo === 'saida'); }
 
   getTipoLabel(tipo: string): string { return tipo === 'entrada' ? 'Entrada' : 'Saída'; }
+
+  getTipoRecebimentoLabel(tipo: string): string {
+    const labels: Record<string, string> = { matricula: 'Matrícula', mensalidade: 'Mensalidade' };
+    return labels[tipo] ?? '';
+  }
 
   getFormaPagamentoLabel(forma: string): string {
     const labels: Record<string, string> = { dinheiro: 'Dinheiro', pix: 'Pix', credito: 'Crédito', debito: 'Débito' };

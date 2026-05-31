@@ -39,8 +39,7 @@ class Router:
         # Remover query parameters do path para matching de rotas
         path = raw_path.split('?')[0] if '?' in raw_path else raw_path
 
-        print(f"[Router] Recebeu: {method} {path}")
-        print(f"[Router] Rotas disponíveis: {len(self._routes)}")
+        # print(f"[Router] Recebeu: {method} {path}")
 
         # Pré-flight CORS
         if method == "OPTIONS":
@@ -53,7 +52,7 @@ class Router:
             # Suporte a path params: /alunos/{id}
             pattern = re.sub(r"\{(\w+)\}", r"(?P<\1>[^/]+)", route_path)
             match = re.fullmatch(pattern, path)
-            print(f"[Router] Testando {route_method} {route_path} (pattern: {pattern}) -> match: {match is not None}")
+            # print(f"[Router] Testando {route_method} {route_path}")
             if match:
                 event["pathParameters"] = {
                     **(event.get("pathParameters") or {}),

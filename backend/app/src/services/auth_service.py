@@ -637,41 +637,96 @@ def _buscar_dados_usuario(id_matricula: str) -> tuple[str, dict | None]:
         return ("administrativo", {"idMatricula": id_matricula, "nomeCompleto": "Administrativo"})
     
     # ===== ID LEGADO (SEM PREFIXO) =====
-    # IDs numéricos puros são do sistema legado - buscar na tabela Login
+    # IDs numéricos puros — buscar tipo real nas tabelas de origem
     else:
-        print(f"[auth_service] ID sem prefixo detectado: {id_matricula} - buscando no sistema legado")
+        print(f"[auth_service] ID sem prefixo detectado: {id_matricula} - determinando tipo real")
         try:
-            # Buscar na tabela Login para obter os dados básicos
-            login_row = execute_query(
-                """SELECT idMatricula, email, senha_definida
-                   FROM Login 
-                   WHERE idMatricula = %s
-                   LIMIT 1""",
+            # 1) Educador?
+            edu_row = execute_query(
+                "SELECT idMatricula, nomeCompleto, email, tipoUsuario, idStatus FROM Educador WHERE idMatricula = %s LIMIT 1",
                 (id_matricula,)
             )
-            
+            if edu_row and len(edu_row) > 0:
+                d = edu_row[0]
+                tipo_usuario = d.get("tipoUsuario") or "educador"
+                login_row = execute_query(
+                    "SELECT senha_definida FROM Login WHERE idMatricula = %s LIMIT 1", (id_matricula,)
+                )
+                senha_definida = login_row[0].get("senha_definida") if login_row else 1
+                usuario_data = {
+                    "idMatricula": id_matricula,
+                    "nomeCompleto": d.get("nomeCompleto", f"Usuário {id_matricula}"),
+                    "email": d.get("email"),
+                    "tipoUsuario": tipo_usuario,
+                    "idStatus": d.get("idStatus"),
+                    "senha_definida": senha_definida,
+                }
+                print(f"[auth_service] Encontrado em Educador: {tipo_usuario}")
+                return (tipo_usuario, usuario_data)
+
+            # 2) EducandoResponsavel?
+            er_row = execute_query(
+                "SELECT idMatricula, nomeCompleto, email, tipoUsuario FROM EducandoResponsavel WHERE idMatricula = %s LIMIT 1",
+                (id_matricula,)
+            )
+            if er_row and len(er_row) > 0:
+                d = er_row[0]
+                tipo_usuario = d.get("tipoUsuario") or "educando"
+                login_row = execute_query(
+                    "SELECT senha_definida FROM Login WHERE idMatricula = %s LIMIT 1", (id_matricula,)
+                )
+                senha_definida = login_row[0].get("senha_definida") if login_row else 1
+                usuario_data = {
+                    "idMatricula": id_matricula,
+                    "nomeCompleto": d.get("nomeCompleto", f"Usuário {id_matricula}"),
+                    "email": d.get("email"),
+                    "tipoUsuario": tipo_usuario,
+                    "senha_definida": senha_definida,
+                }
+                print(f"[auth_service] Encontrado em EducandoResponsavel: {tipo_usuario}")
+                return (tipo_usuario, usuario_data)
+
+            # 3) Colaborador?
+            col_row = execute_query(
+                "SELECT idMatricula, nomeCompleto, email FROM Colaborador WHERE idMatricula = %s LIMIT 1",
+                (id_matricula,)
+            )
+            if col_row and len(col_row) > 0:
+                d = col_row[0]
+                login_row = execute_query(
+                    "SELECT senha_definida FROM Login WHERE idMatricula = %s LIMIT 1", (id_matricula,)
+                )
+                senha_definida = login_row[0].get("senha_definida") if login_row else 1
+                usuario_data = {
+                    "idMatricula": id_matricula,
+                    "nomeCompleto": d.get("nomeCompleto", f"Usuário {id_matricula}"),
+                    "email": d.get("email"),
+                    "tipoUsuario": "colaborador",
+                    "senha_definida": senha_definida,
+                }
+                print(f"[auth_service] Encontrado em Colaborador: colaborador")
+                return ("colaborador", usuario_data)
+
+            # 4) Fallback: Login apenas (tipo desconhecido)
+            login_row = execute_query(
+                "SELECT idMatricula, email, senha_definida FROM Login WHERE idMatricula = %s LIMIT 1",
+                (id_matricula,)
+            )
             if login_row and len(login_row) > 0:
                 login_data = login_row[0]
-                print(f"[auth_service] ✅ Dados legados encontrados para: {id_matricula}")
-                print(f"[auth_service] Email: {login_data.get('email')}")
-                
-                tipo_usuario = "educando"  # Default educando para IDs legados sem prefixo
-                
-                # Montar objeto de usuário com dados disponíveis
+                print(f"[auth_service] Encontrado apenas em Login (tipo desconhecido): {id_matricula}")
                 usuario_data = {
                     "idMatricula": id_matricula,
                     "email": login_data.get("email"),
-                    "tipoUsuario": tipo_usuario,
-                    "nomeCompleto": f"Usuário {id_matricula}",  # Nome genérico pois não temos na tabela Login
-                    "senha_definida": login_data.get("senha_definida")
+                    "tipoUsuario": "educando",
+                    "nomeCompleto": f"Usuário {id_matricula}",
+                    "senha_definida": login_data.get("senha_definida"),
                 }
-                
-                # Retornar dados formatados
-                return (tipo_usuario, usuario_data)
+                return ("educando", usuario_data)
             else:
-                print(f"[auth_service] ❌ Dados legados não encontrados para: {id_matricula}")
+                print(f"[auth_service] ID nao encontrado em nenhuma tabela: {id_matricula}")
         except Exception as e:
-            print(f"[auth_service] ❌ Erro ao buscar dados legados: {e}")
+            print(f"[auth_service] Erro ao buscar dados legados: {e}")
             import traceback
             traceback.print_exc()
     
@@ -691,7 +746,10 @@ def get_usuario_do_evento(event: dict) -> dict | None:
     if not auth_header.startswith("Bearer "):
         return None
     token = auth_header[7:]
-    return validar_token(token)
+    dados = validar_token(token)
+    if dados and "sub" in dados and "id" not in dados:
+        dados["id"] = dados["sub"]
+    return dados
 
 
 # ── Criação de senha via token de email ──────────────────────────────────────

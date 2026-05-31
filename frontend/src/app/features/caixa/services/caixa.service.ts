@@ -16,6 +16,17 @@ export interface Lancamento {
   usuario: string;
   /** true = projeção futura (aparece no Fluxo Projetado) */
   projetado?: boolean;
+  /** Parcelamento */
+  parcelado?: boolean;
+  numeroParcelas?: number;
+  valorParcela?: number;
+  dataPrimeiraParcela?: string;
+  /** Recebimento de matrícula/mensalidade */
+  tipoRecebimento?: 'matricula' | 'mensalidade' | '';
+  idEducando?: string;
+  nomeEducando?: string;
+  mesReferencia?: string;
+  anoLetivo?: string;
 }
 
 @Injectable({ providedIn: 'root' })

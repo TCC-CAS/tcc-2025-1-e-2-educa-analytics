@@ -5,7 +5,10 @@ import { CronogramaResponsavelComponent } from './components/cronograma-responsa
 
 const routes: Routes = [
   { path: '', component: PortalResponsavelComponent },
-  { path: 'cronograma', component: CronogramaResponsavelComponent }
+  { path: 'cronograma', component: CronogramaResponsavelComponent },
+  { path: 'cronograma/:id', component: CronogramaResponsavelComponent },
+  { path: ':id', component: PortalResponsavelComponent },
+  { path: ':id/cronograma', component: CronogramaResponsavelComponent },
 ];
 
 @NgModule({

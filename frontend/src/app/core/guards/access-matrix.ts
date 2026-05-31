@@ -87,17 +87,16 @@ export const ACCESS_MATRIX: AccessControl[] = [
     allowedRoles: ['gestor', 'administrativo', 'educador'],
     description: 'Gestão de cronogramas'
   },
-  {
-    module: 'reposicoes',
-    allowedRoles: ['gestor', 'administrativo', 'educador'],
-    description: 'Gestão de reposições de aula'
-  },
-
   // ==================== FINANCEIRO ====================
   {
     module: 'caixa',
     allowedRoles: ['gestor', 'administrativo', 'colaborador'],
     description: 'Gestão financeira - caixa'
+  },
+  {
+    module: 'mensalidades',
+    allowedRoles: ['gestor', 'administrativo', 'colaborador'],
+    description: 'Controle de pagamentos de matrículas e mensalidades'
   },
   {
     module: 'fornecedores',

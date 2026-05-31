@@ -10,11 +10,13 @@ frontend/dist/
 
 # Python
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *.egg-info/
 .env
 venv/
 .venv/
+backend/.venv/
 
 # OS
 .DS_Store
@@ -27,3 +29,92 @@ Thumbs.db
 !frontend/src/assets/**/*.jpg
 *.jpeg
 !frontend/src/assets/**/*.jpeg
+
+# ─── Logs e arquivos temporários ──────────────────────────────────────────────
+*.log
+*.err
+server_debug.log
+server_error.log
+server_output.log
+backend/server.log
+backend/server.err
+backend/server_error.log
+backend/server_output.log
+backend/test_result.txt
+
+# ─── Artefatos de build/deploy ────────────────────────────────────────────────
+backend/lambda_deploy.zip
+
+# ─── Arquivos temporários do Office ───────────────────────────────────────────
+~$*
+
+# ─── Arquivos de apresentação, documentação e scripts de design ───────────────
+*.pptx
+*.docx
+gerar_pptx.py
+apresentacao-design.html
+limpar_cache_angular.ps1
+documentos/
+CUsersalineAppDataLocalTempbncc_text.txt
+
+# ─── Notas e docs de desenvolvimento (não são código da aplicação) ────────────
+*.md
+!README.md
+!frontend/README.md
+!backend/README.md
+
+# ─── Scripts de debug/check/teste/migração do diretório raiz ─────────────────
+check_*.py
+debug_*.py
+test_insert.py
+migrate_disciplinas.py
+migrar_reset_senha.py
+list_databases.py
+verify_disciplinas_table.py
+
+# ─── Servidor de desenvolvimento local (apenas para testes) ──────────────────
+backend/server.py
+
+# ─── Scripts de desenvolvimento/debug no backend (não vão para produção) ──────
+backend/check_*.py
+backend/debug_*.py
+backend/test_*.py
+backend/verify_*.py
+backend/verificar_*.py
+backend/testar_*.py
+backend/criar_*.py
+backend/migrar_*.py
+backend/executar_*.py
+backend/seed_*.py
+backend/popular_*.py
+backend/inserir_*.py
+backend/listar_*.py
+backend/analisar_*.py
+backend/adicionar_*.py
+backend/apply_*.py
+backend/buscar_*.py
+backend/compare_*.py
+backend/consolidar_*.py
+backend/consultar_*.py
+backend/corrigir_*.py
+backend/deletar_*.py
+backend/describe_*.py
+backend/diagnose_*.py
+backend/find_*.py
+backend/fix_*.py
+backend/get_*.py
+backend/investigate_*.py
+backend/keep_*.py
+backend/limpar_*.py
+backend/list_*.py
+backend/run_*.py
+backend/setup_*.py
+backend/set_*.py
+backend/show_*.py
+backend/sync_*.py
+backend/update_*.py
+backend/deploy.ps1
+backend/lambda_function_backup*.py
+
+# ─── Pasta de scripts de setup/migração one-time ─────────────────────────────
+backend/scripts/

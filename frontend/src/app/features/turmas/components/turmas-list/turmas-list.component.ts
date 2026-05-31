@@ -24,7 +24,7 @@ interface TurmaFiltro {
   selector: 'app-turmas-list',
   templateUrl: './turmas-list.component.html',
   styleUrls: ['./turmas-list.component.scss'],
-  host: { style: 'display:block;width:100%;margin:0;text-align:left;box-sizing:border-box;' },
+  host: { style: 'display:flex;flex-direction:column;min-height:100%;overflow:visible;flex:1 0 auto;width:100%;box-sizing:border-box;' },
   animations: [
     trigger('fadeIn', [
       transition(':enter', [
@@ -116,7 +116,7 @@ export class TurmasListComponent implements AfterViewInit, OnInit {
 
   // Paginação
   currentPage = 1;
-  pageSize = 5;
+  pageSize = 10;
   Math = Math;
 
   get totalPages(): number {

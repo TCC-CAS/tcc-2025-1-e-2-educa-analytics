@@ -23,6 +23,7 @@ export interface Fornecedor {
   scoreEntrega: number;
   scorePontualidade: number;
   scoreQualidade: number;
+  observacoes?: string;
 }
 
 @Injectable({ providedIn: 'root' })

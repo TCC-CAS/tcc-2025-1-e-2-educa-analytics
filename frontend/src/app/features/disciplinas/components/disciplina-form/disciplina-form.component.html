@@ -14,11 +14,17 @@
       </div>
     </div>
   </div>
+
+  <button type="button" class="btn-voltar" (click)="cancel()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Voltar para lista de disciplinas
+  </button>
+
   <div class="form-wrapper">
   <header class="page-header">
     <div>
       <h1>{{ disciplinaId ? 'Editar disciplina' : 'Cadastrar disciplina' }}</h1>
-      <p>Informe os dados da disciplina para salvar as alteracoes.</p>
+      <p>Informe os dados da disciplina para salvar as alterações.</p>
     </div>
   </header>
 

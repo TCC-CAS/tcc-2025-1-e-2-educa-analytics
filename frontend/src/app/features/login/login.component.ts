@@ -20,6 +20,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   outlookLoading = false;
   forgotLoading = false;
   forgotSuccess = false;
+  forgotError = '';
   captchaToken: string | null = null;
   captchaResolved = false;
   returnUrl: string | null = '/home';
@@ -27,6 +28,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   forgotSubmitted = false;
   showForgotPanel = false;
   showPassword = false;
+  loginError = '';
 
   constructor(
     private fb: FormBuilder,
@@ -220,22 +222,59 @@ export class LoginComponent implements OnInit, AfterViewInit {
     this.showForgotPanel = false;
     this.forgotLoading = false;
     this.forgotSuccess = false;
+    this.forgotError = '';
   }
 
   submitForgotPassword(): void {
     this.forgotSubmitted = true;
 
     if (this.forgotForm.invalid) {
-      this.notify.error('Informe um email valido ou ID de matricula para recuperar a senha');
+      this.notify.error('Informe um email válido ou ID de matrícula para recuperar a senha');
       document.getElementById('forgot-email')?.focus();
       return;
     }
 
     this.forgotLoading = true;
-    setTimeout(() => {
-      this.forgotLoading = false;
-      this.forgotSuccess = true;
-    }, 600);
+    const email = this.forgotForm.get('email')?.value;
+
+    this.auth.esqueciSenha(email).subscribe({
+      next: (res) => {
+        this.forgotLoading = false;
+
+        // Verifica se o backend retornou sucesso=false mesmo com HTTP 200
+        if (res && res.sucesso === false) {
+          const errorMessage = res.mensagem || 'Erro ao solicitar recuperação de senha. Tente novamente mais tarde.';
+          this.forgotSuccess = false;
+          this.forgotError = errorMessage;
+          this.notify.error(`❌ ${errorMessage}`, 6000);
+          setTimeout(() => { document.getElementById('forgot-email')?.focus(); }, 100);
+          return;
+        }
+
+        this.forgotSuccess = true;
+        this.forgotError = '';
+        this.notify.success('📧 Instruções de recuperação enviadas! Verifique seu e-mail e a pasta de spam.', 8000);
+
+        setTimeout(() => {
+          const successPanel = document.querySelector('.panel-success');
+          if (successPanel) {
+            successPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        }, 100);
+      },
+      error: (err) => {
+        this.forgotLoading = false;
+        this.forgotSuccess = false;
+
+        const errorMessage = err?.error?.mensagem || err?.error?.message || err?.error?.error
+          || 'Erro ao solicitar recuperação de senha. Tente novamente mais tarde.';
+
+        this.forgotError = errorMessage;
+        this.notify.error(`❌ ${errorMessage}`, 6000);
+
+        setTimeout(() => { document.getElementById('forgot-email')?.focus(); }, 100);
+      }
+    });
   }
 
   private emailOrIdValidator(control: AbstractControl): ValidationErrors | null {
@@ -268,6 +307,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   submit(): void {
     this.submitted = true;
+    this.loginError = '';
 
     if (this.form.invalid) {
       this.notify.error('Por favor, corrija os erros no formulário');
@@ -296,13 +336,28 @@ export class LoginComponent implements OnInit, AfterViewInit {
       next: (res: any) => {
         if (res && res.token) {
           this.auth.setToken(res.token);
-          
+
           // Salvar dados do usuário
           if (res.usuario) {
             this.auth.setUser(res.usuario);
           }
-          
-          this.router.navigateByUrl(this.returnUrl || '/home');
+
+          // Redirecionar para rota específica do tipo de usuário
+          if (!this.returnUrl || this.returnUrl === '/home' || this.returnUrl === '/') {
+            const tipo = res.usuario?.tipo || this.auth.getUserType();
+            const rotasPorTipo: Record<string, string> = {
+              educador:       '/educadores/cronograma',
+              educando:       '/educando/notas',
+              responsavel:    '/responsavel/acompanhamento',
+              colaborador:    '/colaboradores',
+              gestor:         '/home',
+              administrativo: '/home',
+            };
+            const destino = rotasPorTipo[tipo] || '/home';
+            this.router.navigateByUrl(destino);
+          } else {
+            this.router.navigateByUrl(this.returnUrl);
+          }
         } else {
           this.notify.error('Resposta de login inválida');
         }
@@ -313,7 +368,9 @@ export class LoginComponent implements OnInit, AfterViewInit {
         this.submitted = false;
         this.captchaResolved = false;
         this.captchaRef?.reset();
-        this.notify.error(err?.error?.message || 'Falha ao autenticar. Verifique suas credenciais e tente novamente.');
+        // Sempre mostrar mensagem genérica por segurança (não revelar se foi email, ID ou senha)
+        this.loginError = 'Email, ID ou senha inválidos. Por favor, verifique e tente novamente.';
+        this.notify.error(this.loginError);
       }
     });
   }
@@ -378,7 +435,15 @@ export class LoginComponent implements OnInit, AfterViewInit {
   quickLogin(tipo: UserType): void {
     this.auth.loginMock(tipo);
     this.notify.success(`Login como ${tipo}`);
-    this.router.navigateByUrl(this.returnUrl || '/home');
+    const rotasPorTipo: Record<string, string> = {
+      educador:       '/educadores/cronograma',
+      educando:       '/educando/notas',
+      responsavel:    '/responsavel/acompanhamento',
+      colaborador:    '/colaboradores',
+      gestor:         '/home',
+      administrativo: '/home',
+    };
+    this.router.navigateByUrl(rotasPorTipo[tipo] || '/home');
   }
 }
 

@@ -24,47 +24,47 @@ export class AuthService {
   public user$ = this.userSubject.asObservable();
 
   private mockUsers: { [key: string]: User } = {
-    educador: { 
-      id: '1', 
-      matricula: 'EDU001', 
-      nome: 'Maria Santos', 
-      email: 'maria.santos@educa.com', 
-      tipo: 'educador' 
+    educador: {
+      id: '670718951',
+      matricula: '670718951',
+      nome: 'Maria Santos',
+      email: 'maria.santos@educa.com',
+      tipo: 'educador'
     },
-    educando: { 
-      id: '2', 
-      matricula: 'ALU001', 
-      nome: 'João Silva', 
-      email: 'joao.silva@educa.com', 
-      tipo: 'educando' 
+    educando: {
+      id: '661900001',
+      matricula: '661900001',
+      nome: 'João Silva',
+      email: 'joao.silva@educa.com',
+      tipo: 'educando'
     },
-    responsavel: { 
-      id: '3', 
-      matricula: 'RESP001', 
-      nome: 'Ana Costa', 
-      email: 'ana.costa@educa.com', 
-      tipo: 'responsavel' 
+    responsavel: {
+      id: '651800001',
+      matricula: '651800001',
+      nome: 'Maria Ferreira',
+      email: 'maria.ferreira@educa.com',
+      tipo: 'responsavel'
     },
-    colaborador: { 
-      id: '4', 
-      matricula: 'COL001', 
-      nome: 'Carlos Mendes', 
-      email: 'carlos.mendes@educa.com', 
-      tipo: 'colaborador' 
+    colaborador: {
+      id: '641700001',
+      matricula: '641700001',
+      nome: 'Carlos Mendes',
+      email: 'carlos.mendes@educa.com',
+      tipo: 'colaborador'
     },
-    gestor: { 
-      id: '5', 
-      matricula: 'GEST001', 
-      nome: 'Patricia Lima', 
-      email: 'patricia.lima@educa.com', 
-      tipo: 'gestor' 
+    gestor: {
+      id: '631600001',
+      matricula: '631600001',
+      nome: 'Patricia Lima',
+      email: 'patricia.lima@educa.com',
+      tipo: 'gestor'
     },
-    administrativo: { 
-      id: '6', 
-      matricula: 'ADM001', 
-      nome: 'Pedro Oliveira', 
-      email: 'pedro.oliveira@educa.com', 
-      tipo: 'administrativo' 
+    administrativo: {
+      id: '621500001',
+      matricula: '621500001',
+      nome: 'Pedro Oliveira',
+      email: 'pedro.oliveira@educa.com',
+      tipo: 'administrativo'
     }
   };
 
@@ -197,5 +197,17 @@ export class AuthService {
 
   criarSenha(token: string, id: string, senha: string): Observable<any> {
     return this.http.post(`${environment.apiUrl}/auth/criar-senha`, { token, id, senha });
+  }
+
+  esqueciSenha(email: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/auth/esqueci-senha`, { email });
+  }
+
+  validarResetToken(token: string, id: string): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/auth/validar-reset-token`, { params: { token, id } });
+  }
+
+  resetarSenha(token: string, id: string, senha: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/auth/resetar-senha`, { token, id, senha });
   }
 }

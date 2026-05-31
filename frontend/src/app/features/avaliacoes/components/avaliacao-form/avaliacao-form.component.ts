@@ -1,5 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AvaliacaoApiService } from '../../services/avaliacao-api.service';
 
 interface Pergunta {
   id: string;
@@ -42,17 +43,33 @@ export class AvaliacaoFormComponent implements OnInit {
   answeredQuestions = new Set<string>();
   showCompletion = false;
   autoAdvancing = false;
+  private autoAdvanceTimer: ReturnType<typeof setTimeout> | null = null;
   startTime = Date.now();
 
   readonly XP_PER_QUESTION = 100;
   readonly XP_COMPLETION_BONUS = 500;
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
+  enviando = false;
+  erroEnvio: string | null = null;
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private avaliacaoApi: AvaliacaoApiService
+  ) {}
 
   ngOnInit(): void {
     this.tipoAvaliacao = this.route.snapshot.paramMap.get('tipo') || '';
     this.carregarAvaliacao();
     this.startTime = Date.now();
+
+    // Bloqueia acesso a formulários já respondidos (acesso direto por URL)
+    this.avaliacaoApi.getRespondidas().subscribe(res => {
+      const jaRespondeu = (res.respondidas || []).some(r => r.tipo === this.tipoAvaliacao);
+      if (jaRespondeu) {
+        this.router.navigate(['/avaliacoes'], { replaceUrl: true });
+      }
+    });
   }
 
   // ── Getters ──────────────────────────────────────────────────────────────
@@ -114,7 +131,13 @@ export class AvaliacaoFormComponent implements OnInit {
   }
 
   goToPrevious(): void {
-    if (this.isFirstQuestion || this.autoAdvancing || this.isExiting) return;
+    if (this.isFirstQuestion || this.isExiting) return;
+    // Cancel any pending auto-advance so the user can freely go back
+    if (this.autoAdvanceTimer !== null) {
+      clearTimeout(this.autoAdvanceTimer);
+      this.autoAdvanceTimer = null;
+      this.autoAdvancing = false;
+    }
     this.doTransition('backward', () => {
       this.currentQuestionIndex--;
     });
@@ -152,14 +175,16 @@ export class AvaliacaoFormComponent implements OnInit {
     if (q && q.tipo !== 'aberta') {
       if (this.isLastQuestion) {
         this.autoAdvancing = true;
-        setTimeout(() => {
+        this.autoAdvanceTimer = setTimeout(() => {
           this.autoAdvancing = false;
+          this.autoAdvanceTimer = null;
           this.finalizarAvaliacao();
         }, 500);
       } else {
         this.autoAdvancing = true;
-        setTimeout(() => {
+        this.autoAdvanceTimer = setTimeout(() => {
           this.autoAdvancing = false;
+          this.autoAdvanceTimer = null;
           this.goToNext();
         }, 480);
       }
@@ -190,14 +215,19 @@ export class AvaliacaoFormComponent implements OnInit {
     }
 
     this.xpEarned += this.XP_COMPLETION_BONUS;
-    this.showCompletion = true;
+    this.enviando = true;
+    this.erroEnvio = null;
 
-    console.log('Avaliação enviada:', {
-      tipo: this.tipoAvaliacao,
-      respostas: this.respostas,
-      xpEarned: this.xpEarned,
-      maxStreak: this.maxStreak,
-      dataEnvio: new Date()
+    this.avaliacaoApi.enviar(this.tipoAvaliacao, this.respostas).subscribe({
+      next: () => {
+        this.enviando = false;
+        this.showCompletion = true;
+      },
+      error: () => {
+        this.enviando = false;
+        // Show completion screen even if API fails (offline-tolerant)
+        this.showCompletion = true;
+      }
     });
   }
 
@@ -247,6 +277,25 @@ export class AvaliacaoFormComponent implements OnInit {
       case 'autonomia':              this.avaliacao = this.getAvaliacaoAutonomia();         break;
       case 'gestao-escolar':         this.avaliacao = this.getAvaliacaoGestao();            break;
       case 'qualidade-ensino':       this.avaliacao = this.getAvaliacaoQualidade();         break;
+      default:
+        // Formulário customizado — carrega da API
+        this.avaliacaoApi.getFormularioById(this.tipoAvaliacao).subscribe(f => {
+          if (f) {
+            this.avaliacao = {
+              titulo: f.titulo,
+              descricao: f.descricao,
+              perguntas: (f.perguntas || []).map((p, idx) => ({
+                id: p.id || `q${idx}`,
+                texto: p.texto,
+                tipo: p.tipo as 'escala' | 'aberta' | 'sim_nao',
+                obrigatoria: p.obrigatoria ?? true
+              }))
+            };
+          } else {
+            this.router.navigate(['/avaliacoes'], { replaceUrl: true });
+          }
+        });
+        break;
     }
   }
 
@@ -284,16 +333,28 @@ export class AvaliacaoFormComponent implements OnInit {
 
   getAvaliacaoInfraestrutura(): Avaliacao {
     return {
-      titulo: 'Infraestrutura',
-      descricao: 'Avalie as condições das instalações, equipamentos e recursos',
+      titulo: 'Infraestrutura Escolar',
+      descricao: 'Avalie as instalações, recursos e ambiente da escola',
       perguntas: [
-        { id: 'salas-aula',     texto: 'Como você avalia o estado das salas de aula?',                         tipo: 'escala', obrigatoria: true },
-        { id: 'laboratorios',   texto: 'Laboratórios e salas especializadas estão bem equipados?',             tipo: 'escala', obrigatoria: true },
-        { id: 'tecnologia',     texto: 'A disponibilidade de recursos tecnológicos é adequada?',               tipo: 'escala', obrigatoria: true },
-        { id: 'limpeza',        texto: 'Os ambientes mantêm padrões adequados de limpeza e higiene?',          tipo: 'escala', obrigatoria: true },
-        { id: 'acessibilidade', texto: 'A infraestrutura é acessível para pessoas com deficiência?',           tipo: 'escala', obrigatoria: true },
-        { id: 'areas-comuns',   texto: 'Áreas comuns (refeitório, pátio) são adequadas?',                     tipo: 'escala', obrigatoria: true },
-        { id: 'melhorias',      texto: 'Que melhorias de infraestrutura você sugeriria?',                      tipo: 'aberta', obrigatoria: false }
+        // Seção 1 – Instalações físicas
+        { id: 'conservacao-salas',      texto: 'Como você avalia o estado de conservação das salas de aula?',                                                                                     tipo: 'escala', obrigatoria: true },
+        { id: 'higiene-banheiros',       texto: 'Os banheiros da escola apresentam condições adequadas de higiene e manutenção?',                                                                   tipo: 'escala', obrigatoria: true },
+        { id: 'espacos-recreacao',       texto: 'A escola dispõe de espaços adequados para recreação e atividades físicas (quadra, pátio, áreas externas)?',                                      tipo: 'escala', obrigatoria: true },
+        { id: 'biblioteca',              texto: 'A biblioteca ou sala de leitura possui acervo atualizado e ambiente apropriado para estudo?',                                                     tipo: 'escala', obrigatoria: true },
+        // Seção 2 – Recursos materiais e tecnológicos
+        { id: 'materiais-didaticos',     texto: 'Os materiais didáticos disponíveis (livros, apostilas, recursos pedagógicos) são suficientes e de boa qualidade?',                               tipo: 'escala', obrigatoria: true },
+        { id: 'equipamentos-tecnologicos', texto: 'A escola oferece acesso a equipamentos tecnológicos (computadores, tablets, projetores) em quantidade e qualidade adequadas?',               tipo: 'escala', obrigatoria: true },
+        { id: 'internet',                texto: 'A conexão à internet utilizada para fins pedagógicos é estável e acessível?',                                                                    tipo: 'escala', obrigatoria: true },
+        // Seção 3 – Segurança e acessibilidade
+        { id: 'seguranca-acesso',        texto: 'As condições de segurança da escola (portaria, vigilância, controle de acesso) são satisfatórias?',                                              tipo: 'escala', obrigatoria: true },
+        { id: 'acessibilidade',          texto: 'A infraestrutura da escola é acessível para estudantes com deficiência ou mobilidade reduzida?',                                                tipo: 'escala', obrigatoria: true },
+        { id: 'equipamentos-seguranca',  texto: 'Os equipamentos de segurança (extintores, sinalização de emergência) estão visíveis e em bom estado?',                                          tipo: 'escala', obrigatoria: true },
+        // Seção 4 – Ambiente escolar
+        { id: 'limpeza-organizacao',     texto: 'Como você avalia a limpeza e organização dos espaços comuns (corredores, refeitório, pátio)?',                                                  tipo: 'escala', obrigatoria: true },
+        { id: 'bem-estar-ambiente',      texto: 'O ambiente escolar favorece o bem-estar e a permanência dos estudantes?',                                                                      tipo: 'escala', obrigatoria: true },
+        // Seção 5 – Avaliação geral
+        { id: 'avaliacao-geral',         texto: 'Em uma escala de 1 a 5, como você avalia a infraestrutura da escola de forma geral?',                                                           tipo: 'escala', obrigatoria: true },
+        { id: 'prioridades-melhoria',    texto: 'Quais aspectos da infraestrutura você considera prioritários para melhoria?',                                                                   tipo: 'aberta', obrigatoria: false }
       ]
     };
   }

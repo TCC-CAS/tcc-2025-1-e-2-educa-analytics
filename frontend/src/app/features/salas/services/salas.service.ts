@@ -34,7 +34,13 @@ export class SalasService {
 
   listarSalas(): Observable<{ data: Sala[] }> {
     return this.api.get<Sala[]>(this.endpoint).pipe(
-      map(salas => ({ data: salas }))
+      map((salas: any) => {
+        console.log('[SALAS-SERVICE] Resposta bruta da API:', salas);
+        console.log('[SALAS-SERVICE] Tipo:', typeof salas);
+        console.log('[SALAS-SERVICE] É array?', Array.isArray(salas));
+        console.log('[SALAS-SERVICE] Total:', Array.isArray(salas) ? salas.length : 'não é array');
+        return { data: salas };
+      })
     );
   }
 

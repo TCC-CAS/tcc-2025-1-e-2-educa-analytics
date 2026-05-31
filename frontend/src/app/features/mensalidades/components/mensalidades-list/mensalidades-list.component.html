@@ -1,0 +1,247 @@
+<div class="mens-page">
+
+  <!-- Header -->
+  <div class="page-header" *ngIf="!isLoading">
+    <div class="page-title">
+      <div class="page-title-text">
+        <h1>Controle de Pagamentos</h1>
+        <span class="page-subtitle">Acompanhe os recebimentos de matrículas e mensalidades dos educandos.</span>
+        <button class="btn btn-primary" (click)="novoLancamento()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Registrar Recebimento
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skeleton -->
+  <div class="sk-wrapper sk-inner" *ngIf="isLoading">
+    <div class="sk-page-header">
+      <div class="sk-header-text">
+        <div class="sk sk-h22 sk-w40p"></div>
+        <div class="sk sk-h14 sk-w60p"></div>
+      </div>
+      <div class="sk sk-btn"></div>
+    </div>
+    <div class="sk-card sk-summary-row">
+      <div class="sk-summary-card" *ngFor="let i of [1,2,3,4]">
+        <div class="sk sk-icon-sq"></div>
+        <div class="sk-summary-text">
+          <div class="sk sk-h12 sk-w70p"></div>
+          <div class="sk sk-h20 sk-w50p"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sk-card">
+      <div class="sk-table-head"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
+      <div class="sk-table-row" *ngFor="let i of [1,2,3,4,5,6]">
+        <div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cards de resumo -->
+  <div class="totais-row" *ngIf="!isLoading">
+    <div class="total-card total-entrada">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      <div class="total-info">
+        <span class="total-label">Total Recebido</span>
+        <span class="total-valor">R$ {{ totalPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</span>
+      </div>
+    </div>
+    <div class="total-card total-count">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <div class="total-info">
+        <span class="total-label">Matrículas Pagas</span>
+        <span class="total-valor">{{ totalMatriculas }}</span>
+      </div>
+    </div>
+    <div class="total-card total-count-mens">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <div class="total-info">
+        <span class="total-label">Mensalidades Pagas</span>
+        <span class="total-valor">{{ totalMensalidades }}</span>
+      </div>
+    </div>
+    <div class="total-card total-atrasado">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="total-info">
+        <span class="total-label">Pendentes / Atrasados</span>
+        <span class="total-valor">{{ totalAtrasado }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros-card" *ngIf="!isLoading">
+    <div class="filtros-header">
+      <div class="filtros-titulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        <span>Filtros</span>
+        <span class="filtros-ativos-badge" *ngIf="filtrosAtivos > 0">{{ filtrosAtivos }}</span>
+      </div>
+      <div class="filtros-resultado">
+        <span class="resultado-count"><strong>{{ filtrados.length }}</strong> resultado(s)</span>
+        <button class="btn-limpar" (click)="limparFiltros()" *ngIf="filtrosAtivos > 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Limpar filtros
+        </button>
+      </div>
+    </div>
+    <div class="filtros-grid">
+      <div class="filtro-field">
+        <label>Status</label>
+        <div class="input-wrapper">
+          <select [(ngModel)]="filtroStatus" (change)="aplicarFiltros()" [class.active]="filtroStatus">
+            <option value="">Todos</option>
+            <option value="pago">Pago</option>
+            <option value="atrasado">Atrasado</option>
+          </select>
+        </div>
+      </div>
+      <div class="filtro-field">
+        <label>Tipo</label>
+        <div class="input-wrapper">
+          <select [(ngModel)]="filtroTipo" (change)="aplicarFiltros()" [class.active]="filtroTipo">
+            <option value="">Todos</option>
+            <option value="matricula">Matrícula</option>
+            <option value="mensalidade">Mensalidade</option>
+          </select>
+        </div>
+      </div>
+      <div class="filtro-field">
+        <label>Ano Letivo</label>
+        <div class="input-wrapper">
+          <select [(ngModel)]="filtroAno" (change)="aplicarFiltros()" [class.active]="filtroAno">
+            <option value="">Todos</option>
+            <option *ngFor="let a of anosLetivos" [value]="a">{{ a }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="filtro-field" *ngIf="filtroTipo !== 'matricula'">
+        <label>Mês de Referência</label>
+        <div class="input-wrapper">
+          <select [(ngModel)]="filtroMes" (change)="aplicarFiltros()" [class.active]="filtroMes">
+            <option value="">Todos</option>
+            <option *ngFor="let m of meses" [value]="m.value">{{ m.label }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="filtro-field">
+        <label>Educando</label>
+        <div class="input-wrapper">
+          <input type="text" placeholder="Nome ou matrícula" [(ngModel)]="filtroEducando" (input)="aplicarFiltros()" [class.active]="filtroEducando">
+        </div>
+      </div>
+      <div class="filtro-field" *ngIf="filtroStatus !== 'atrasado'">
+        <label>Forma de Pagamento</label>
+        <div class="input-wrapper">
+          <select [(ngModel)]="filtroFormaPgto" (change)="aplicarFiltros()" [class.active]="filtroFormaPgto">
+            <option value="">Todas</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="pix">Pix</option>
+            <option value="credito">Cartão de Crédito</option>
+            <option value="debito">Cartão de Débito</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="tabela-card" *ngIf="!isLoading">
+    <div class="tabela-wrapper">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th><div class="th-content">Educando</div></th>
+            <th><div class="th-content">Matrícula</div></th>
+            <th><div class="th-content">Tipo</div></th>
+            <th><div class="th-content">Referência</div></th>
+            <th><div class="th-content">Ano Letivo</div></th>
+            <th><div class="th-content">Status</div></th>
+            <th><div class="th-content">Forma de Pgto.</div></th>
+            <th><div class="th-content">Data Pgto.</div></th>
+            <th><div class="th-content th-right">Valor</div></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="tabela-row" [class.row-atrasado]="r.status === 'atrasado'" *ngFor="let r of paginados">
+            <td>
+              <span class="td-educando-nome">{{ r.nomeEducando }}</span>
+            </td>
+            <td><span class="td-id-badge">{{ r.idEducando || '—' }}</span></td>
+            <td>
+              <span class="badge-tipo"
+                [class.badge-matricula]="r.tipoRecebimento === 'matricula'"
+                [class.badge-mensalidade]="r.tipoRecebimento === 'mensalidade'">
+                {{ r.tipoRecebimento === 'matricula' ? 'Matrícula' : 'Mensalidade' }}
+              </span>
+            </td>
+            <td>
+              <span class="td-text" *ngIf="r.tipoRecebimento === 'mensalidade'">{{ getMesLabel(r.mesReferencia || '') }}</span>
+              <span class="td-muted" *ngIf="r.tipoRecebimento !== 'mensalidade'">—</span>
+            </td>
+            <td><span class="td-text">{{ r.anoLetivo || '—' }}</span></td>
+            <td>
+              <span class="badge-status badge-pago"     *ngIf="r.status === 'pago'">Pago</span>
+              <span class="badge-status badge-atrasado" *ngIf="r.status === 'atrasado'">Atrasado</span>
+            </td>
+            <td><span class="td-text">{{ getFormaPgtoLabel(r.formaPagamento) }}</span></td>
+            <td><span class="td-text">{{ r.data ? (r.data | date:'dd/MM/yyyy') : '—' }}</span></td>
+            <td class="td-right">
+              <span class="td-valor valor-entrada" *ngIf="r.status === 'pago'">
+                + R$ {{ (r.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+              </span>
+              <span class="td-muted" *ngIf="r.status === 'atrasado'">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tabela-empty" *ngIf="filtrados.length === 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Nenhum registro encontrado</span>
+      </div>
+    </div>
+
+    <!-- Paginação -->
+    <div class="pagination" *ngIf="filtrados.length > 0">
+      <div class="pagination-info">
+        <strong>{{ (paginaAtual - 1) * itensPorPagina + 1 }}</strong> – <strong>{{ Math.min(paginaAtual * itensPorPagina, filtrados.length) }}</strong> de <strong>{{ filtrados.length }}</strong>
+      </div>
+      <div class="pagination-controls">
+        <button type="button" class="pagination-btn" [disabled]="paginaAtual === 1" (click)="irParaPagina(1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+        </button>
+        <button type="button" class="pagination-btn" [disabled]="paginaAtual === 1" (click)="irParaPagina(paginaAtual - 1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="pagination-pages">
+          <button type="button" class="pagination-page"
+            *ngFor="let page of paginasVisiveis; trackBy: trackByIndex"
+            [class.active]="page === paginaAtual" [class.dots]="page === -1"
+            [disabled]="page === -1" (click)="page !== -1 && irParaPagina(page)">
+            {{ page === -1 ? '...' : page }}
+          </button>
+        </div>
+        <button type="button" class="pagination-btn" [disabled]="paginaAtual === totalPaginas" (click)="irParaPagina(paginaAtual + 1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button type="button" class="pagination-btn" [disabled]="paginaAtual === totalPaginas" (click)="irParaPagina(totalPaginas)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+        </button>
+      </div>
+      <div class="pagination-size">
+        <label>Por página:</label>
+        <select [(ngModel)]="itensPorPagina" (change)="onItensPorPaginaChange()">
+          <option [value]="10">10</option>
+          <option [value]="15">15</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -107,7 +107,7 @@ export class EducadoresListComponent implements OnInit {
       const matchNome = !this.filtroNome || e.nomeCompleto.toLowerCase().includes(this.filtroNome.toLowerCase());
       const matchMatricula = !this.filtroMatricula || (e.matriculaFuncional?.toLowerCase().includes(this.filtroMatricula.toLowerCase()) ?? false);
       const matchDisciplina = !this.filtroDisciplina || (e.disciplinaLecionada?.toLowerCase().includes(this.filtroDisciplina.toLowerCase()) ?? false);
-      const matchTurno = !this.filtroTurno || e.turno === this.filtroTurno;
+      const matchTurno = !this.filtroTurno || (e.turno?.includes(this.filtroTurno) ?? false);
       const matchStatus = !this.filtroStatus || (e.status || 'ativo') === this.filtroStatus;
       return matchNome && matchMatricula && matchDisciplina && matchTurno && matchStatus;
     });
@@ -136,9 +136,17 @@ export class EducadoresListComponent implements OnInit {
     return Math.max(1, Math.ceil(this.educadoresFiltrados.length / this.itensPorPagina));
   }
 
-  get paginasVisiveis(): number[] {
-    const pages: number[] = [];
-    for (let i = 1; i <= this.totalPaginas; i++) pages.push(i);
+  get paginasVisiveis(): (number | -1)[] {
+    const total = this.totalPaginas;
+    const current = this.paginaAtual;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: (number | -1)[] = [1];
+    if (current > 3) pages.push(-1);
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (current < total - 2) pages.push(-1);
+    pages.push(total);
     return pages;
   }
 
@@ -159,7 +167,7 @@ export class EducadoresListComponent implements OnInit {
   }
 
   verTurmas(idMatricula: string): void {
-    this.router.navigate([`/educadores/${idMatricula}/minhas-turmas`]);
+    this.router.navigate(['/educadores/minhas-turmas', idMatricula]);
   }
 
   ativar(educador: Educador): void {
