@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './features/login/login.component';
 import { CriarSenhaComponent } from './features/criar-senha/criar-senha.component';
 import { ResetarSenhaComponent } from './resetar-senha/resetar-senha.component';
+import { OAuthCallbackComponent } from './features/oauth-callback/oauth-callback.component';
 import { AuthGuard } from './core/guards/auth.guard';
 import { RoleGuard } from './core/guards/role.guard';
 
@@ -23,6 +24,14 @@ const routes: Routes = [
   {
     path: 'resetar-senha',
     component: ResetarSenhaComponent
+  },
+  {
+    path: 'auth/callback/google',
+    component: OAuthCallbackComponent
+  },
+  {
+    path: 'auth/callback/microsoft',
+    component: OAuthCallbackComponent
   },
   {
     path: 'home',

@@ -210,4 +210,20 @@ export class AuthService {
   resetarSenha(token: string, id: string, senha: string): Observable<any> {
     return this.http.post(`${environment.apiUrl}/auth/resetar-senha`, { token, id, senha });
   }
+
+  getGoogleAuthUrl(): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/auth/oauth/google/url`);
+  }
+
+  getMicrosoftAuthUrl(): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/auth/oauth/microsoft/url`);
+  }
+
+  processGoogleCallback(code: string, state: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/auth/oauth/google/callback`, { code, state });
+  }
+
+  processMicrosoftCallback(code: string, state: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/auth/oauth/microsoft/callback`, { code, state });
+  }
 }

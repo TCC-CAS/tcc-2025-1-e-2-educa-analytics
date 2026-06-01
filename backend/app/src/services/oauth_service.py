@@ -12,26 +12,27 @@ from datetime import datetime, timedelta
 from app.src.adapters.db_adapter import execute_query, execute_write
 from app.src.services import auth_service
 from app.src.models.models import LoginModel
+from app.src.core.config import Config
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CONFIGURAÇÃO OAUTH
+# CONFIGURAÇÃO OAUTH  (lida das env vars via Config)
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Google OAuth
-GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"  # Configurar no Google Cloud Console
-GOOGLE_CLIENT_SECRET = "YOUR_GOOGLE_CLIENT_SECRET"
-GOOGLE_REDIRECT_URI = "http://localhost:4200/auth/callback/google"  # Produção: https://seudominio.com/...
-GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
-GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+def _google_client_id():     return Config.GOOGLE_CLIENT_ID()
+def _google_client_secret(): return Config.GOOGLE_CLIENT_SECRET()
+def _google_redirect_uri():  return Config.GOOGLE_REDIRECT_URI()
+
+def _microsoft_client_id():     return Config.MICROSOFT_CLIENT_ID()
+def _microsoft_client_secret(): return Config.MICROSOFT_CLIENT_SECRET()
+def _microsoft_redirect_uri():  return Config.MICROSOFT_REDIRECT_URI()
+
+GOOGLE_AUTH_URL     = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URL    = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 
-# Microsoft OAuth
-MICROSOFT_CLIENT_ID = "YOUR_MICROSOFT_CLIENT_ID"  # Configurar no Azure AD
-MICROSOFT_CLIENT_SECRET = "YOUR_MICROSOFT_CLIENT_SECRET"
-MICROSOFT_REDIRECT_URI = "http://localhost:4200/auth/callback/microsoft"
-MICROSOFT_AUTH_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
-MICROSOFT_TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+MICROSOFT_AUTH_URL     = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+MICROSOFT_TOKEN_URL    = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
 MICROSOFT_USERINFO_URL = "https://graph.microsoft.com/v1.0/me"
 
 
@@ -50,8 +51,8 @@ def gerar_url_google() -> Dict[str, str]:
     state = secrets.token_urlsafe(32)
     
     params = {
-        "client_id": GOOGLE_CLIENT_ID,
-        "redirect_uri": GOOGLE_REDIRECT_URI,
+        "client_id": _google_client_id(),
+        "redirect_uri": _google_redirect_uri(),
         "response_type": "code",
         "scope": "openid email profile",
         "state": state,
@@ -119,9 +120,9 @@ def _trocar_code_por_token_google(code: str) -> Dict:
     """Troca authorization code por access token"""
     data = {
         "code": code,
-        "client_id": GOOGLE_CLIENT_ID,
-        "client_secret": GOOGLE_CLIENT_SECRET,
-        "redirect_uri": GOOGLE_REDIRECT_URI,
+        "client_id": _google_client_id(),
+        "client_secret": _google_client_secret(),
+        "redirect_uri": _google_redirect_uri(),
         "grant_type": "authorization_code"
     }
     
@@ -160,8 +161,8 @@ def gerar_url_microsoft() -> Dict[str, str]:
     state = secrets.token_urlsafe(32)
     
     params = {
-        "client_id": MICROSOFT_CLIENT_ID,
-        "redirect_uri": MICROSOFT_REDIRECT_URI,
+        "client_id": _microsoft_client_id(),
+        "redirect_uri": _microsoft_redirect_uri(),
         "response_type": "code",
         "scope": "openid email profile",
         "state": state,
@@ -228,9 +229,9 @@ def _trocar_code_por_token_microsoft(code: str) -> Dict:
     """Troca authorization code por access token"""
     data = {
         "code": code,
-        "client_id": MICROSOFT_CLIENT_ID,
-        "client_secret": MICROSOFT_CLIENT_SECRET,
-        "redirect_uri": MICROSOFT_REDIRECT_URI,
+        "client_id": _microsoft_client_id(),
+        "client_secret": _microsoft_client_secret(),
+        "redirect_uri": _microsoft_redirect_uri(),
         "grant_type": "authorization_code"
     }
     

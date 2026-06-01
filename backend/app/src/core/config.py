@@ -53,6 +53,26 @@ class Config:
     @staticmethod
     def RECAPTCHA_ENABLED() -> bool: return os.environ.get("RECAPTCHA_ENABLED", "true").lower() == "true"
 
+    # ── OAuth Google ───────────────────────────────────────────
+    @staticmethod
+    def GOOGLE_CLIENT_ID() -> str: return os.environ.get("GOOGLE_CLIENT_ID", "")
+    @staticmethod
+    def GOOGLE_CLIENT_SECRET() -> str: return os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    @staticmethod
+    def GOOGLE_REDIRECT_URI() -> str:
+        app_url = os.environ.get("APP_URL", "http://localhost:4200")
+        return os.environ.get("GOOGLE_REDIRECT_URI", f"{app_url}/auth/callback/google")
+
+    # ── OAuth Microsoft ────────────────────────────────────────
+    @staticmethod
+    def MICROSOFT_CLIENT_ID() -> str: return os.environ.get("MICROSOFT_CLIENT_ID", "")
+    @staticmethod
+    def MICROSOFT_CLIENT_SECRET() -> str: return os.environ.get("MICROSOFT_CLIENT_SECRET", "")
+    @staticmethod
+    def MICROSOFT_REDIRECT_URI() -> str:
+        app_url = os.environ.get("APP_URL", "http://localhost:4200")
+        return os.environ.get("MICROSOFT_REDIRECT_URI", f"{app_url}/auth/callback/microsoft")
+
     # ── Ambiente ───────────────────────────────────────────────
     @staticmethod
     def ENV() -> str: return os.environ.get("ENV", "development")

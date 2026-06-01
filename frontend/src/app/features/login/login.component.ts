@@ -376,46 +376,28 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   loginWithGoogle(): void {
     this.googleLoading = true;
-    // Simula o login com Google - em produção, usar biblioteca Google Sign-In
-    setTimeout(() => {
-      try {
-        // Simula seleção aleatória de um tipo de usuário para demonstração
-        const userTypes: UserType[] = ['educador', 'educando', 'responsavel', 'colaborador', 'gestor', 'administrativo'];
-        const randomType = userTypes[Math.floor(Math.random() * userTypes.length)];
-        
-        // Login mock com o tipo selecionado
-        this.auth.loginMock(randomType);
-        this.auth.setToken('mock-google-token-' + randomType);
-        this.notify.success(`Autenticado como ${randomType} via Google`);
-        this.router.navigateByUrl(this.returnUrl || '/home');
-      } catch (err) {
-        this.notify.error('Falha ao autenticar com Google');
-      } finally {
+    this.auth.getGoogleAuthUrl().subscribe({
+      next: (res: any) => {
+        window.location.href = res.url;
+      },
+      error: () => {
         this.googleLoading = false;
+        this.notify.error('Falha ao iniciar autenticação com Google');
       }
-    }, 1000);
+    });
   }
 
   loginWithOutlook(): void {
     this.outlookLoading = true;
-    // Simula o login com Outlook/Microsoft - em produção, usar MSAL (Microsoft Authentication Library)
-    setTimeout(() => {
-      try {
-        // Simula seleção aleatória de um tipo de usuário para demonstração
-        const userTypes: UserType[] = ['educador', 'educando', 'responsavel', 'colaborador', 'gestor', 'administrativo'];
-        const randomType = userTypes[Math.floor(Math.random() * userTypes.length)];
-        
-        // Login mock com o tipo selecionado
-        this.auth.loginMock(randomType);
-        this.auth.setToken('mock-outlook-token-' + randomType);
-        this.notify.success(`Autenticado como ${randomType} via Outlook`);
-        this.router.navigateByUrl(this.returnUrl || '/home');
-      } catch (err) {
-        this.notify.error('Falha ao autenticar com Outlook');
-      } finally {
+    this.auth.getMicrosoftAuthUrl().subscribe({
+      next: (res: any) => {
+        window.location.href = res.url;
+      },
+      error: () => {
         this.outlookLoading = false;
+        this.notify.error('Falha ao iniciar autenticação com Microsoft');
       }
-    }, 1000);
+    });
   }
 
   /**

@@ -13,13 +13,15 @@ import { SharedModule } from './shared/shared.module';
 import { LoginComponent } from './features/login/login.component';
 import { CriarSenhaComponent } from './features/criar-senha/criar-senha.component';
 import { ResetarSenhaComponent } from './resetar-senha/resetar-senha.component';
+import { OAuthCallbackComponent } from './features/oauth-callback/oauth-callback.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
     CriarSenhaComponent,
-    ResetarSenhaComponent
+    ResetarSenhaComponent,
+    OAuthCallbackComponent
   ],
   imports: [
     BrowserModule,
