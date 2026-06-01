@@ -1,0 +1,233 @@
+<div class="form-page">
+
+  <!-- ── Modal de confirmação de edição ──────────────────────── -->
+  <div class="modal-overlay" *ngIf="confirmVisible" (click)="cancelarConfirmacao()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <h3 class="modal-title">Confirmar alterações</h3>
+      <p class="modal-msg">
+        Deseja salvar a grade curricular da <strong>{{ serie }}</strong> para
+        o ano letivo <strong>{{ anoLetivo }}</strong>?
+        Disciplinas não incluídas serão marcadas como inativas.
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelarConfirmacao()">Cancelar</button>
+        <button type="button" class="modal-btn modal-confirm" (click)="confirmarEdicao()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Cabeçalho ───────────────────────────────────────────── -->
+  <header class="page-header">
+    <div>
+      <h1>{{ pageTitle }}</h1>
+      <p>Selecione a série e configure as disciplinas, aulas por semana e carga horária.</p>
+    </div>
+  </header>
+
+  <!-- ── Mensagem ─────────────────────────────────────────────── -->
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+
+  <!-- ── Seleção de série e ano letivo ──────────────────────── -->
+  <div class="config-card">
+    <div class="config-row">
+      <div class="form-field">
+        <label for="anoLetivo">
+          Ano Letivo <span class="required">*</span>
+        </label>
+        <div class="select-wrapper">
+          <select
+            id="anoLetivo"
+            name="anoLetivo"
+            [(ngModel)]="anoLetivo"
+            (ngModelChange)="onSerieOuAnoChange()"
+            [disabled]="isSaving">
+            <option *ngFor="let ano of anosLetivos" [value]="ano">{{ ano }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="serie">
+          Série / Ano <span class="required">*</span>
+        </label>
+        <div class="select-wrapper">
+          <select
+            id="serie"
+            name="serie"
+            [(ngModel)]="serie"
+            (ngModelChange)="onSerieOuAnoChange()"
+            [disabled]="isSaving">
+            <option value="">— Selecione uma série —</option>
+            <option *ngFor="let s of seriesDisponiveis" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Resumo -->
+      <div class="serie-summary" *ngIf="serie">
+        <div class="summary-item">
+          <span class="summary-label">Disciplinas ativas</span>
+          <span class="summary-value">{{ ativasCount }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Total de Aulas</span>
+          <span class="summary-value">{{ totalQAS }} aulas/sem</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">CH Anual</span>
+          <span class="summary-value primary">{{ totalCH }}h</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tabela de disciplinas ──────────────────────────────── -->
+  <div class="disciplinas-card" *ngIf="serie">
+
+    <!-- Loading state -->
+    <div class="table-loading" *ngIf="isLoadingDisciplinas">
+      <div class="spinner"></div>
+      <span>Carregando disciplinas...</span>
+    </div>
+
+    <ng-container *ngIf="!isLoadingDisciplinas">
+
+      <!-- Table header -->
+      <div class="disc-table-head">
+        <label class="check-all-label" title="Selecionar / desmarcar todas">
+          <input
+            type="checkbox"
+            [checked]="allActive"
+            (change)="toggleAll($any($event.target).checked)"
+            [disabled]="isSaving" />
+        </label>
+        <span>Disciplina</span>
+        <span>Área de Conhecimento</span>
+        <span class="text-right">Aulas/semana (QAS)</span>
+        <span class="text-right">CH Anual</span>
+        <span>Observações</span>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-disciplines" *ngIf="rows.length === 0">
+        <p>Nenhuma disciplina ativa cadastrada. Cadastre disciplinas primeiro.</p>
+      </div>
+
+      <!-- Rows -->
+      <div
+        class="disc-row"
+        *ngFor="let row of rows"
+        [class.active]="row.ativa"
+        [class.inactive]="!row.ativa">
+
+        <!-- Toggle -->
+        <label class="disc-toggle">
+          <input
+            type="checkbox"
+            [(ngModel)]="row.ativa"
+            (ngModelChange)="row.ativa && row.qas < 1 ? (row.qas = 2) : null"
+            [disabled]="isSaving" />
+        </label>
+
+        <!-- Nome + código -->
+        <div class="disc-nome-cell">
+          <span class="disc-nome">{{ row.nome }}</span>
+          <span class="disc-cod" *ngIf="row.codigo">{{ row.codigo }}</span>
+        </div>
+
+        <!-- Área -->
+        <span class="disc-area">{{ row.areaConhecimento || '—' }}</span>
+
+        <!-- QAS input -->
+        <div class="qas-cell">
+          <input
+            type="number"
+            class="qas-input"
+            [(ngModel)]="row.qas"
+            min="1"
+            max="40"
+            [disabled]="!row.ativa || isSaving"
+            [class.disabled]="!row.ativa" />
+          <span class="qas-unit">aulas</span>
+        </div>
+
+        <!-- CH Anual (auto) -->
+        <div class="ch-cell">
+          <span class="ch-value" [class.zero]="!row.ativa">{{ row.ativa ? ch(row) : '—' }}</span>
+          <span class="ch-unit" *ngIf="row.ativa">h</span>
+        </div>
+
+        <!-- Observações -->
+        <input
+          type="text"
+          class="obs-input"
+          [(ngModel)]="row.observacoes"
+          placeholder="Observação (opcional)"
+          [disabled]="!row.ativa || isSaving"
+          [class.disabled]="!row.ativa" />
+
+      </div><!-- /disc-row -->
+
+      <!-- Totals -->
+      <div class="disc-totals" *ngIf="rows.length > 0">
+        <span></span>
+        <span class="totals-label">Total ({{ ativasCount }} disciplina{{ ativasCount !== 1 ? 's' : '' }})</span>
+        <span></span>
+        <span class="text-right totals-qas">{{ totalQAS }} aulas/sem</span>
+        <span class="text-right totals-ch">{{ totalCH }}h/ano</span>
+        <span></span>
+      </div>
+
+    </ng-container>
+
+  </div><!-- /disciplinas-card -->
+
+  <!-- ── Placeholder quando nenhuma série selecionada ──────── -->
+  <div class="no-serie-hint" *ngIf="!serie">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+      <rect x="9" y="3" width="6" height="4" rx="1" ry="1"/>
+      <line x1="9" y1="12" x2="15" y2="12"/>
+      <line x1="9" y1="16" x2="12" y2="16"/>
+    </svg>
+    <p>Selecione o <strong>ano letivo</strong> e a <strong>série</strong> acima para configurar a grade curricular.</p>
+  </div>
+
+  <!-- ── Rodapé da página ──────────────────────────────────── -->
+  <div class="form-footer" *ngIf="serie && !isLoadingDisciplinas">
+
+    <!-- Motivo de alteração -->
+    <div class="motivo-field" *ngIf="isEditMode">
+      <label for="motivoAlteracao">Motivo da alteração (opcional)</label>
+      <input
+        type="text"
+        id="motivoAlteracao"
+        name="motivoAlteracao"
+        [(ngModel)]="motivoAlteracao"
+        placeholder="Descreva brevemente a razão das alterações"
+        [disabled]="isSaving" />
+      <small>Será registrado no histórico de alterações da matriz curricular.</small>
+    </div>
+
+    <!-- Ações -->
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" (click)="cancelar()" [disabled]="isSaving">
+        Cancelar
+      </button>
+      <button type="button" class="btn-primary" (click)="submit()" [disabled]="isSaving || !podeSalvar">
+        <span *ngIf="!isSaving">{{ isEditMode ? 'Salvar Alterações' : 'Salvar Grade' }}</span>
+        <span *ngIf="isSaving">Salvando...</span>
+      </button>
+    </div>
+  </div>
+
+</div><!-- /form-page -->

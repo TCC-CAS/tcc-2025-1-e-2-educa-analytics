@@ -1,0 +1,290 @@
+<div class="bncc-container" *ngIf="!enviado">
+
+  <!-- Header -->
+  <div class="bncc-header">
+    <button class="btn-voltar" (click)="voltar()">← Voltar</button>
+    <div class="header-info">
+      <div class="disciplina-badge" *ngIf="avaliacao">{{ disciplinaBadge }}</div>
+      <h1 *ngIf="avaliacao">{{ avaliacao.titulo }}</h1>
+      <p class="subtitulo" *ngIf="avaliacao">{{ avaliacao.subtitulo }}</p>
+    </div>
+    <div class="progresso-info">{{ progresso }}% concluído</div>
+  </div>
+
+  <!-- Barra de progresso -->
+  <div class="progresso-bar">
+    <div class="progresso-fill" [style.width.%]="progresso"></div>
+  </div>
+
+  <!-- Seleção de contexto -->
+  <div class="contexto-card" *ngIf="avaliacao">
+    <h3 class="contexto-titulo">Informações da Avaliação</h3>
+    <div class="contexto-campos">
+      <div class="campo-select">
+        <label>Educando(a) <span class="obrigatoria">*</span></label>
+        <select [(ngModel)]="educandoSelecionado" name="educando">
+          <option value="">Selecione o(a) educando(a)...</option>
+          <option *ngFor="let e of educandosMock" [value]="e.id">
+            {{ e.nome }} — {{ e.turma }}
+          </option>
+        </select>
+      </div>
+      <div class="campo-select">
+        <label>Bimestre <span class="obrigatoria">*</span></label>
+        <select [(ngModel)]="bimestreSelecionado" name="bimestre">
+          <option value="1">1º Bimestre</option>
+          <option value="2">2º Bimestre</option>
+          <option value="3">3º Bimestre</option>
+          <option value="4">4º Bimestre</option>
+        </select>
+      </div>
+      <div class="campo-select">
+        <label>Ano Letivo</label>
+        <select [(ngModel)]="anoLetivoSelecionado" name="anoLetivo">
+          <option value="2025">2025</option>
+          <option value="2026">2026</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <div class="bncc-body" *ngIf="avaliacao">
+
+    <!-- Abas de navegação -->
+    <div class="secoes-tabs">
+      <button
+        *ngFor="let secao of avaliacao.secoes"
+        class="tab-btn"
+        [class.ativa]="secaoAtiva === secao.id"
+        [class.completa]="secaoCompleta(secao)"
+        (click)="ativarSecao(secao.id)">
+        <span class="tab-icone">{{ secao.icone }}</span>
+        <span class="tab-label">{{ secao.titulo }}</span>
+        <span class="tab-contador" [class.completo]="secaoCompleta(secao)">
+          {{ criteriosPreenchidosSecao(secao) }}/{{ totalCriteriosSecao(secao) }}
+        </span>
+      </button>
+      <button
+        *ngIf="hasCampos"
+        class="tab-btn"
+        [class.ativa]="secaoAtiva === 'campos'"
+        (click)="ativarSecao('campos')">
+        <span class="tab-icone">📋</span>
+        <span class="tab-label">Campos de Atuação</span>
+      </button>
+      <button class="tab-btn" [class.ativa]="secaoAtiva === 'sintese'" (click)="ativarSecao('sintese')">
+        <span class="tab-icone">🧾</span>
+        <span class="tab-label">Síntese</span>
+      </button>
+    </div>
+
+    <!-- Seções de critérios -->
+    <div *ngFor="let secao of avaliacao.secoes">
+      <div class="secao-panel" *ngIf="secaoAtiva === secao.id">
+        <div class="secao-header">
+          <span class="secao-icone">{{ secao.icone }}</span>
+          <h2>{{ secao.titulo }}</h2>
+          <span class="secao-progresso">
+            {{ criteriosPreenchidosSecao(secao) }} de {{ totalCriteriosSecao(secao) }} critérios avaliados
+          </span>
+        </div>
+
+        <div class="legenda-niveis">
+          <span *ngFor="let n of niveisList" class="legenda-item" [class]="getNivelClass(n.valor)">
+            {{ n.icone }} {{ n.label }}
+          </span>
+        </div>
+
+        <div class="criterios-lista">
+          <div *ngFor="let criterio of secao.criterios; let i = index" class="criterio-card">
+            <div class="criterio-info">
+              <div class="criterio-numero">{{ i + 1 }}</div>
+              <div class="criterio-texto">
+                <strong>{{ criterio.nome }}</strong>
+                <p>{{ criterio.descricao }}</p>
+              </div>
+            </div>
+            <div class="criterio-niveis">
+              <button
+                *ngFor="let nivel of niveisList"
+                class="nivel-btn"
+                [class]="'nivel-btn-' + nivel.valor"
+                [class.selecionado]="criterio.nivel === nivel.valor"
+                (click)="definirNivel(criterio, nivel.valor)">
+                <span class="nivel-icone">{{ nivel.icone }}</span>
+                <span class="nivel-texto">{{ nivel.label }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="navegacao-secoes">
+          <button
+            class="btn-nav btn-anterior"
+            *ngIf="avaliacao.secoes.indexOf(secao) > 0"
+            (click)="ativarSecao(avaliacao.secoes[avaliacao.secoes.indexOf(secao) - 1].id)">
+            ← Seção Anterior
+          </button>
+          <span></span>
+          <!-- Ir para próxima seção -->
+          <button
+            class="btn-nav btn-proxima"
+            *ngIf="avaliacao.secoes.indexOf(secao) < avaliacao.secoes.length - 1"
+            (click)="ativarSecao(avaliacao.secoes[avaliacao.secoes.indexOf(secao) + 1].id)">
+            Próxima Seção →
+          </button>
+          <!-- Última seção: ir para Campos (se existir) ou Síntese -->
+          <button
+            class="btn-nav btn-proxima"
+            *ngIf="avaliacao.secoes.indexOf(secao) === avaliacao.secoes.length - 1 && hasCampos"
+            (click)="ativarSecao('campos')">
+            Campos de Atuação →
+          </button>
+          <button
+            class="btn-nav btn-proxima"
+            *ngIf="avaliacao.secoes.indexOf(secao) === avaliacao.secoes.length - 1 && !hasCampos"
+            (click)="ativarSecao('sintese')">
+            Síntese de Avaliação →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campos de Atuação (somente LP) -->
+    <div class="secao-panel" *ngIf="secaoAtiva === 'campos' && hasCampos">
+      <div class="secao-header">
+        <span class="secao-icone">📋</span>
+        <h2>Campos de Atuação</h2>
+        <span class="secao-descricao">Gêneros textuais e objetivos por campo de atuação social</span>
+      </div>
+      <div class="campos-table-wrapper">
+        <table class="campos-table">
+          <thead>
+            <tr>
+              <th>Campo de Atuação</th>
+              <th>Gêneros Textuais</th>
+              <th>Objetivo da Avaliação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let campo of avaliacao.camposAtuacao; let i = index" [class.row-par]="i % 2 === 0">
+              <td class="campo-nome">{{ campo.campo }}</td>
+              <td class="campo-generos">{{ campo.generos }}</td>
+              <td class="campo-objetivo">{{ campo.objetivo }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="navegacao-secoes">
+        <button class="btn-nav btn-anterior" (click)="ativarSecao(avaliacao.secoes[avaliacao.secoes.length - 1].id)">
+          ← Seção Anterior
+        </button>
+        <span></span>
+        <button class="btn-nav btn-proxima" (click)="ativarSecao('sintese')">
+          Síntese de Avaliação →
+        </button>
+      </div>
+    </div>
+
+    <!-- Síntese de Avaliação -->
+    <div class="secao-panel" *ngIf="secaoAtiva === 'sintese'">
+      <div class="secao-header">
+        <span class="secao-icone">🧾</span>
+        <h2>Síntese de Avaliação</h2>
+        <span class="secao-descricao">Registre suas observações gerais por dimensão</span>
+      </div>
+      <div class="sintese-lista">
+        <div *ngFor="let item of avaliacao.sintese" class="sintese-card">
+          <div class="sintese-info">
+            <div class="sintese-dimensao">{{ item.dimensao }}</div>
+            <div class="sintese-indicadores">
+              <strong>Indicadores:</strong> {{ item.indicadores }}
+            </div>
+          </div>
+          <div class="sintese-observacoes">
+            <label>Observações do Professor</label>
+            <textarea
+              [(ngModel)]="item.observacoes"
+              [name]="item.id"
+              rows="3"
+              placeholder="Registre observações sobre o desempenho do educando nesta dimensão...">
+            </textarea>
+          </div>
+        </div>
+      </div>
+      <div class="navegacao-secoes">
+        <button
+          class="btn-nav btn-anterior"
+          *ngIf="hasCampos"
+          (click)="ativarSecao('campos')">
+          ← Campos de Atuação
+        </button>
+        <button
+          class="btn-nav btn-anterior"
+          *ngIf="!hasCampos"
+          (click)="ativarSecao(avaliacao.secoes[avaliacao.secoes.length - 1].id)">
+          ← Seção Anterior
+        </button>
+      </div>
+    </div>
+
+    <!-- Rodapé com ações -->
+    <div class="form-actions">
+      <div class="actions-info">
+        <span class="info-progresso">
+          <strong>{{ progresso }}%</strong> dos critérios preenchidos
+        </span>
+        <span class="info-educando" *ngIf="educandoSelecionado">
+          Educando(a): <strong>{{ getNomeEducando() }}</strong>
+        </span>
+      </div>
+      <div class="actions-btns">
+        <button class="btn-cancelar" (click)="voltar()">Cancelar</button>
+        <button
+          class="btn-salvar"
+          [disabled]="!podeSalvar() || enviando"
+          (click)="enviarAvaliacao()">
+          <span *ngIf="!enviando">💾 Salvar Avaliação</span>
+          <span *ngIf="enviando">Salvando...</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Tela de sucesso -->
+<div class="sucesso-container" *ngIf="enviado">
+  <div class="sucesso-card">
+    <div class="sucesso-icone">✅</div>
+    <h2>Avaliação Salva com Sucesso!</h2>
+    <p *ngIf="avaliacao">A avaliação de <strong>{{ avaliacao.disciplina }}</strong> foi registrada no histórico do educando.</p>
+    <div class="sucesso-detalhes" *ngIf="avaliacao">
+      <div class="detalhe-item">
+        <span class="detalhe-label">Disciplina</span>
+        <span class="detalhe-valor">{{ avaliacao.disciplina }}</span>
+      </div>
+      <div class="detalhe-item">
+        <span class="detalhe-label">Série</span>
+        <span class="detalhe-valor">{{ avaliacao.subtitulo }}</span>
+      </div>
+      <div class="detalhe-item">
+        <span class="detalhe-label">Educando(a)</span>
+        <span class="detalhe-valor">{{ getNomeEducando() }}</span>
+      </div>
+      <div class="detalhe-item">
+        <span class="detalhe-label">Bimestre</span>
+        <span class="detalhe-valor">{{ bimestreSelecionado }}º Bimestre / {{ anoLetivoSelecionado }}</span>
+      </div>
+      <div class="detalhe-item">
+        <span class="detalhe-label">Critérios Avaliados</span>
+        <span class="detalhe-valor">{{ progresso }}% concluídos</span>
+      </div>
+    </div>
+    <div class="sucesso-acoes">
+      <button class="btn-nova" (click)="novaAvaliacao()">Avaliar outro educando</button>
+      <button class="btn-voltar-lista" (click)="voltar()">Voltar à lista</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,222 @@
+<div class="cronograma-gestor-container">
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- HEADER COM ESTATÍSTICAS -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="header-estatisticas">
+    <div class="card-stat">
+      <i class="pi pi-calendar"></i>
+      <div class="stat-content">
+        <span class="stat-label">Total de Aulas</span>
+        <span class="stat-value">{{ estatisticas.totalAulas }}</span>
+      </div>
+    </div>
+    
+    <div class="card-stat">
+      <i class="pi pi-clock"></i>
+      <div class="stat-content">
+        <span class="stat-label">Aulas Hoje</span>
+        <span class="stat-value">{{ estatisticas.aulasHoje }}</span>
+      </div>
+    </div>
+    
+    <div class="card-stat" [class.warning]="estatisticas.totalConflitos > 0">
+      <i class="pi pi-exclamation-triangle"></i>
+      <div class="stat-content">
+        <span class="stat-label">Conflitos</span>
+        <span class="stat-value">{{ estatisticas.totalConflitos }}</span>
+      </div>
+    </div>
+    
+    <div class="card-stat" [class.danger]="estatisticas.conflitosAlta > 0">
+      <i class="pi pi-times-circle"></i>
+      <div class="stat-content">
+        <span class="stat-label">Alta Prioridade</span>
+        <span class="stat-value">{{ estatisticas.conflitosAlta }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- TOOLBAR -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <button class="btn btn-success" (click)="novaAula()">
+        <i class="pi pi-plus"></i> Nova Aula
+      </button>
+      
+      <button class="btn btn-secondary" (click)="gerarGradeAutomatica()">
+        <i class="pi pi-cog"></i> Gerar Grade Automática
+      </button>
+    </div>
+    
+    <div class="toolbar-right">
+      <button class="btn btn-outline" 
+              (click)="visualizacao = visualizacao === 'semanal' ? 'lista' : 'semanal'">
+        <i [class]="visualizacao === 'semanal' ? 'pi pi-th-large' : 'pi pi-list'"></i>
+        {{ visualizacao === 'semanal' ? 'Semanal' : 'Lista' }}
+      </button>
+      
+      <button class="btn btn-outline" (click)="visualizacao = 'conflitos'">
+        <i class="pi pi-exclamation-triangle"></i> Conflitos
+        <span class="badge badge-danger" *ngIf="estatisticas.totalConflitos > 0">
+          {{ estatisticas.totalConflitos }}
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- FILTROS -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="filtros-panel">
+    <h3 class="filtros-header">Filtros</h3>
+    <div class="filtros-container">
+      <div class="field">
+        <label for="turma">Turma</label>
+        <select id="turma" [(ngModel)]="filtros.idTurma" class="form-control">
+          <option [ngValue]="undefined">Todas as turmas</option>
+          <option *ngFor="let turma of turmas" [ngValue]="turma.idTurma">
+            {{ turma.nomeTurma }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="filtros-actions">
+        <button class="btn btn-primary" (click)="aplicarFiltros()">
+          <i class="pi pi-filter"></i> Filtrar
+        </button>
+        <button class="btn btn-outline" (click)="limparFiltros()">
+          <i class="pi pi-times"></i> Limpar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- VISUALIZAÇÃO SEMANAL -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="visualizacao === 'semanal'" class="grade-semanal">
+    <div *ngIf="loading" class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Carregando...</p>
+    </div>
+    
+    <div *ngIf="!loading" class="grade-table">
+      <table class="cronograma-table">
+        <thead>
+          <tr>
+            <th class="hora-col">Horário</th>
+            <th *ngFor="let dia of diasSemana">{{ dia.label }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let hora of horariosFixos">
+            <td class="hora-col">{{ hora }}</td>
+            <td *ngFor="let dia of diasSemana" 
+                class="aula-cell"
+                [class.has-aula]="gradeSemanal[dia.key][hora]">
+              
+              <div *ngIf="gradeSemanal[dia.key][hora]" 
+                   class="aula-card"
+                   [style.background-color]="getCorAula(gradeSemanal[dia.key][hora])">
+                <div class="aula-info">
+                  <strong>{{ gradeSemanal[dia.key][hora]?.disciplina?.nomeDisciplina }}</strong>
+                  <span class="turma">{{ gradeSemanal[dia.key][hora]?.turma?.codTurma }}</span>
+                  <span class="educador">{{ gradeSemanal[dia.key][hora]?.educador?.nomeCompleto }}</span>
+                  <span class="sala" *ngIf="gradeSemanal[dia.key][hora]?.sala">
+                    Sala: {{ gradeSemanal[dia.key][hora]?.sala?.codSala }}
+                  </span>
+                </div>
+                <div class="aula-actions">
+                  <button class="btn btn-sm btn-icon" 
+                          (click)="editarHorario(gradeSemanal[dia.key][hora]!)" 
+                          title="Editar">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-danger" 
+                          (click)="excluirHorario(gradeSemanal[dia.key][hora]!)" 
+                          title="Excluir">
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div *ngIf="!gradeSemanal[dia.key][hora]" class="slot-vazio">
+                <!-- Slot vazio -->
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- VISUALIZAÇÃO EM LISTA -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="visualizacao === 'lista'" class="lista-horarios">
+    <div *ngIf="loading" class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Carregando...</p>
+    </div>
+    
+    <table *ngIf="!loading" class="data-table">
+      <thead>
+        <tr>
+          <th>Dia</th>
+          <th>Horário</th>
+          <th>Disciplina</th>
+          <th>Turma</th>
+          <th>Educador</th>
+          <th>Sala</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let horario of horarios">
+          <td>{{ horario.diaSemana }}</td>
+          <td>{{ formatarHorario(horario.horaInicio) }} - {{ formatarHorario(horario.horaFim) }}</td>
+          <td>{{ horario.disciplina?.nomeDisciplina }}</td>
+          <td>{{ horario.turma?.codTurma }}</td>
+          <td>{{ horario.educador?.nomeCompleto }}</td>
+          <td>{{ horario.sala?.codSala || '-' }}</td>
+          <td>
+            <button class="btn btn-sm btn-icon" (click)="editarHorario(horario)" title="Editar">
+              <i class="pi pi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-icon btn-danger" (click)="excluirHorario(horario)" title="Excluir">
+              <i class="pi pi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- VISUALIZAÇÃO DE CONFLITOS -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="visualizacao === 'conflitos'" class="conflitos-view">
+    <h3>Conflitos Detectados</h3>
+    
+    <div *ngIf="conflitos.length === 0" class="no-conflitos">
+      <i class="pi pi-check-circle"></i>
+      <p>Nenhum conflito detectado! ✨</p>
+    </div>
+    
+    <div *ngFor="let conflito of conflitos" class="conflito-card"
+         [ngClass]="'severidade-' + conflito.severidade">
+      <div class="conflito-header">
+        <span class="badge" [ngClass]="'badge-' + conflito.severidade">
+          {{ conflito.severidade }}
+        </span>
+        <span class="conflito-tipo">{{ conflito.tipoConflito }}</span>
+      </div>
+      <div class="conflito-body">
+        <p>{{ conflito.descricao }}</p>
+        <small>Detectado em: {{ conflito.detectedAt | date:'dd/MM/yyyy HH:mm' }}</small>
+      </div>
+    </div>
+  </div>
+</div>

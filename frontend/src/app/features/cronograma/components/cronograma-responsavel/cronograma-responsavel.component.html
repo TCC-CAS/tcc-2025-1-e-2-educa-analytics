@@ -1,0 +1,74 @@
+<div class="cronograma-responsavel-container">
+  <h2>Cronograma dos Filhos</h2>
+  
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Carregando...</p>
+  </div>
+  
+  <div *ngIf="!loading && filhos.length === 0" class="sem-filhos">
+    <i class="pi pi-users"></i>
+    <p>Nenhum filho cadastrado</p>
+  </div>
+  
+  <div *ngIf="!loading && filhos.length > 0" class="content">
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- SELETOR DE FILHOS -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="filhos-selector" *ngIf="filhos.length > 1">
+      <h3>Selecione o filho:</h3>
+      <div class="filhos-buttons">
+        <button *ngFor="let filho of filhos"
+                class="filho-button"
+                [class.active]="filhoSelecionado === filho"
+                (click)="selecionarFilho(filho)">
+          <i class="pi pi-user"></i>
+          <span>{{ filho.filho.nomeCompleto }}</span>
+          <small>{{ filho.turma.codTurma }}</small>
+        </button>
+      </div>
+    </div>
+    
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- INFO DO FILHO SELECIONADO -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div *ngIf="filhoSelecionado" class="filho-info-card">
+      <h3>{{ filhoSelecionado.filho.nomeCompleto }}</h3>
+      <p>
+        <i class="pi pi-users"></i>
+        Turma: {{ filhoSelecionado.turma.codTurma }} - {{ filhoSelecionado.turma.nomeTurma }}
+      </p>
+    </div>
+    
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- GRADE SEMANAL -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div *ngIf="filhoSelecionado" class="grade-semanal-responsavel">
+      <div *ngFor="let dia of diasSemana" class="dia-card">
+        <h4>{{ getDiaLabel(dia) }}</h4>
+        
+        <div *ngIf="gradeSemanal[dia]?.length === 0" class="sem-aulas">
+          <i class="pi pi-calendar-times"></i>
+          <p>Sem aulas neste dia</p>
+        </div>
+        
+        <div *ngFor="let horario of gradeSemanal[dia]" class="aula-item"
+             [style.border-left-color]="horario.cor || '#3788d8'">
+          <div class="horario">
+            <i class="pi pi-clock"></i>
+            <span>{{ horario.horaInicio.substring(0,5) }} - {{ horario.horaFim.substring(0,5) }}</span>
+          </div>
+          <div class="disciplina">{{ horario.disciplina?.nomeDisciplina }}</div>
+          <div class="educador">
+            <i class="pi pi-user"></i>
+            {{ horario.educador?.nomeCompleto }}
+          </div>
+          <div class="sala" *ngIf="horario.sala">
+            <i class="pi pi-map-marker"></i>
+            {{ horario.sala.nomeSala }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

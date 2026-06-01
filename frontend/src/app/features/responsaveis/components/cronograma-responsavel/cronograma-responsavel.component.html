@@ -1,0 +1,143 @@
+<div class="cron-page">
+
+  <!-- ── Carregando ────────────────────────────────────────── -->
+  <div class="loading-state" *ngIf="carregando">
+    <div class="spinner"></div>
+    <p>Carregando cronograma...</p>
+  </div>
+
+  <!-- ── Erro ──────────────────────────────────────────────── -->
+  <div class="error-state" *ngIf="!carregando && erro">
+    <p>{{ erro }}</p>
+  </div>
+
+  <!-- ── Sem educandos ─────────────────────────────────────── -->
+  <div class="empty-state" *ngIf="!carregando && !erro && educandos.length === 0">
+    <p>Nenhum educando vinculado encontrado.</p>
+  </div>
+
+  <ng-container *ngIf="!carregando && !erro && educandos.length > 0">
+
+  <!-- ── Header ──────────────────────────────────────────────── -->
+  <header class="page-header">
+    <div class="header-info">
+      <div class="header-text">
+        <h1>Cronograma Escolar</h1>
+      </div>
+    </div>
+    <div class="filhos-count">
+      <span class="stat-num">{{ educandos.length }}</span>
+      <span class="stat-label">educando{{ educandos.length !== 1 ? 's' : '' }} vinculado{{ educandos.length !== 1 ? 's' : '' }}</span>
+    </div>
+  </header>
+
+  <!-- ── Seletor de educandos ───────────────────────────────── -->
+  <div class="educandos-tabs">
+    <button class="educando-tab"
+            *ngFor="let e of educandos; trackBy: trackById"
+            [class.ativo]="selecionado.id === e.id"
+            (click)="selecionar(e)">
+      <div class="tab-avatar">{{ e.nome[0] }}</div>
+      <div class="tab-info">
+        <span class="tab-nome">{{ e.nome }}</span>
+        <span class="tab-turma">{{ e.turma.serie }} · {{ e.turma.turno }}</span>
+      </div>
+      <span class="tab-badge">{{ e.slots.length }} aulas</span>
+    </button>
+  </div>
+
+  <!-- ── Info da turma selecionada ─────────────────────────── -->
+  <div class="turma-info-bar">
+    <div class="turma-info-left">
+      <div class="turma-avatar">{{ selecionado.nome[0] }}</div>
+      <div>
+        <p class="turma-nome">{{ selecionado.nome }}</p>
+        <div class="turma-badges">
+          <span class="badge serie">{{ selecionado.turma.serie }} — Turma {{ selecionado.turma.codigo }}</span>
+          <span class="badge turno">{{ selecionado.turma.turno }}</span>
+          <span class="badge ano">{{ selecionado.turma.anoLetivo }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="turma-stats">
+      <span class="mini-stat">
+        <strong>{{ totalAulas }}</strong> aulas/semana
+      </span>
+      <span class="mini-stat">
+        <strong>{{ disciplinasCount }}</strong> disciplinas
+      </span>
+    </div>
+  </div>
+
+  <!-- ── Legenda ────────────────────────────────────────────── -->
+  <div class="legenda-bar" *ngIf="legenda.length > 0">
+    <span class="legenda-titulo">Disciplinas:</span>
+    <span class="legenda-item" *ngFor="let item of legenda">
+      <span class="legenda-dot"
+            [style.background]="item.corBg"
+            [style.border-color]="item.corBorder"></span>
+      {{ item.disciplina }}
+    </span>
+  </div>
+
+  <!-- ── Grade semanal ─────────────────────────────────────── -->
+  <div class="grade-container">
+    <div class="grade">
+
+      <div class="grade-header">
+        <div class="hora-col-header"></div>
+        <div class="dia-header"
+             *ngFor="let dia of dias; trackBy: trackByDia"
+             [class.hoje]="isHoje(dia.key)">
+          <span class="dia-nome">{{ dia.label }}</span>
+          <span class="dia-abrev">{{ dia.abrev }}</span>
+          <span class="hoje-tag" *ngIf="isHoje(dia.key)">Hoje</span>
+        </div>
+      </div>
+
+      <div class="grade-row" *ngFor="let hora of horasFiltradas; trackBy: trackByHora">
+
+        <div class="hora-label">
+          <span>{{ hora }}</span>
+        </div>
+
+        <div class="celula"
+             *ngFor="let dia of dias; trackBy: trackByDia"
+             [class.hoje-col]="isHoje(dia.key)">
+
+          <div class="slot"
+               *ngIf="getSlot(dia.key, hora) as slot"
+               [style.background]="slot.corBg"
+               [style.border-left-color]="slot.corBorder"
+               [style.color]="slot.corText">
+
+            <span class="slot-disciplina">{{ slot.disciplina }}</span>
+
+            <span class="slot-info" *ngIf="slot.educador">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              {{ slot.educador }}
+            </span>
+
+            <span class="slot-info" *ngIf="slot.sala">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+              </svg>
+              {{ slot.sala }}
+            </span>
+
+            <span class="slot-hora">{{ slot.horaInicio }} – {{ slot.horaFim }}</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  </ng-container>
+
+</div>

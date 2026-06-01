@@ -1,0 +1,210 @@
+<div class="eventos-page">
+
+  <!-- Modal de Confirmação -->
+  <div class="modal-overlay" *ngIf="confirm.visible" (click)="cancelConfirm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon" [class.danger]="confirm.danger">
+        <svg *ngIf="!confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg *ngIf="confirm.danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="10.29 3.86 1.82 18 2 18 22 18 21.73 18 13.71 3.86 12 1 10.29 3.86"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h3 class="modal-title">{{ confirm.title }}</h3>
+      <p class="modal-message">{{ confirm.message }}</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
+        <button type="button" class="modal-btn"
+          [class.modal-confirm-danger]="confirm.danger"
+          [class.modal-confirm]="!confirm.danger"
+          (click)="confirmAction()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Eventos Escolares</h1>
+      <span class="page-subtitle">Consulte, filtre e gerencie os eventos cadastrados.</span>
+      <button class="btn btn-primary" (click)="novo()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Agendar Evento
+      </button>
+    </div>
+  </div>
+
+  <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros-card">
+    <div class="filtros-header">
+      <div class="filtros-titulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        <span>Filtros</span>
+        <span class="filtros-ativos-badge" *ngIf="filtrosAtivos > 0">{{ filtrosAtivos }}</span>
+      </div>
+      <div class="filtros-resultado">
+        <span class="resultado-count">
+          <strong>{{ eventosFiltrados.length }}</strong>
+          resultado{{ eventosFiltrados.length !== 1 ? 's' : '' }}
+        </span>
+        <button class="btn-limpar" (click)="limparFiltros()" *ngIf="filtrosAtivos > 0" title="Limpar todos os filtros">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Limpar filtros
+        </button>
+      </div>
+    </div>
+
+    <div class="filtros-grid">
+      <div class="filtro-field">
+        <label>Nome do Evento</label>
+        <div class="input-wrapper">
+          <input type="text" placeholder="Digite o nome do evento" [(ngModel)]="filtroNome" (input)="aplicarFiltros()" [class.active]="filtroNome">
+        </div>
+      </div>
+
+      <div class="filtro-field">
+        <label>Data</label>
+        <div class="input-wrapper">
+          <input type="date" [(ngModel)]="filtroData" (input)="aplicarFiltros()" [class.active]="filtroData">
+        </div>
+      </div>
+
+      <div class="filtro-field">
+        <label>Horário</label>
+        <div class="input-wrapper">
+          <input type="time" [(ngModel)]="filtroHorario" (input)="aplicarFiltros()" [class.active]="filtroHorario">
+        </div>
+      </div>
+
+      <div class="filtro-field">
+        <label>Série</label>
+        <div class="input-wrapper">
+          <input type="text" placeholder="Ex: 6º Ano" [(ngModel)]="filtroSerie" (input)="aplicarFiltros()" [class.active]="filtroSerie">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de ações em lote -->
+  <div class="lote-bar" *ngIf="algumSelecionado">
+    <span class="lote-info">{{ quantidadeSelecionados }} evento{{ quantidadeSelecionados !== 1 ? 's' : '' }} selecionado{{ quantidadeSelecionados !== 1 ? 's' : '' }}</span>
+    <div class="lote-acoes">
+      <button type="button" class="btn btn-danger btn-sm" (click)="excluirSelecionados()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Excluir selecionados
+      </button>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="limparSelecao()">Desmarcar tudo</button>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="tabela-card">
+    <div class="tabela-wrapper">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th class="th-check">
+              <input type="checkbox" [(ngModel)]="todosSelecionados" (change)="toggleTodos()" title="Selecionar todos">
+            </th>
+            <th>
+              <div class="th-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Nome do Evento
+              </div>
+            </th>
+            <th>
+              <div class="th-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Data
+              </div>
+            </th>
+            <th>
+              <div class="th-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Horário
+              </div>
+            </th>
+            <th>
+              <div class="th-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                Série Escolar
+              </div>
+            </th>
+            <th><div class="th-content">Ações</div></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="tabela-row" *ngFor="let evento of eventosPaginados" [class.selecionada]="evento.selected">
+            <td class="td-check">
+              <input type="checkbox" [(ngModel)]="evento.selected" (change)="toggleEvento()" />
+            </td>
+            <td><span class="td-text td-bold">{{ evento.nomeEvento }}</span></td>
+            <td><span class="td-text">{{ evento.dataEvento | date: 'dd/MM/yyyy' }}</span></td>
+            <td><span class="td-text">{{ evento.horarioEvento }}</span></td>
+            <td><span class="td-text">{{ evento.serieEscolar }}</span></td>
+            <td>
+              <div class="row-actions">
+                <button type="button" class="btn-icone" title="Editar" (click)="editar(evento.id)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button type="button" class="btn-icone btn-icone-excluir" title="Excluir" (click)="excluir(evento)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tabela-empty" *ngIf="eventosFiltrados.length === 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Nenhum evento encontrado</span>
+      </div>
+    </div>
+
+    <!-- Paginação -->
+    <div class="pagination" *ngIf="eventosFiltrados.length > 0">
+      <div class="pagination-info">
+        <strong>{{ (paginaAtual - 1) * itensPorPagina + 1 }}</strong> - <strong>{{ Math.min(paginaAtual * itensPorPagina, eventosFiltrados.length) }}</strong> de <strong>{{ eventosFiltrados.length }}</strong> evento(s)
+      </div>
+
+      <div class="pagination-controls">
+        <button type="button" class="pagination-btn" [disabled]="paginaAtual === 1" (click)="irParaPagina(1)" title="Primeira página">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+        </button>
+        <button type="button" class="pagination-btn" [disabled]="paginaAtual === 1" (click)="irParaPagina(paginaAtual - 1)" title="Página anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+
+        <div class="pagination-pages">
+          <button type="button" class="pagination-page"
+            *ngFor="let page of paginasVisiveis; trackBy: trackByIndex"
+            [class.active]="page === paginaAtual"
+            [class.dots]="page === -1"
+            [disabled]="page === -1"
+            (click)="page !== -1 && irParaPagina(page)">
+            {{ page === -1 ? '...' : page }}
+          </button>
+        </div>
+
+        <button type="button" class="pagination-btn" [disabled]="paginaAtual === totalPaginas" (click)="irParaPagina(paginaAtual + 1)" title="Próxima página">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button type="button" class="pagination-btn" [disabled]="paginaAtual === totalPaginas" (click)="irParaPagina(totalPaginas)" title="Última página">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+        </button>
+      </div>
+
+      <div class="pagination-size">
+        <label>Por página:</label>
+        <select [(ngModel)]="itensPorPagina" (change)="onItensPorPaginaChange()">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+</div>

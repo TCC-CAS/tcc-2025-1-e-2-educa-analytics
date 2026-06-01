@@ -1,0 +1,405 @@
+<div class="dash-page">
+
+  <!-- ── Page Header ─────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Dashboard Escolar</h1>
+      <span class="page-subtitle">Índices de satisfação institucional — dados anônimos e agregados</span>
+    </div>
+    <div class="header-meta" *ngIf="!isLoading && !erro">
+      <span class="meta-label">Atualizado em</span>
+      <span class="meta-value">{{ dataAtualizacao }}</span>
+    </div>
+  </div>
+
+  <!-- ── Error ───────────────────────────────────────────────────── -->
+  <div class="message error" *ngIf="erro">{{ erro }}</div>
+
+  <!-- ── Skeleton Loading ────────────────────────────────────────── -->
+  <div *ngIf="isLoading" class="sk-wrapper">
+    <div class="sk-totais-row">
+      <div class="sk-total-card" *ngFor="let i of [1,2,3]">
+        <div class="sk sk-icon"></div>
+        <div class="sk-text">
+          <div class="sk sk-h12 sk-w60p"></div>
+          <div class="sk sk-h20 sk-w40p"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sk-grid">
+      <div class="sk-card" *ngFor="let i of [1,2,3,4]">
+        <div class="sk sk-h16 sk-w50p"></div>
+        <div class="sk sk-score"></div>
+        <div class="sk sk-h10 sk-w80p" style="margin-top:16px"></div>
+        <div class="sk sk-h10 sk-w70p"></div>
+        <div class="sk sk-h10 sk-w60p"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Sem dados ───────────────────────────────────────────────── -->
+  <div class="empty-state" *ngIf="!isLoading && !erro && !temDados">
+    <div class="empty-icon">📊</div>
+    <h3>Ainda não há dados suficientes</h3>
+    <p>Os índices aparecerão aqui assim que educadores, educandos e responsáveis responderem aos formulários de avaliação.</p>
+  </div>
+
+  <!-- ── Conteúdo ────────────────────────────────────────────────── -->
+  <ng-container *ngIf="!isLoading && !erro && temDados">
+
+    <!-- ── Participação por perfil (donuts + comparação) ──────────── -->
+    <div class="section-label">Participação por perfil</div>
+    <div class="participacao-row">
+      <div *ngFor="let p of dadosParticipacao" class="participacao-card">
+        <div class="donut-wrap">
+          <svg class="donut-svg" viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+            <circle
+              cx="60" cy="60" r="50" fill="none"
+              [attr.stroke]="p.cor"
+              stroke-width="12"
+              stroke-linecap="round"
+              [attr.stroke-dasharray]="p.arc + ' ' + p.circ"
+              stroke-dashoffset="0"
+              transform="rotate(-90 60 60)"/>
+            <text x="60" y="55" text-anchor="middle"
+              font-size="22" font-weight="800" fill="#1e293b">{{ p.pct }}%</text>
+            <text x="60" y="71" text-anchor="middle"
+              font-size="8.5" fill="#64748b">responderam</text>
+          </svg>
+        </div>
+        <div class="donut-info">
+          <span class="donut-emoji">{{ p.emoji }}</span>
+          <span class="donut-nome">{{ p.label }}</span>
+          <span class="donut-contagem">
+            <strong>{{ p.responderam }}</strong> de {{ p.total }} cadastrados
+          </span>
+          <div class="donut-pct-bar">
+            <div class="donut-pct-fill" [style.width.%]="p.pct" [style.background]="p.cor"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Resumo total de respondentes ───────────────────────────── -->
+    <div class="totais-row">
+      <div class="total-card">
+        <div class="total-icon icon-total">👥</div>
+        <div class="total-info">
+          <span class="total-label">Total de respondentes</span>
+          <span class="total-valor">{{ totais.total_respondentes }}</span>
+        </div>
+      </div>
+      <div class="total-card">
+        <div class="total-icon icon-educador">👨‍🏫</div>
+        <div class="total-info">
+          <span class="total-label">Educadores</span>
+          <span class="total-valor">
+            {{ totalPapel('educador') }}
+            <small *ngIf="totalInstituicao('educador')">
+              de {{ totalInstituicao('educador') }} ({{ pctPapel('educador') }}%)
+            </small>
+          </span>
+        </div>
+      </div>
+      <div class="total-card">
+        <div class="total-icon icon-educando">🎓</div>
+        <div class="total-info">
+          <span class="total-label">Educandos</span>
+          <span class="total-valor">
+            {{ totalPapel('educando') }}
+            <small *ngIf="totalInstituicao('educando')">
+              de {{ totalInstituicao('educando') }} ({{ pctPapel('educando') }}%)
+            </small>
+          </span>
+        </div>
+      </div>
+      <div class="total-card">
+        <div class="total-icon icon-responsavel">👨‍👧</div>
+        <div class="total-info">
+          <span class="total-label">Responsáveis</span>
+          <span class="total-valor">
+            {{ totalPapel('responsavel') }}
+            <small *ngIf="totalInstituicao('responsavel')">
+              de {{ totalInstituicao('responsavel') }} ({{ pctPapel('responsavel') }}%)
+            </small>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Diversidade ───────────────────────────────────────────────── -->
+    <div class="section-label">Diversidade</div>
+    <div class="div-card" *ngIf="diversidade.total > 0; else divEmpty">
+
+      <!-- Coluna 1: Donut Raça/Cor -->
+      <div class="div-bloco div-bloco-raca">
+        <div class="div-titulo">Raça / Cor</div>
+        <div class="div-raca-inner">
+          <svg class="raca-donut" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="46" fill="none" stroke="#f1f5f9" stroke-width="18"/>
+            <circle
+              *ngFor="let s of donutRacaSegmentos"
+              cx="60" cy="60" r="46"
+              fill="none"
+              [attr.stroke]="s.color"
+              stroke-width="18"
+              [attr.stroke-dasharray]="s.dash"
+              [attr.stroke-dashoffset]="-s.offset"
+              transform="rotate(-90 60 60)"
+              stroke-linecap="butt"
+            />
+            <text x="60" y="56" text-anchor="middle" font-size="13" font-weight="800" fill="#1e293b">{{ diversidade.total }}</text>
+            <text x="60" y="70" text-anchor="middle" font-size="7.5" fill="#64748b">pessoas</text>
+          </svg>
+
+          <div class="raca-legenda">
+            <div *ngFor="let item of diversidade.cor_raca" class="raca-leg-item">
+              <span class="raca-dot" [style.background]="corRacaColor(item.label)"></span>
+              <span class="raca-label">{{ item.label }}</span>
+              <span class="raca-pct">{{ item.pct }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coluna 2: Silhuetas de gênero -->
+      <div class="div-bloco div-bloco-genero">
+        <div class="div-titulo">Gênero</div>
+        <div class="div-genero-lista">
+          <div *ngFor="let g of diversidade.genero" class="genero-item">
+            <!-- Silhueta SVG estilizada -->
+            <div class="genero-figura" [style.background]="generoFill(g.label)">
+              <svg viewBox="0 0 40 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Cabeça -->
+                <circle cx="20" cy="10" r="8" [attr.fill]="generoText(g.label)" opacity="0.7"/>
+                <!-- Corpo -->
+                <path d="M10 28 Q10 18 20 18 Q30 18 30 28 L30 48 Q30 52 20 52 Q10 52 10 48 Z"
+                  [attr.fill]="generoText(g.label)" opacity="0.5"/>
+                <!-- Pernas -->
+                <rect x="11" y="50" width="7" height="16" rx="3.5" [attr.fill]="generoText(g.label)" opacity="0.5"/>
+                <rect x="22" y="50" width="7" height="16" rx="3.5" [attr.fill]="generoText(g.label)" opacity="0.5"/>
+              </svg>
+            </div>
+            <div class="genero-info">
+              <span class="genero-pct" [style.color]="generoText(g.label)">{{ g.pct }}%</span>
+              <span class="genero-nome">{{ g.label }}</span>
+              <span class="genero-total">{{ g.total }} pessoas</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coluna 3: Pirâmide etária -->
+      <div class="div-bloco div-bloco-piramide">
+        <div class="div-titulo">Faixa Etária</div>
+        <div class="piramide-legenda">
+          <span class="pir-leg pir-leg-m">Masculino</span>
+          <span class="pir-leg pir-leg-f">Feminino</span>
+          <span class="pir-leg pir-leg-o" *ngIf="(diversidade.faixas[0]?.outro || 0) > 0">Outro</span>
+        </div>
+        <div class="piramide-wrap">
+          <div *ngFor="let f of diversidade.faixas" class="piramide-row">
+            <!-- Barra esquerda: masculino -->
+            <div class="pir-bar-left">
+              <div class="pir-fill pir-fill-m"
+                [style.width.%]="maxPiramide ? (f.masculino / maxPiramide * 100) : 0"
+                [title]="f.masculino"></div>
+              <span class="pir-val pir-val-left" *ngIf="f.masculino">{{ f.masculino }}</span>
+            </div>
+            <!-- Rótulo central -->
+            <div class="pir-faixa-label">{{ f.faixa }}</div>
+            <!-- Barra direita: feminino -->
+            <div class="pir-bar-right">
+              <span class="pir-val pir-val-right" *ngIf="f.feminino">{{ f.feminino }}</span>
+              <div class="pir-fill pir-fill-f"
+                [style.width.%]="maxPiramide ? (f.feminino / maxPiramide * 100) : 0"
+                [title]="f.feminino"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coluna 4: Nacionalidade -->
+      <div class="div-bloco div-bloco-nacionalidade">
+        <div class="div-titulo">Nacionalidade</div>
+        <div class="nac-lista">
+          <div *ngFor="let item of diversidade.nacionalidade; let i = index" class="nac-item">
+            <div class="nac-bar-wrap">
+              <div class="nac-bar-fill" [style.width.%]="item.pct" [style.background]="nacColor(i)"></div>
+            </div>
+            <span class="nac-label">{{ item.label }}</span>
+            <span class="nac-pct" [style.color]="nacColor(i)">{{ item.pct }}%</span>
+            <span class="nac-total">{{ item.total }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.div-card -->
+
+    <ng-template #divEmpty>
+      <div class="div-empty">
+        <span>📋</span> Dados de diversidade serão exibidos quando os cadastros incluírem informações demográficas.
+      </div>
+    </ng-template>
+
+    <!-- ── Comparativo de satisfação por formulário ────────────────── -->
+    <div class="section-label">Comparativo de satisfação por formulário</div>
+    <div class="comparativo-card">
+      <div class="comp-legenda">
+        <span class="cl-item cl-educador">👨‍🏫 Educadores</span>
+        <span class="cl-item cl-educando">🎓 Educandos</span>
+        <span class="cl-item cl-responsavel">👨‍👧 Responsáveis</span>
+      </div>
+      <div class="comp-list">
+        <div *ngFor="let d of dadosComparativo" class="comp-item">
+          <div class="comp-titulo">{{ d.icone }} {{ d.titulo }}</div>
+          <div class="comp-barras">
+            <div class="comp-barra-row">
+              <span class="comp-papel">Educadores</span>
+              <div class="comp-track">
+                <div class="comp-fill comp-fill-educador" [style.width.%]="d.educador"></div>
+              </div>
+              <span class="comp-val">{{ d.educador > 0 ? d.educador + '%' : '—' }}</span>
+            </div>
+            <div class="comp-barra-row">
+              <span class="comp-papel">Educandos</span>
+              <div class="comp-track">
+                <div class="comp-fill comp-fill-educando" [style.width.%]="d.educando"></div>
+              </div>
+              <span class="comp-val">{{ d.educando > 0 ? d.educando + '%' : '—' }}</span>
+            </div>
+            <div class="comp-barra-row">
+              <span class="comp-papel">Responsáveis</span>
+              <div class="comp-track">
+                <div class="comp-fill comp-fill-responsavel" [style.width.%]="d.responsavel"></div>
+              </div>
+              <span class="comp-val">{{ d.responsavel > 0 ? d.responsavel + '%' : '—' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Análise por turma ───────────────────────────────────────── -->
+    <ng-container *ngIf="porTurma.length > 0">
+      <div class="section-label">Participação por turma (educandos)</div>
+      <div class="turma-card">
+        <div class="turma-lista">
+          <div *ngFor="let t of porTurma" class="turma-item">
+            <div class="turma-header-row">
+              <span class="turma-nome">{{ t.nome }}</span>
+              <span class="turma-meta">{{ t.responderam }} de {{ t.total_educandos }} educandos</span>
+              <span class="turma-pct" [class]="'score-' + corScore(t.pct)">{{ t.pct }}%</span>
+            </div>
+            <div class="turma-barra-track">
+              <div class="turma-barra-fill"
+                [class]="'barra-' + corScore(t.pct)"
+                [style.width.%]="t.pct"></div>
+            </div>
+            <div class="turma-media" *ngIf="t.media > 0">
+              Média de satisfação:
+              <strong [class]="'score-' + corScore(t.media)">{{ t.media.toFixed(0) }}%</strong>
+              <span [class]="'label-tag label-' + corScore(t.media)"> {{ labelScore(t.media) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ── Grid de formulários ────────────────────────────────────── -->
+    <div class="section-label">Índices por formulário</div>
+    <div class="formularios-grid">
+      <div
+        *ngFor="let f of formularios"
+        class="form-card"
+        [class.form-card--open]="f.aberto"
+      >
+        <!-- Card header -->
+        <div class="form-card-header" (click)="toggleFormulario(f)">
+          <div class="form-card-top">
+            <span class="form-icone">{{ f.icone }}</span>
+            <div class="form-info">
+              <span class="form-titulo">{{ f.titulo }}</span>
+              <span class="form-resp">{{ f.total_respondentes }} respondentes</span>
+            </div>
+            <div class="form-score" [class]="'score-' + corScore(f.media_geral)">
+              {{ f.media_geral > 0 ? f.media_geral.toFixed(0) + '%' : '—' }}
+            </div>
+          </div>
+
+          <!-- Barra geral -->
+          <div class="barra-geral" *ngIf="f.media_geral > 0">
+            <div class="barra-track">
+              <div class="barra-fill"
+                [class]="'barra-' + corScore(f.media_geral)"
+                [style.width.%]="f.media_geral"></div>
+            </div>
+            <span [class]="'label-tag label-' + corScore(f.media_geral)">
+              {{ labelScore(f.media_geral) }}
+            </span>
+          </div>
+
+          <!-- Por papel -->
+          <div class="papeis-row">
+            <div class="papel-item" *ngFor="let papel of ['educador','educando','responsavel']">
+              <span class="papel-nome">
+                {{ papel === 'educador' ? '👨‍🏫 Educ.' : papel === 'educando' ? '🎓 Educ.' : '👨‍👧 Resp.' }}
+              </span>
+              <div class="papel-mini-barra">
+                <div class="papel-mini-fill"
+                  [style.width.%]="mediaFormulario(f, papel)"
+                  [class]="'barra-' + corScore(mediaFormulario(f, papel))"></div>
+              </div>
+              <span class="papel-val">
+                {{ respondeuFormulario(f, papel) > 0 ? mediaFormulario(f, papel).toFixed(0) + '%' : '—' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Toggle -->
+          <button class="toggle-btn" [attr.aria-expanded]="f.aberto">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline *ngIf="!f.aberto" points="6 9 12 15 18 9"/>
+              <polyline *ngIf="f.aberto"  points="18 15 12 9 6 15"/>
+            </svg>
+            {{ f.aberto ? 'Ocultar perguntas' : 'Ver por pergunta' }}
+          </button>
+        </div>
+
+        <!-- Detalhamento por pergunta -->
+        <div class="form-card-body" *ngIf="f.aberto && f.perguntasArray.length > 0">
+          <div class="perguntas-lista">
+            <div class="pergunta-item" *ngFor="let p of f.perguntasArray">
+              <span class="pergunta-label">{{ p.label }}</span>
+              <div class="pergunta-barra">
+                <div class="pergunta-barra-fill"
+                  [class]="'barra-' + corScore(p.media)"
+                  [style.width.%]="p.media"></div>
+              </div>
+              <span class="pergunta-val" [class]="'score-' + corScore(p.media)">
+                {{ p.media.toFixed(0) }}%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card-body form-card-body--empty" *ngIf="f.aberto && f.perguntasArray.length === 0">
+          <p>Ainda não há respostas com detalhamento por pergunta para este formulário.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nota de sigilo -->
+    <div class="nota-sigilo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span>
+        Todos os dados são compilados de forma <strong>anônima e agregada</strong>.
+        As respostas individuais não são identificáveis e são tratadas com total confidencialidade.
+      </span>
+    </div>
+
+  </ng-container>
+</div>

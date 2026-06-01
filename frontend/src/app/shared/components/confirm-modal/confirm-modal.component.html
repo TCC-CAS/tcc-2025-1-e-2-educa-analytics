@@ -1,0 +1,15 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <span class="material-icons modal-icon" [class.danger]="danger">
+        {{ danger ? 'warning' : 'help_outline' }}
+      </span>
+      <h2>{{ title }}</h2>
+    </div>
+    <p class="modal-message">{{ message }}</p>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" (click)="onCancel()">{{ cancelLabel }}</button>
+      <button type="button" class="btn-confirm" [class.danger]="danger" (click)="onConfirm()">{{ confirmLabel }}</button>
+    </div>
+  </div>
+</div>

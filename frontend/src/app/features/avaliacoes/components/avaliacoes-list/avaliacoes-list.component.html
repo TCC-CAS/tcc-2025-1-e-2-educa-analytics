@@ -1,0 +1,93 @@
+<div class="avaliacoes-page">
+  <div class="page-content">
+
+    <!-- ══ CABEÇALHO DA PÁGINA ══ -->
+    <div class="page-header">
+      <div class="page-title">
+        <h1>Formulários</h1>
+        <span class="page-subtitle">Responda os formulários disponíveis e contribua para a melhoria da escola</span>
+      </div>
+    </div>
+
+    <!-- ══ FORMULÁRIOS DISPONÍVEIS ══ -->
+    <section class="missions-section" *ngIf="obterAvaliacoesPendentes().length > 0">
+      <div class="section-header">
+        <h2 class="section-title pending">
+          <span class="section-icon">📋</span>
+          Formulários Disponíveis
+          <span class="count-badge pending">{{ obterAvaliacoesPendentes().length }}</span>
+        </h2>
+      </div>
+
+      <div class="missions-grid">
+        <div *ngFor="let avaliacao of obterAvaliacoesPendentes()"
+             class="mission-card"
+             [class]="'card-' + avaliacao.cor">
+
+          <div class="mission-top">
+            <span class="mission-icon">{{ avaliacao.icone }}</span>
+          </div>
+
+          <div class="mission-body">
+            <h3>{{ avaliacao.titulo }}</h3>
+            <p>{{ avaliacao.descricao }}</p>
+          </div>
+
+          <button class="btn-start" (click)="responderAvaliacao(avaliacao)">
+            Responder
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ FORMULÁRIOS RESPONDIDOS ══ -->
+    <section class="missions-section" *ngIf="obterAvaliacoesRespondidas().length > 0">
+      <div class="section-header">
+        <h2 class="section-title done">
+          <span class="section-icon">✅</span>
+          Formulários Respondidos
+          <span class="count-badge done">{{ obterAvaliacoesRespondidas().length }}</span>
+        </h2>
+      </div>
+
+      <div class="missions-grid">
+        <div *ngFor="let avaliacao of obterAvaliacoesRespondidas()"
+             class="mission-card completed"
+             [class]="'card-' + avaliacao.cor">
+
+          <div class="mission-top">
+            <span class="mission-icon">{{ avaliacao.icone }}</span>
+            <div class="completed-badge">
+              <span>✓ Concluída</span>
+            </div>
+          </div>
+
+          <div class="mission-body">
+            <h3>{{ avaliacao.titulo }}</h3>
+            <p>Respondida em {{ avaliacao.dataResposta }}</p>
+          </div>
+
+          <div class="completed-actions">
+            <button class="btn-ghost-sm" (click)="visualizarResposta(avaliacao)">Visualizar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ VAZIO ══ -->
+    <div *ngIf="avaliacoes.length === 0" class="empty-state">
+      <span>📋</span>
+      <h3>Nenhum formulário disponível</h3>
+      <p>No momento não há formulários disponíveis para o seu perfil.</p>
+    </div>
+
+    <!-- ══ NOTA DE PRIVACIDADE ══ -->
+    <div class="privacy-note">
+      <strong>🔒 Anônimo e confidencial:</strong> Suas respostas são tratadas de forma agregada e nunca serão identificáveis individualmente.
+    </div>
+
+  </div>
+</div>

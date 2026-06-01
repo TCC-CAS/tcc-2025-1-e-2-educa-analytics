@@ -1,0 +1,167 @@
+﻿<div class="turma-form-page">
+
+  <!-- Modal de Confirmação de Edição -->
+  <div class="modal-overlay" *ngIf="confirmVisible" (click)="cancelConfirm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h3 class="modal-title">Confirmar edição</h3>
+      <p class="modal-message">Deseja realmente salvar as alterações desta turma?</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-cancel" (click)="cancelConfirm()">Cancelar</button>
+        <button type="button" class="modal-btn modal-confirm" (click)="confirmEdit()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-wrapper">
+    <button type="button" class="btn-voltar" (click)="cancel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Voltar para lista de turmas
+    </button>
+
+    <header class="page-header">
+      <div>
+        <h1>{{ turmaId ? 'Editar turma' : 'Cadastrar turma' }}</h1>
+        <p>Informe os dados da turma para salvar as alterações.</p>
+      </div>
+    </header>
+
+    <div class="message" *ngIf="message" [class.error]="messageType === 'error'">
+      {{ message }}
+    </div>
+
+    <form #form="ngForm" class="form" (ngSubmit)="submit(form.valid === true)">
+      <div class="field-grid">
+      
+      <!-- Código da Turma (somente leitura se editando) -->
+      <label class="field" *ngIf="turmaId && (model.codTurma || model.codigo_automatico)">
+        <span>Código da Turma</span>
+        <input type="text" [value]="model.codTurma || model.codigo_automatico" readonly style="background: #f5f5f5; cursor: not-allowed;" />
+        <span class="field-hint">Este código é gerado automaticamente e não pode ser alterado</span>
+      </label>
+      
+      <!-- Série -->
+      <label class="field">
+        <span>Série <span class="required">*</span></span>
+        <select name="idSerie" [(ngModel)]="model.idSerie" required (ngModelChange)="onCampoChange()">
+          <option [ngValue]="null">Selecione a série</option>
+          <option *ngFor="let serie of series" [ngValue]="serie.idSerie">
+            {{ serie.nome }}
+          </option>
+        </select>
+      </label>
+      
+      <!-- Período -->
+      <label class="field">
+        <span>Período <span class="required">*</span></span>
+        <select name="idPeriodo" [(ngModel)]="model.idPeriodo" required (ngModelChange)="onCampoChange()">
+          <option [ngValue]="null">Selecione o período</option>
+          <option *ngFor="let periodo of periodos" [ngValue]="periodo.idPeriodo">
+            {{ periodo.nome }} ({{ periodo.hora_inicio.substring(0,5) }} - {{ periodo.hora_fim.substring(0,5) }})
+          </option>
+        </select>
+      </label>
+      
+      <!-- Ano Letivo -->
+      <label class="field">
+        <span>Ano Letivo <span class="required">*</span></span>
+        <input 
+          type="number" 
+          name="anoLetivo" 
+          [(ngModel)]="model.anoLetivo" 
+          required 
+          min="2020" 
+          max="2050"
+          placeholder="Ex: 2026"
+          (ngModelChange)="onCampoChange()"
+        />
+        <span class="field-hint" *ngIf="!alertaAnoLetivo"></span>
+        <span class="field-hint error" *ngIf="alertaAnoLetivo">{{ alertaAnoLetivo }}</span>
+      </label>
+      
+      <!-- Sala -->
+      <label class="field">
+        <span>Sala <span class="required">*</span></span>
+        <select name="idSala" [(ngModel)]="model.idSala" required (ngModelChange)="onCampoChange()">
+          <option [ngValue]="null">Selecione a sala</option>
+          <option *ngFor="let sala of salas" [ngValue]="sala.id">
+            {{ sala.nome }} (Cap: {{ sala.capacidade }})
+          </option>
+        </select>
+        <span class="field-hint">Escolha uma sala cadastrada para esta turma</span>
+      </label>
+      
+      <!-- Capacidade Máxima -->
+      <label class="field">
+        <span>Capacidade Máxima <span class="required">*</span></span>
+        <input 
+          type="number" 
+          name="capacidade_maxima" 
+          [(ngModel)]="model.capacidade_maxima" 
+          required 
+          min="1" 
+          max="100"
+          placeholder="Ex: 30" 
+        />
+        <span class="field-hint">Quantidade de vagas disponíveis na sala (número máximo de alunos)</span>
+      </label>
+      
+      <!-- Status -->
+      <label class="field">
+        <span>Status <span class="required">*</span></span>
+        <select name="status" [(ngModel)]="model.status" required>
+          <option value="">Selecione</option>
+          <option value="planejada">Planejada</option>
+          <option value="ativa">Ativa</option>
+          <option value="encerrada">Encerrada</option>
+          <option value="cancelada">Cancelada</option>
+          <option value="suspensa">Suspensa</option>
+        </select>
+      </label>
+      
+      <!-- Data de Início (se editando) -->
+      <label class="field" *ngIf="turmaId">
+        <span>Data de Início</span>
+        <input 
+          type="date" 
+          name="dataInicio" 
+          [(ngModel)]="model.dataInicio"
+        />
+        <span class="field-hint">Data de início do ano letivo para esta turma</span>
+      </label>
+      
+      <!-- Data de Fim (se editando) -->
+      <label class="field" *ngIf="turmaId">
+        <span>Data de Término</span>
+        <input 
+          type="date" 
+          name="dataFim" 
+          [(ngModel)]="model.dataFim"
+        />
+        <span class="field-hint">Data de término do ano letivo para esta turma</span>
+      </label>
+      
+      <!-- Observações (campo longo) -->
+      <label class="field field-full">
+        <span>Observações</span>
+        <textarea 
+          name="observacoes" 
+          [(ngModel)]="model.observacoes" 
+          rows="3"
+          placeholder="Informações adicionais sobre a turma..."
+        ></textarea>
+      </label>
+      
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="ghost" (click)="cancel()">Cancelar</button>
+      <button type="submit" class="primary" [disabled]="salvando || alertaAnoLetivo">
+        {{ salvando ? 'Salvando...' : (turmaId ? 'Salvar alterações' : 'Cadastrar turma') }}
+      </button>
+    </div>
+  </form>
+  </div>
+</div>

@@ -1,0 +1,147 @@
+<div class="fornecedor-form-page">
+  <div class="form-wrapper">
+
+  <header class="page-header">
+    <div>
+      <h1>{{ isEdicao ? 'Editar Fornecedor' : 'Novo Fornecedor' }}</h1>
+      <p>Informe os dados do fornecedor para salvar as informações.</p>
+    </div>
+  </header>
+
+  <!-- Mensagem inline de erro/sucesso -->
+  <div *ngIf="message" class="message-banner" [class.error]="messageType === 'error'">
+    <svg *ngIf="messageType === 'error'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    <svg *ngIf="messageType === 'success'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+    {{ message }}
+  </div>
+
+  <form #fornecedorForm="ngForm" class="form" (ngSubmit)="salvar(fornecedorForm)">
+
+    <!-- Tipo de Pessoa -->
+    <div class="section-label">Tipo de Pessoa</div>
+    <div class="tipo-pessoa">
+      <label class="radio-label">
+        <input type="radio" name="tipo" value="PF" [(ngModel)]="fornecedor.tipo" required>
+        <span>Pessoa Física (PF)</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="tipo" value="PJ" [(ngModel)]="fornecedor.tipo" required>
+        <span>Pessoa Jurídica (PJ)</span>
+      </label>
+    </div>
+
+    <!-- Dados Básicos -->
+    <div class="section-label" style="margin-top:1.25rem">Dados Básicos</div>
+    <div class="field-grid">
+
+      <label class="field" [class.full-width]="!mostrarRazaoSocial">
+        <span>{{ labelNome }} *</span>
+        <input type="text" name="nome" [(ngModel)]="fornecedor.nome" required
+          [placeholder]="fornecedor.tipo === 'PF' ? 'Ex: João Silva' : 'Ex: Papelaria Central'">
+      </label>
+
+      <label class="field" *ngIf="mostrarRazaoSocial">
+        <span>Razão Social *</span>
+        <input type="text" name="razaoSocial" [(ngModel)]="fornecedor.razaoSocial"
+          [required]="mostrarRazaoSocial" placeholder="Ex: Papelaria Central Ltda">
+      </label>
+
+      <label class="field">
+        <span>{{ labelDocumento }} *</span>
+        <input type="text" name="cpfCnpj" [(ngModel)]="fornecedor.cpfCnpj" required
+          [placeholder]="fornecedor.tipo === 'PF' ? '000.000.000-00' : '00.000.000/0000-00'">
+      </label>
+
+      <label class="field">
+        <span>Telefone *</span>
+        <input type="tel" name="telefone" [(ngModel)]="fornecedor.telefone" required
+          placeholder="(00) 00000-0000">
+      </label>
+
+      <label class="field full-width">
+        <span>E-mail *</span>
+        <input type="email" name="email" [(ngModel)]="fornecedor.email" required
+          placeholder="exemplo@email.com">
+      </label>
+
+      <label class="field">
+        <span>Tipo de Despesa *</span>
+        <select name="tipoDespesa" [(ngModel)]="fornecedor.tipoDespesa" required>
+          <option value="" disabled>Selecione o tipo</option>
+          <option value="Material Escolar">Material Escolar</option>
+          <option value="Alimentação">Alimentação</option>
+          <option value="Manutenção">Manutenção</option>
+          <option value="Serviços de TI">Serviços de TI</option>
+          <option value="Limpeza e Higiene">Limpeza e Higiene</option>
+          <option value="Transporte">Transporte</option>
+          <option value="Uniforme">Uniforme</option>
+          <option value="Energia / Água / Telefone">Energia / Água / Telefone</option>
+          <option value="Outros">Outros</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Centro de Custo *</span>
+        <select name="centroCusto" [(ngModel)]="fornecedor.centroCusto" required>
+          <option value="" disabled>Selecione o centro</option>
+          <option value="Pedagógico">Pedagógico</option>
+          <option value="Administrativo">Administrativo</option>
+          <option value="Infraestrutura">Infraestrutura</option>
+          <option value="Tecnologia">Tecnologia</option>
+          <option value="Alimentação">Alimentação</option>
+          <option value="Transporte">Transporte</option>
+          <option value="Eventos">Eventos</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Quantidade de Contratos</span>
+        <input type="number" name="qtdContratos" [(ngModel)]="fornecedor.qtdContratos"
+          min="0" placeholder="0">
+      </label>
+
+      <label class="field full-width">
+        <span>Observações</span>
+        <textarea name="observacoes" [(ngModel)]="fornecedor.observacoes"
+          rows="3" placeholder="Informações adicionais sobre o fornecedor..."></textarea>
+      </label>
+
+    </div>
+
+    <!-- Endereço -->
+    <div class="section-label" style="margin-top:1.25rem">Endereço</div>
+    <div class="field-grid">
+
+      <label class="field">
+        <span>CEP *</span>
+        <div class="cep-wrapper">
+          <input type="text" name="cep" [(ngModel)]="fornecedor.cep" required
+            placeholder="00000-000" maxlength="9"
+            (blur)="buscarCep()">
+          <span class="cep-spinner" *ngIf="buscandoCep">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          </span>
+        </div>
+        <span class="field-hint">Pressione Tab para preencher o endereço automaticamente</span>
+      </label>
+
+      <label class="field full-width">
+        <span>Endereço Completo *</span>
+        <input type="text" name="endereco" [(ngModel)]="fornecedor.endereco" required
+          placeholder="Rua, número, bairro, cidade - UF">
+      </label>
+
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="ghost" (click)="voltar()" [disabled]="salvando">Cancelar</button>
+      <button type="submit" class="primary" [disabled]="salvando">
+        <svg *ngIf="salvando" class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        {{ salvando ? 'Salvando...' : (isEdicao ? 'Atualizar' : 'Cadastrar') }}
+      </button>
+    </div>
+
+  </form>
+
+  </div>
+</div>

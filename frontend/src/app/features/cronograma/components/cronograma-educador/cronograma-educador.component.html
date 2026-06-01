@@ -1,0 +1,32 @@
+<div class="cronograma-educador-container">
+  <h2>Meu Cronograma</h2>
+  
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Carregando...</p>
+  </div>
+  
+  <div *ngIf="!loading" class="grade-semanal-educador">
+    <div *ngFor="let dia of diasSemana" class="dia-card">
+      <h3>{{ getDiaLabel(dia) }}</h3>
+      
+      <div *ngIf="gradeSemanal[dia]?.length === 0" class="sem-aulas">
+        <i class="pi pi-calendar-times"></i>
+        <p>Sem aulas neste dia</p>
+      </div>
+      
+      <div *ngFor="let horario of gradeSemanal[dia]" class="aula-item"
+           [style.border-left-color]="horario.cor || '#3788d8'">
+        <div class="horario">
+          <i class="pi pi-clock"></i>
+          <span>{{ horario.horaInicio.substring(0,5) }} - {{ horario.horaFim.substring(0,5) }}</span>
+        </div>
+        <div class="disciplina">{{ horario.disciplina?.nomeDisciplina }}</div>
+        <div class="turma">{{ horario.turma?.codTurma }} - {{ horario.turma?.nomeTurma }}</div>
+        <div class="sala" *ngIf="horario.sala">
+          <i class="pi pi-map-marker"></i> {{ horario.sala.nomeSala }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

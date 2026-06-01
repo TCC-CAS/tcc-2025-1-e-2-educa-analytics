@@ -1,0 +1,347 @@
+<div class="app-shell">
+
+  <aside class="sidebar" [class.expandido]="menuExpandido"
+         (mouseenter)="menuExpandido = true"
+         (mouseleave)="menuExpandido = false"
+         *ngIf="mostrarMenu">
+
+    <!-- Logo -->
+    <div class="sidebar-top">
+      <div class="brand-logo">
+        <span class="logo-icon">EA</span>
+        <span class="logo-label">EducaAnalytics</span>
+      </div>
+    </div>
+
+    <!-- Navegação -->
+    <nav class="sidebar-nav">
+
+      <a class="nav-item" routerLink="/home" routerLinkActive="active"
+         [routerLinkActiveOptions]="{ exact: true }">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        <span class="nav-label">Início</span>
+      </a>
+
+      <!-- SEÇÃO: Acadêmico -->
+      <div class="nav-section-label" *ngIf="mostrarItem(['educador', 'gestor', 'administrativo', 'colaborador'])">Acadêmico</div>
+
+      <a class="nav-item" routerLink="/matricula/lista" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <span class="nav-label">Matrículas</span>
+      </a>
+
+      <a class="nav-item" routerLink="/educadores/cronograma" routerLinkActive="active"
+         *ngIf="mostrarItem(['educador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span class="nav-label">Cronograma educador</span>
+      </a>
+
+      <a class="nav-item" routerLink="/educandos/cronograma" routerLinkActive="active"
+         *ngIf="mostrarItem(['educando'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span class="nav-label">Cronograma educando</span>
+      </a>
+
+      <a class="nav-item" routerLink="/educandos" routerLinkActive="active"
+         *ngIf="mostrarItem(['educando'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <path d="M10 9h4"/>
+        </svg>
+        <span class="nav-label">Nota e Frequência</span>
+      </a>
+
+      <a class="nav-item" routerLink="/responsaveis/cronograma" routerLinkActive="active"
+         *ngIf="mostrarItem(['responsavel'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span class="nav-label">Cronograma responsável</span>
+      </a>
+
+      <a class="nav-item" routerLink="/responsaveis" routerLinkActive="active"
+         *ngIf="mostrarItem(['responsavel'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <path d="M10 9h4"/>
+        </svg>
+        <span class="nav-label">Notas e Frequência</span>
+      </a>
+
+      <!-- SEÇÃO: Gestão de Cronograma -->
+      <div class="nav-section-label" *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">Gestão de Cronograma</div>
+
+      <a class="nav-item" routerLink="/cronograma/gerar-automatico" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+          <polyline points="7.5 4.21 12 6.81 16.5 4.21"/>
+          <polyline points="7.5 19.79 7.5 14.6 3 12"/>
+          <polyline points="21 12 16.5 14.6 16.5 19.79"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+        <span class="nav-label">Cronograma de Aulas</span>
+      </a>
+
+      <!-- SEÇÃO: Turmas & Disciplinas -->
+      <div class="nav-section-label" *ngIf="mostrarItem(['educador', 'gestor', 'administrativo', 'colaborador'])">Turmas & Disciplinas</div>
+
+      <a class="nav-item" routerLink="/turmas" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+          <path d="M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+        <span class="nav-label">Turmas</span>
+      </a>
+
+      <a class="nav-item" routerLink="/educadores/minhas-turmas" routerLinkActive="active"
+         *ngIf="mostrarItem(['educador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+          <path d="M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+        <span class="nav-label">Minhas Turmas</span>
+      </a>
+
+      <a class="nav-item" routerLink="/educadores/competencias" routerLinkActive="active"
+         *ngIf="mostrarItem(['educador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="2"/>
+          <path d="M9 12h6M9 16h4"/>
+        </svg>
+        <span class="nav-label">Competências</span>
+      </a>
+
+      <a class="nav-item" routerLink="/disciplinas" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+        </svg>
+        <span class="nav-label">Disciplinas</span>
+      </a>
+
+      <a class="nav-item" routerLink="/matriz-curricular" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        <span class="nav-label">Matriz Curricular</span>
+      </a>
+
+      <!-- SEÇÃO: Reposições -->
+      <!-- SEÇÃO: Avaliações e Eventos -->
+      <div class="nav-section-label" *ngIf="mostrarItem(['educador', 'educando', 'responsavel'])">Avaliações e Eventos</div>
+
+      <a class="nav-item" [routerLink]="['/avaliacoes', currentUserId]" routerLinkActive="active"
+         *ngIf="mostrarItem(['educador', 'educando', 'responsavel'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <span class="nav-label">Avaliações</span>
+      </a>
+
+      <a class="nav-item" routerLink="/eventos" routerLinkActive="active"
+         *ngIf="mostrarItem(['colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <span class="nav-label">Eventos Escolares</span>
+      </a>
+
+      <a class="nav-item" routerLink="/eventos/calendario" routerLinkActive="active"
+         *ngIf="mostrarItem(['colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+          <path d="M8 14h.01"/>
+          <path d="M12 14h.01"/>
+          <path d="M16 14h.01"/>
+          <path d="M8 18h.01"/>
+          <path d="M12 18h.01"/>
+          <path d="M16 18h.01"/>
+        </svg>
+        <span class="nav-label">Calendário Acadêmico</span>
+      </a>
+
+      <!-- SEÇÃO: Pessoas -->
+      <div class="nav-section-label" *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">Pessoas</div>
+
+      <a class="nav-item" routerLink="/educadores" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+        <span class="nav-label">Educadores</span>
+      </a>
+
+      <a class="nav-item" routerLink="/colaboradores" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="2" y="7" width="20" height="14" rx="2"/>
+          <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+        </svg>
+        <span class="nav-label">Colaboradores</span>
+      </a>
+
+      <!-- SEÇÃO: Estrutura -->
+      <div class="nav-section-label" *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">Estrutura</div>
+
+      <a class="nav-item" routerLink="/salas" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span class="nav-label">Salas</span>
+      </a>
+
+      <!-- SEÇÃO: Financeiro -->
+      <div class="nav-section-label" *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">Financeiro</div>
+
+      <a class="nav-item" routerLink="/caixa" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+        <span class="nav-label">Caixa</span>
+      </a>
+
+      <a class="nav-item" routerLink="/mensalidades" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <polyline points="16 11 18 13 22 9"/>
+        </svg>
+        <span class="nav-label">Controle de Pagamentos</span>
+      </a>
+
+      <a class="nav-item" routerLink="/fornecedores" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'administrativo', 'colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+        </svg>
+        <span class="nav-label">Fornecedores</span>
+      </a>
+
+      <!-- SEÇÃO: Dashboards -->
+      <div class="nav-section-label" *ngIf="mostrarItem(['educador', 'educando', 'responsavel', 'gestor', 'administrativo', 'colaborador'])">Dashboards</div>
+
+      <a class="nav-item" routerLink="/dashboard-financeiro" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'administrativo'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        <span class="nav-label">Dash. Financeiro</span>
+      </a>
+
+      <a class="nav-item" routerLink="/dashboard-escolar" routerLinkActive="active"
+         *ngIf="mostrarItem(['educador', 'educando', 'responsavel', 'colaborador'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        <span class="nav-label">Dash. Escolar</span>
+      </a>
+
+      <a class="nav-item" routerLink="/criar-formulario" routerLinkActive="active"
+         *ngIf="mostrarItem(['gestor', 'colaborador', 'administrativo'])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="12" y1="18" x2="12" y2="12"/>
+          <line x1="9"  y1="15" x2="15" y2="15"/>
+        </svg>
+        <span class="nav-label">Criar Formulário</span>
+      </a>
+
+      <a class="nav-item" (click)="logout()" style="cursor: pointer;" *ngIf="usuarioLogado">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span class="nav-label">Sair</span>
+      </a>
+
+    </nav>
+
+  </aside>
+
+  <main class="main-content">
+    <div class="content-scroll">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+</div>
+
+<!-- Modal de confirmação de logout -->
+<div class="modal-overlay" *ngIf="modalLogoutAberto" (click)="cancelarLogout()">
+  <div class="modal-logout" (click)="$event.stopPropagation()">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </div>
+    <h2 class="modal-titulo">Sair da plataforma</h2>
+    <p class="modal-descricao">Tem certeza que deseja encerrar sua sessão?</p>
+    <div class="modal-acoes">
+      <button class="btn-cancelar" (click)="cancelarLogout()">Cancelar</button>
+      <button class="btn-sair" (click)="confirmarLogout()">Sim, sair</button>
+    </div>
+  </div>
+</div>

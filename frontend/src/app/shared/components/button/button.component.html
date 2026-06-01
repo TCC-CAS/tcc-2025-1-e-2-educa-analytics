@@ -1,0 +1,9 @@
+<button
+  [type]="type"
+  [disabled]="disabled || loading"
+  [class]="'btn btn-' + variant"
+  (click)="onClick()"
+>
+  <span *ngIf="!loading">{{ label }}</span>
+  <span *ngIf="loading">Carregando...</span>
+</button>

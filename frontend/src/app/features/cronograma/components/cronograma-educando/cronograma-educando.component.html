@@ -1,0 +1,71 @@
+<div class="cronograma-educando-container">
+  <div class="header">
+    <h2>Minha Grade de Horários</h2>
+    <p *ngIf="turmaInfo" class="turma-info">
+      <i class="pi pi-users"></i> {{ turmaInfo.codTurma }} - {{ turmaInfo.nomeTurma }}
+    </p>
+  </div>
+  
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Carregando...</p>
+  </div>
+  
+  <div *ngIf="!loading" class="content-grid">
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- GRADE SEMANAL COMPACTA -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="grade-compacta">
+      <h3><i class="pi pi-calendar"></i> Horários da Semana</h3>
+      
+      <div class="dias-container">
+        <div *ngFor="let dia of diasSemana" class="dia-coluna">
+          <div class="dia-header">{{ getDiaLabel(dia) }}</div>
+          
+          <div *ngIf="gradeSemanal[dia]?.length === 0" class="sem-aulas-mini">
+            <small>Sem aulas</small>
+          </div>
+          
+          <div *ngFor="let horario of gradeSemanal[dia]" class="aula-mini"
+               [style.background]="horario.cor || '#3788d8'">
+            <div class="hora">{{ horario.horaInicio.substring(0,5) }}</div>
+            <div class="disciplina">{{ horario.disciplina?.nomeDisciplina }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- ATIVIDADES RECENTES -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="atividades-recentes">
+      <h3><i class="pi pi-file-edit"></i> Atividades Recentes</h3>
+      
+      <div *ngIf="atividades.length === 0" class="sem-atividades">
+        <i class="pi pi-inbox"></i>
+        <p>Nenhuma atividade no momento</p>
+      </div>
+      
+      <div *ngFor="let atividade of atividades" class="atividade-card">
+        <div class="atividade-header">
+          <span class="tipo-badge" 
+                [ngClass]="'tipo-' + atividade.tipoAtividade">
+            {{ atividade.tipoAtividade }}
+          </span>
+          <span class="disciplina-nome">{{ atividade.disciplina?.nomeDisciplina }}</span>
+        </div>
+        <div class="atividade-titulo">{{ atividade.titulo }}</div>
+        <div class="atividade-footer">
+          <span class="data-entrega" *ngIf="atividade.dataEntrega">
+            <i class="pi pi-calendar"></i>
+            Entrega: {{ atividade.dataEntrega | date:'dd/MM/yyyy' }}
+          </span>
+          <span class="nota" *ngIf="atividade.valorNota">
+            <i class="pi pi-star"></i>
+            {{ atividade.valorNota }} pts
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

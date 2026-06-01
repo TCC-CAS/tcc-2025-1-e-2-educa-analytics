@@ -1,0 +1,42 @@
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
+
+@Component({
+  selector: 'app-shell',
+  templateUrl: './shell.component.html',
+  styleUrls: ['./shell.component.scss']
+})
+export class ShellComponent {
+  title = 'EducaAnalytics';
+  menuRecolhido = false;
+
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  get usuarioLogado(): boolean {
+    return this.authService.isAuthenticated();
+  }
+
+  get userType(): string | null {
+    return this.authService.getUserType();
+  }
+
+  hasRole(roles: string[]): boolean {
+    const userType = this.userType;
+    return userType ? roles.includes(userType) : false;
+  }
+
+  toggleSidebar(): void {
+    this.menuRecolhido = !this.menuRecolhido;
+  }
+
+  logout(): void {
+    if (confirm('Deseja realmente fazer logout?')) {
+      this.authService.logout();
+      this.router.navigate(['/login']);
+    }
+  }
+}

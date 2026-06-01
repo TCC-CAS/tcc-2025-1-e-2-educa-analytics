@@ -1,0 +1,297 @@
+<!-- Toast de mensagem -->
+<div class="toast" *ngIf="message" [class.toast-success]="messageType === 'success'" [class.toast-error]="messageType === 'error'">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" *ngIf="messageType === 'success'"><polyline points="20 6 9 17 4 12"/></svg>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" *ngIf="messageType === 'error'"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  {{ message }}
+</div>
+
+<div class="grade-page">
+
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <button class="btn-back" (click)="voltar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="page-title-block">
+        <h1>Grade Horária</h1>
+        <p class="page-subtitle">Monte a grade semanal fixa das turmas — disciplinas, educadores e horários.</p>
+      </div>
+    </div>
+    <div class="page-header-badges" *ngIf="turmaSel">
+      <span class="badge-turma">{{ turmaSel.codTurma }} · {{ turmaSel.serie_nome }}</span>
+      <span class="badge-turno">{{ turmaSel.periodo_nome }}</span>
+      <span class="badge-aulas">{{ totalAulas }} aula(s)</span>
+    </div>
+  </div>
+
+  <!-- Skeleton de carregamento inicial -->
+  <div class="sk-initial" *ngIf="isLoading && !turmaSel">
+    <div class="sk sk-header"></div>
+    <div class="sk sk-filters"></div>
+  </div>
+
+  <ng-container *ngIf="!isLoading || turmaSel">
+
+    <!-- ── Painel de seleção ────────────────────────────── -->
+    <div class="selecao-card">
+      <div class="selecao-titulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Selecionar Turma
+      </div>
+      <div class="selecao-grid">
+        <div class="sel-field">
+          <label>Ano Letivo</label>
+          <div class="sel-input-wrap">
+            <select [(ngModel)]="anoLetivoSel" (change)="onAnoLetivoChange()">
+              <option value="">Selecione</option>
+              <option *ngFor="let a of anosLetivos" [value]="a">{{ a }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sel-field">
+          <label>Série</label>
+          <div class="sel-input-wrap">
+            <select [(ngModel)]="serieSel" (change)="onSerieChange()" [disabled]="!anoLetivoSel">
+              <option value="">Selecione</option>
+              <option *ngFor="let s of seriesDisponiveis" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sel-field">
+          <label>Turno</label>
+          <div class="sel-input-wrap">
+            <select [(ngModel)]="turnoSel" (change)="onTurnoChange()" [disabled]="!serieSel">
+              <option value="">Selecione</option>
+              <option *ngFor="let t of turnosDisponiveis" [value]="t">{{ t }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sel-field">
+          <label>Turma</label>
+          <div class="sel-input-wrap">
+            <select [(ngModel)]="turmaSel" (change)="onTurmaChange()" [disabled]="!turnoSel">
+              <option [ngValue]="null">Selecione</option>
+              <option *ngFor="let t of turmasDisponiveis" [ngValue]="t">{{ t.codTurma }} — {{ t.nomeTurma }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Sem turmas disponíveis ───────────────────────── -->
+    <div class="empty-state" *ngIf="turnoSel && turmasDisponiveis.length === 0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p>Nenhuma turma ativa encontrada para os filtros selecionados.</p>
+    </div>
+
+    <!-- ── Grade horária semanal ────────────────────────── -->
+    <div class="grade-card" *ngIf="turmaSel && slots.length > 0">
+
+      <!-- Skeleton da grade -->
+      <div class="grade-skeleton" *ngIf="isLoading">
+        <div class="sk sk-grade-h"></div>
+        <div class="sk sk-grade-row" *ngFor="let i of [1,2,3,4,5]"></div>
+      </div>
+
+      <!-- Grade real -->
+      <div class="grade-container" *ngIf="!isLoading">
+        <div class="grade-info-bar">
+          <span class="grade-info-txt">
+            Clique em <strong>+</strong> para adicionar uma aula ao horário.
+            A verificação de conflitos é feita automaticamente.
+          </span>
+          <div class="grade-legenda">
+            <span class="leg-item"><span class="leg-dot leg-filled"></span>Aula cadastrada</span>
+            <span class="leg-item"><span class="leg-dot leg-empty"></span>Horário livre</span>
+          </div>
+        </div>
+
+        <div class="grade-scroll">
+          <table class="grade-table">
+            <thead>
+              <tr>
+                <th class="th-hora">Horário</th>
+                <th *ngFor="let dia of DIAS; trackBy: trackByKey" class="th-dia">
+                  <span class="dia-label">{{ dia.label }}</span>
+                  <span class="dia-aulas-count" *ngIf="aulasPorDia[dia.key] > 0">{{ aulasPorDia[dia.key] }} aula(s)</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let slot of slots">
+                <td class="td-hora">
+                  <span class="hora-badge">{{ slot.label }}</span>
+                </td>
+                <td *ngFor="let dia of DIAS; trackBy: trackByKey" class="td-cell"
+                    [class.td-cell-ocupado]="getAula(dia.key, slot)">
+                  <!-- Aula existente -->
+                  <ng-container *ngIf="getAula(dia.key, slot) as aula">
+                    <div class="aula-card">
+                      <div class="aula-disc">{{ getNomeDisciplina(aula) }}</div>
+                      <div class="aula-edu">{{ getNomeEducador(aula) }}</div>
+                      <button class="aula-del" (click)="removerAula(aula, $event)" title="Remover aula">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  </ng-container>
+                  <!-- Célula vazia -->
+                  <ng-container *ngIf="!getAula(dia.key, slot)">
+                    <button class="btn-add-aula" (click)="abrirModal(dia, slot)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                  </ng-container>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Resumo da grade -->
+        <div class="grade-resumo" *ngIf="totalAulas > 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span><strong>{{ totalAulas }}</strong> aula(s) cadastrada(s) na grade semanal</span>
+          <span class="resumo-sala" *ngIf="turmaSel.nomeSala">· Sala: {{ turmaSel.nomeSala }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Painel de cobertura curricular ───────────────────── -->
+    <div class="cobertura-card" *ngIf="turmaSel && (matrizCurricular.length > 0 || carregandoMatriz)">
+      <div class="cobertura-header">
+        <div class="cobertura-titulo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Cobertura da Matriz Curricular
+        </div>
+        <span class="cobertura-badge cobertura-ok" *ngIf="coberturaCompleta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Grade completa
+        </span>
+        <span class="cobertura-badge cobertura-pendente" *ngIf="!coberturaCompleta && matrizCurricular.length > 0">
+          {{ disciplinasPendentes.length }} disciplina(s) com pendência
+        </span>
+      </div>
+
+      <!-- Loading -->
+      <div class="cobertura-loading" *ngIf="carregandoMatriz">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+        Carregando matriz curricular...
+      </div>
+
+      <!-- Lista de disciplinas -->
+      <div class="cobertura-lista" *ngIf="!carregandoMatriz && matrizCurricular.length > 0">
+        <div class="cobertura-item" *ngFor="let item of matrizCurricular"
+             [class.cobertura-item-ok]="item.completo"
+             [class.cobertura-item-falta]="!item.completo">
+          <div class="cobertura-item-info">
+            <span class="cobertura-disc">{{ item.nomeDisciplina }}</span>
+            <span class="cobertura-nums">
+              <strong>{{ item.aulasCadastradas }}</strong>/{{ item.cargaSemanal }} aula(s)/semana
+            </span>
+          </div>
+          <div class="cobertura-bar-wrap">
+            <div class="cobertura-bar">
+              <div class="cobertura-bar-fill"
+                   [style.width.%]="item.cargaSemanal > 0 ? (item.aulasCadastradas / item.cargaSemanal) * 100 : 0"
+                   [class.bar-completo]="item.completo"
+                   [class.bar-parcial]="!item.completo && item.aulasCadastradas > 0"
+                   [class.bar-vazio]="item.aulasCadastradas === 0">
+              </div>
+            </div>
+            <span class="cobertura-falta" *ngIf="!item.completo">
+              faltam {{ item.faltam }}
+            </span>
+            <svg class="cobertura-check" *ngIf="item.completo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Instruções quando turma selecionada mas sem slots ── -->
+    <div class="empty-state" *ngIf="turmaSel && slots.length === 0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <p>Turno não reconhecido. Horários não puderam ser gerados.</p>
+    </div>
+
+  </ng-container>
+</div>
+
+<!-- ══ Modal — Adicionar Aula ══════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="modalAberto" (click)="fecharModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-block">
+        <h2 class="modal-title">Adicionar Aula</h2>
+        <p class="modal-sub">{{ getDiaLabel(modalDia) }} · {{ modalSlot?.label }}–{{ modalSlot?.end?.substring(0,5) }}</p>
+      </div>
+      <button class="modal-close" (click)="fecharModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Turma info -->
+      <div class="modal-turma-info" *ngIf="turmaSel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        <span>{{ turmaSel.codTurma }} — {{ turmaSel.nomeTurma }}</span>
+        <span class="mt-sala" *ngIf="turmaSel.nomeSala">· {{ turmaSel.nomeSala }}</span>
+      </div>
+
+      <!-- Erro -->
+      <div class="modal-erro" *ngIf="modalErro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        {{ modalErro }}
+      </div>
+
+      <!-- Disciplina -->
+      <div class="modal-field">
+        <label>Disciplina *</label>
+        <select [(ngModel)]="modalDisciplinaId" (change)="onDisciplinaChange()" [class.sel-active]="modalDisciplinaId">
+          <option value="">Selecione a disciplina</option>
+          <option *ngFor="let d of disciplinas" [value]="d.id">{{ d.nome }}</option>
+        </select>
+      </div>
+
+      <!-- Educador -->
+      <div class="modal-field">
+        <label>Educador *</label>
+        <div class="edu-loading" *ngIf="carregandoEducadores">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+          Carregando educadores...
+        </div>
+        <select *ngIf="!carregandoEducadores"
+          [(ngModel)]="modalEducadorId"
+          [class.sel-active]="modalEducadorId"
+          [disabled]="!modalDisciplinaId">
+          <option value="">
+            {{ !modalDisciplinaId ? 'Selecione a disciplina primeiro' : educadoresModal.length === 0 ? 'Nenhum educador disponível' : 'Selecione o educador' }}
+          </option>
+          <option *ngFor="let e of educadoresModal" [value]="e.id">{{ e.nome }}</option>
+        </select>
+        <span class="edu-hint" *ngIf="modalDisciplinaId && !carregandoEducadores && educadoresModal.length === 0">
+          Nenhum educador cadastrado para esta disciplina no turno {{ turnoSel }}.
+        </span>
+        <span class="edu-count" *ngIf="modalDisciplinaId && !carregandoEducadores && educadoresModal.length > 0">
+          {{ educadoresModal.length }} educador(es) disponível(eis) para este turno
+        </span>
+      </div>
+
+      <!-- Aviso conflito -->
+      <div class="modal-aviso">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        O sistema verificará automaticamente conflitos de educador e sala ao salvar.
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="fecharModal()" [disabled]="salvandoAula">Cancelar</button>
+      <button class="btn btn-primary" (click)="salvarAula()" [disabled]="salvandoAula">
+        <span *ngIf="!salvandoAula">Adicionar Aula</span>
+        <span *ngIf="salvandoAula">Salvando...</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,151 @@
+<!-- ══════════ TELA DE CONCLUSÃO ══════════ -->
+<div class="completion-screen" *ngIf="showCompletion">
+  <div class="completion-card">
+    <div class="completion-icon">🎉</div>
+    <h1 class="completion-title">Avaliação Enviada!</h1>
+    <p class="completion-sub">
+      Obrigado pela sua participação. Sua opinião contribui para a melhoria da nossa escola!
+    </p>
+    <div class="xp-burst">
+      <span class="xp-plus">+{{ xpEarned }}</span>
+      <span class="xp-label">XP conquistados</span>
+    </div>
+    <div class="completion-stats">
+      <div class="stat">
+        <span class="stat-val">{{ perguntasRespondidas }}</span>
+        <span class="stat-lbl">Respostas</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-val">{{ progresso }}%</span>
+        <span class="stat-lbl">Completado</span>
+      </div>
+    </div>
+    <button class="btn-return" (click)="voltar()">
+      Voltar às avaliações
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ FORMULÁRIO ══════════ -->
+<div class="infraestrutura-form-page" *ngIf="!showCompletion">
+
+  <!-- ── Cabeçalho ── -->
+  <div class="form-header">
+    <button class="btn-back" (click)="voltar()" title="Voltar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="header-info">
+      <h1 class="form-title">Formulário de Avaliação da Infraestrutura Escolar</h1>
+      <p class="form-subtitle">Sua opinião é anônima e ajuda a melhorar a escola</p>
+    </div>
+    <div class="xp-chip">
+      <span>⚡</span>
+      <span>{{ xpEarned }} XP</span>
+    </div>
+  </div>
+
+  <!-- ── Barra de progresso ── -->
+  <div class="progress-bar-wrap">
+    <div class="progress-info">
+      <span>{{ perguntasRespondidas }} de {{ totalPerguntas }} perguntas respondidas</span>
+      <span class="pct">{{ progresso }}%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" [style.width.%]="progresso"></div>
+    </div>
+  </div>
+
+  <!-- ── Seções ── -->
+  <div class="form-body">
+
+    <div class="secao" *ngFor="let secao of secoes">
+      <div class="secao-header">
+        <span class="secao-icon">{{ secao.icone }}</span>
+        <div class="secao-info">
+          <span class="secao-num">Seção {{ secao.numero }}</span>
+          <h2 class="secao-titulo">{{ secao.titulo }}</h2>
+        </div>
+      </div>
+
+      <div class="perguntas-list">
+        <div
+          *ngFor="let pergunta of secao.perguntas; let i = index"
+          class="pergunta-card"
+          [class.has-error]="submitted && pergunta.obrigatoria && respostas[pergunta.id] === undefined"
+          [id]="'pergunta-' + pergunta.id">
+
+          <p class="pergunta-texto">
+            {{ pergunta.texto }}
+            <span class="obrigatoria-star" *ngIf="pergunta.obrigatoria">*</span>
+          </p>
+
+          <!-- Escala Likert 1–5 -->
+          <div *ngIf="pergunta.tipo === 'escala'" class="likert-wrap">
+            <div class="likert-labels">
+              <span>Muito insatisfeito</span>
+              <span>Muito satisfeito</span>
+            </div>
+            <div class="likert-options">
+              <button
+                *ngFor="let val of [1, 2, 3, 4, 5]"
+                type="button"
+                class="likert-btn"
+                [class.selected]="respostas[pergunta.id] === val"
+                [class.opt-1]="val === 1"
+                [class.opt-2]="val === 2"
+                [class.opt-3]="val === 3"
+                [class.opt-4]="val === 4"
+                [class.opt-5]="val === 5"
+                [title]="escalaLabels[val - 1]"
+                (click)="responder(pergunta.id, val)">
+                <span class="likert-emoji">{{ escalaEmojis[val - 1] }}</span>
+                <span class="likert-num">{{ val }}</span>
+              </button>
+            </div>
+            <div class="likert-selected-label" *ngIf="respostas[pergunta.id]">
+              {{ escalaLabels[respostas[pergunta.id] - 1] }}
+            </div>
+            <p class="error-msg" *ngIf="submitted && pergunta.obrigatoria && respostas[pergunta.id] === undefined">
+              Por favor, selecione uma opção.
+            </p>
+          </div>
+
+          <!-- Aberta -->
+          <div *ngIf="pergunta.tipo === 'aberta'" class="aberta-wrap">
+            <textarea
+              class="aberta-input"
+              rows="4"
+              placeholder="Escreva sua resposta aqui... (opcional)"
+              [value]="respostas[pergunta.id] || ''"
+              (input)="responder(pergunta.id, $any($event.target).value)">
+            </textarea>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Nota de privacidade + Enviar ── -->
+    <div class="form-footer">
+      <div class="privacy-note">
+        🔒 <strong>Anônimo e confidencial:</strong> Suas respostas são tratadas de forma agregada
+        e nunca serão identificáveis individualmente.
+      </div>
+
+      <div class="footer-actions">
+        <button class="btn-cancelar" type="button" (click)="voltar()">Cancelar</button>
+        <button class="btn-enviar" type="button" (click)="enviar()">
+          Enviar Avaliação
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
