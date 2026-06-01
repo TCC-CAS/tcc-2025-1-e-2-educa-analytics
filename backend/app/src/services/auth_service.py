@@ -172,6 +172,7 @@ def validar_token(token: str) -> dict | None:
     try:
         partes = token.split(".")
         if len(partes) != 3:
+            print(f"[validar_token] formato inválido: {len(partes)} partes")
             return None
         header, payload, assinatura = partes
         assinatura_esperada = _b64url(
@@ -182,13 +183,16 @@ def validar_token(token: str) -> dict | None:
             ).digest()
         )
         if not hmac.compare_digest(assinatura, assinatura_esperada):
+            print(f"[validar_token] assinatura inválida. recebida={assinatura[:20]}, esperada={assinatura_esperada[:20]}")
             return None
         padding = 4 - len(payload) % 4
         dados = json.loads(base64.urlsafe_b64decode(payload + "=" * padding))
         if dados.get("exp", 0) < int(time.time()):
+            print(f"[validar_token] token expirado: exp={dados.get('exp')}, agora={int(time.time())}")
             return None
         return dados
-    except Exception:
+    except Exception as e:
+        print(f"[validar_token] exceção: {e}")
         return None
 
 
@@ -745,10 +749,13 @@ def get_usuario_do_evento(event: dict) -> dict | None:
     headers = event.get("headers") or {}
     # API Gateway HTTP API v2 normaliza headers para minúsculas
     auth_header = headers.get("Authorization") or headers.get("authorization", "")
+    print(f"[auth] header Authorization: '{auth_header[:30] if auth_header else 'AUSENTE'}'")
     if not auth_header.startswith("Bearer "):
+        print(f"[auth] token ausente ou formato inválido")
         return None
     token = auth_header[7:]
     dados = validar_token(token)
+    print(f"[auth] validar_token retornou: {dados is not None}")
     if dados and "sub" in dados and "id" not in dados:
         dados["id"] = dados["sub"]
     return dados
