@@ -784,10 +784,10 @@ def home_perfil(event):
                     {"label": "Disciplinas", "valor": disc_count, "cor": "roxo", "icone": "book", "sufixo": ""},
                 ]
             else:
-                movs = _count("SELECT COUNT(*) FROM Caixa WHERE DATE(dataMovimento)=CURDATE()")
+                movs = _count("SELECT COUNT(*) FROM Caixa WHERE DATE(data)=CURDATE()")
                 saldo_rows = _q("""
-                    SELECT COALESCE(SUM(CASE WHEN tipo='entrada' THEN valor ELSE -valor END),0) AS saldo
-                    FROM Caixa WHERE MONTH(dataMovimento)=MONTH(CURDATE()) AND YEAR(dataMovimento)=YEAR(CURDATE())
+                    SELECT COALESCE(SUM(CASE WHEN tipoOperacao='entrada' THEN valorDespesa ELSE -valorDespesa END),0) AS saldo
+                    FROM Caixa WHERE MONTH(data)=MONTH(CURDATE()) AND YEAR(data)=YEAR(CURDATE())
                 """)
                 saldo = float(saldo_rows[0]["saldo"]) if saldo_rows else 0.0
                 matriculas_count = _count("SELECT COUNT(*) FROM EducandoResponsavel WHERE tipoUsuario='educando' AND idStatus='Ativa'")
